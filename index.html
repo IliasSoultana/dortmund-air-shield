@@ -2,258 +2,340 @@
 <html lang="de">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>DORTMUND AIR SHIELD · Off-Grid Air Mission Control</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>DORTMUND AIR SHIELD · Hybrid FSOC Laser + DECT NR+ Terminal</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 <style>
-*{box-sizing:border-box;margin:0;padding:0}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --bg:#09090B;--map-bg:#0B0B0C;--road:#161618;
-  --glass:rgba(24,24,27,0.75);--glass-hi:rgba(32,32,36,0.85);
-  --border:rgba(255,255,255,0.07);--border-hi:rgba(255,255,255,0.14);
+  --bg:#060608;--map-bg:#0B0B0E;
+  --glass:rgba(16,17,22,0.82);--glass-hi:rgba(24,26,33,0.92);
+  --border:rgba(255,255,255,0.09);--border-hi:rgba(255,255,255,0.18);
   --txt:#FAFAFA;--txt2:#A1A1AA;--mut:#71717A;
-  --mint:#34D399;--amber:#F59E0B;--red:#EF4444;--blue:#38BDF8;
+  --mint:#10B981;--mint-hi:#34D399;--amber:#F59E0B;--red:#EF4444;--blue:#38BDF8;
   --font:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
   --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
 }
-html,body{width:100vw;height:100vh;background:var(--bg);color:var(--txt);font-family:var(--font);overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none}
+html,body{
+  width:100vw;height:100vh;height:100dvh;background:var(--bg);color:var(--txt);
+  font-family:var(--font);overflow:hidden;-webkit-font-smoothing:antialiased;user-select:none;
+}
 button,input{font-family:inherit}
-.scroll{overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.12) transparent}
-.scroll::-webkit-scrollbar{width:4px}
-.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.12);border-radius:4px}
+.scroll{overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(255,255,255,0.14) transparent}
+.scroll::-webkit-scrollbar{width:4px;height:4px}
+.scroll::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.14);border-radius:4px}
+.hscroll{overflow-x:auto;overflow-y:hidden;scrollbar-width:none;-ms-overflow-style:none}
+.hscroll::-webkit-scrollbar{display:none}
 .hidden{display:none!important}
 
-/* ---------- Full-Bleed Map & Floating Layout ---------- */
-#app{position:relative;width:100vw;height:100vh;overflow:hidden;background:var(--map-bg)}
-#mapWrap{position:fixed;inset:0;width:100vw;height:100vh;z-index:0}
-#map{width:100%;height:100%;display:block;cursor:grab}
+/* ---------- Desktop-First Fullscreen Container (Responsive on Mobile) ---------- */
+#app{
+  position:relative;width:100vw;height:100dvh;
+  background:var(--map-bg);overflow:hidden;
+}
+
+/* ---------- Full-Bleed 3D Map Background ---------- */
+#mapWrap{position:absolute;inset:0;width:100%;height:100%;z-index:0;background:#090A0F}
+#glMap{position:absolute;inset:0;width:100%;height:100%}
+#map{position:absolute;inset:0;width:100%;height:100%;display:block;pointer-events:auto;cursor:grab;z-index:2}
 #map.dragging{cursor:grabbing}
+.maplibregl-ctrl-attrib,.maplibregl-ctrl-logo{display:none!important}
 
 .glass{
   background:var(--glass);
-  backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  backdrop-filter:blur(22px);-webkit-backdrop-filter:blur(22px);
   border:1px solid var(--border);
-  border-radius:20px;
-  box-shadow:0 20px 50px rgba(0,0,0,0.45);
+  box-shadow:0 16px 42px rgba(0,0,0,0.55);
 }
 
-/* ---------- Top Center Toast + Collapsible Log Drawer ---------- */
+/* ---------- Top Center Toast + Collapsible Event Log Drawer ---------- */
 .top-center{
-  position:fixed;top:24px;left:50%;transform:translateX(-50%);
-  z-index:20;display:flex;flex-direction:column;align-items:center;gap:8px;
-  max-width:560px;width:calc(100vw - 740px);min-width:340px;pointer-events:none;
+  position:fixed;top:16px;left:50%;transform:translateX(-50%);
+  z-index:30;display:flex;flex-direction:column;align-items:center;gap:8px;
+  width:min(580px, calc(100vw - 680px));min-width:340px;pointer-events:none;
 }
 .toast-bar{
   pointer-events:auto;width:100%;display:flex;align-items:center;gap:10px;
-  padding:10px 16px;border-radius:999px;cursor:pointer;
-  background:var(--glass);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border:1px solid var(--border);box-shadow:0 12px 32px rgba(0,0,0,0.4);
+  padding:9px 14px;border-radius:999px;cursor:pointer;
   transition:border-color .2s,background .2s;
 }
 .toast-bar:hover{border-color:var(--border-hi);background:var(--glass-hi)}
-.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);flex:none}
+.toast-dot{width:7px;height:7px;border-radius:50%;background:var(--mint-hi);flex:none}
 .toast-dot.warn{background:var(--amber);box-shadow:0 0 8px var(--amber)}
 .toast-dot.crit{background:var(--red);box-shadow:0 0 8px var(--red);animation:pulse 1.2s infinite}
-.toast-time{font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums;flex:none}
+.toast-time{font-size:11px;color:var(--mut);font-variant-numeric:tabular-nums;flex:none;font-family:var(--mono)}
 .toast-msg{font-size:12px;font-weight:500;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
-.toast-threat{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(255,255,255,0.06);color:var(--txt2);flex:none}
-.toast-threat.warn{background:rgba(245,158,11,0.16);color:#FBBF24}
-.toast-threat.crit{background:rgba(239,68,68,0.2);color:#F87171}
+.toast-threat{font-size:9.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:3px 8px;border-radius:999px;background:rgba(52,211,153,0.14);color:var(--mint-hi);flex:none}
+.toast-threat.warn{background:rgba(245,158,11,0.18);color:#FBBF24}
+.toast-threat.crit{background:rgba(239,68,68,0.22);color:#F87171}
 .toast-chev{color:var(--mut);font-size:10px;transition:transform .2s}
 .toast-bar.open .toast-chev{transform:rotate(180deg)}
 
 .log-drawer{
-  pointer-events:auto;width:100%;max-height:240px;padding:12px 14px;
+  pointer-events:auto;width:100%;max-height:220px;padding:12px 14px;border-radius:16px;
   display:flex;flex-direction:column;gap:8px;
 }
 .drawer-head{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:600;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
 .drawer-actions{display:flex;gap:6px}
-.mini-btn{background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--txt2);font-size:10px;font-weight:500;padding:3px 8px;border-radius:8px;cursor:pointer}
+.mini-btn{background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--txt2);font-size:10px;font-weight:500;padding:3px 8px;border-radius:7px;cursor:pointer}
 .mini-btn:hover{color:var(--txt);border-color:var(--border-hi)}
-.terminal{font-family:var(--mono);font-size:11px;line-height:1.55;max-height:180px}
-.terminal .ln{display:flex;gap:8px;padding:1px 0}
+.terminal{font-family:var(--mono);font-size:10.5px;line-height:1.55;max-height:160px}
+.terminal .ln{display:flex;gap:8px;padding:1.5px 0}
 .terminal .ts{color:var(--mut);flex:none}
-.terminal .lv{width:34px;flex:none;font-weight:600}
+.terminal .lv{width:32px;flex:none;font-weight:600}
 .terminal .msg{color:var(--txt2);word-break:break-word}
-.lv-INFO .lv{color:var(--blue)}.lv-OK .lv{color:var(--mint)}.lv-WARN .lv{color:var(--amber)}.lv-CRIT .lv{color:var(--red)}.lv-NET .lv{color:#A78BFA}.lv-DBG .lv{color:var(--mut)}
+.lv-INFO .lv{color:var(--blue)}.lv-OK .lv{color:var(--mint-hi)}.lv-WARN .lv{color:var(--amber)}.lv-CRIT .lv{color:var(--red)}.lv-NET .lv{color:#A78BFA}.lv-DBG .lv{color:var(--mut)}
 
-/* ---------- Left Floating Panel (Fleet) ---------- */
-#left{
-  position:fixed;top:24px;left:24px;bottom:24px;width:320px;z-index:10;
-  display:flex;flex-direction:column;padding:18px;gap:14px;
+/* ---------- Desktop Left Floating Panel: Brand + Fleet Status ---------- */
+.left-panel{
+  position:fixed;top:16px;left:16px;bottom:92px;width:296px;
+  z-index:20;border-radius:20px;padding:14px;
+  display:flex;flex-direction:column;gap:12px;
 }
-.brand-row{display:flex;align-items:center;justify-content:space-between;gap:10px}
-.brand-left{display:flex;align-items:center;gap:10px}
-.logo{width:32px;height:32px;border-radius:10px;display:grid;place-items:center;background:rgba(255,255,255,0.06);border:1px solid var(--border);color:var(--txt)}
-.brand-title{font-size:14px;font-weight:600;letter-spacing:-0.01em;color:var(--txt)}
-.brand-sub{font-size:10px;font-weight:500;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-top:2px}
-.status-pill{display:flex;align-items:center;gap:6px;padding:4px 9px;border-radius:999px;font-size:10px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--txt2);cursor:pointer}
+.brand-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.brand-left{display:flex;align-items:center;gap:10px;min-width:0}
+.logo{
+  width:32px;height:32px;border-radius:10px;display:grid;place-items:center;flex:none;
+  background:linear-gradient(135deg,rgba(16,185,129,0.22),rgba(245,158,11,0.16));
+  border:1px solid rgba(52,211,153,0.35);color:var(--mint-hi);
+}
+.brand-title{font-size:13.5px;font-weight:700;letter-spacing:-0.01em;color:var(--txt);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-sub{font-size:10px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--mint-hi);margin-top:1px}
+.nav-right{display:flex;align-items:center;gap:6px;flex:none}
+.arch-pill{
+  font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+  padding:4px 7px;border-radius:999px;background:rgba(16,185,129,0.12);
+  border:1px solid rgba(16,185,129,0.32);color:var(--mint-hi);
+}
+.status-pill{
+  display:flex;align-items:center;gap:5px;padding:4px 9px;border-radius:999px;
+  font-size:9.5px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--txt2);cursor:pointer;
+}
 .status-pill .dot{width:6px;height:6px;border-radius:50%;background:var(--txt2)}
-.status-pill.live{color:var(--mint);border-color:rgba(52,211,153,0.25)}.status-pill.live .dot{background:var(--mint);box-shadow:0 0 8px var(--mint)}
+.status-pill.live{color:var(--mint-hi);border-color:rgba(52,211,153,0.3)}.status-pill.live .dot{background:var(--mint-hi);box-shadow:0 0 8px var(--mint-hi)}
 .status-pill.mock .dot{background:var(--amber)}
 
 .ws-bar{display:flex;gap:6px;align-items:center}
-#wsUrl{flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--border);border-radius:10px;color:var(--txt2);font-size:11px;padding:6px 10px;outline:none}
-#wsUrl:focus{border-color:var(--border-hi);color:var(--txt)}
-#wsBtn{background:rgba(255,255,255,0.07);border:1px solid var(--border);color:var(--txt);font-size:11px;font-weight:500;padding:6px 10px;border-radius:10px;cursor:pointer}
-#wsBtn:hover{background:rgba(255,255,255,0.12)}
+#wsUrl{flex:1;background:rgba(0,0,0,0.35);border:1px solid var(--border);border-radius:9px;color:var(--txt2);font-size:11px;padding:5px 9px;outline:none}
+#wsBtn{background:rgba(255,255,255,0.08);border:1px solid var(--border);color:var(--txt);font-size:11px;font-weight:600;padding:5px 10px;border-radius:9px;cursor:pointer}
 
-.sec-hdr{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:600;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
-.fleet-summary{display:flex;gap:12px;font-size:11px;color:var(--txt2)}
-.fleet-summary b{color:var(--txt);font-weight:600;font-variant-numeric:tabular-nums}
+.fleet-summary-bar{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:8px 10px;border-radius:11px;background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  font-size:10.5px;color:var(--txt2);
+}
+.fleet-counts{display:flex;gap:10px;font-variant-numeric:tabular-nums}
+.fleet-counts span{display:inline-flex;align-items:center;gap:5px}
+.fleet-counts b{color:var(--txt);font-weight:700}
 
-.fleet-list{flex:1;display:flex;flex-direction:column;gap:2px;margin:0 -6px;padding:0 6px}
-.drow{
-  border-radius:12px;border:1px solid transparent;
-  transition:background .15s,border-color .15s;overflow:hidden;
+/* Mobile-only horizontal chip bar (hidden on desktop, shown on mobile) */
+.mobile-chips-wrap{display:none}
+.fleet-chips{display:flex;gap:6px;padding:2px 2px 4px}
+.fchip{
+  flex:none;display:flex;align-items:center;gap:6px;
+  padding:6px 10px;border-radius:999px;cursor:pointer;
+  background:rgba(18,18,23,0.86);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+  border:1px solid var(--border);box-shadow:0 6px 18px rgba(0,0,0,0.4);
+  font-size:11px;font-variant-numeric:tabular-nums;transition:all .18s ease;
 }
-.drow:hover{background:rgba(255,255,255,0.035)}
-.drow.selected{background:rgba(255,255,255,0.06);border-color:var(--border-hi)}
-.drow-main{
-  height:40px;padding:0 10px;display:flex;align-items:center;gap:9px;cursor:pointer;
-  font-size:12px;font-variant-numeric:tabular-nums;
-}
-.st-dot{width:7px;height:7px;border-radius:50%;background:var(--mint);flex:none}
-.st-dot.warn{background:var(--amber);box-shadow:0 0 8px rgba(245,158,11,0.7)}
-.st-dot.crit{background:var(--red);box-shadow:0 0 8px rgba(239,68,68,0.8)}
-.st-dot.off{background:#52525B}
-.drow-id{font-weight:600;color:var(--txt)}
-.drow-ip{font-size:11px;color:var(--mut)}
-.drow-band{margin-left:auto;font-size:11px;color:var(--txt2);font-weight:500}
-.drow-band.warn{color:var(--amber)}
-.drow-band.crit{color:var(--red)}
-.drow-rtt{width:42px;text-align:right;font-size:11px;color:var(--mut)}
+.fchip.selected{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.38)}
+.fchip.warn{border-color:rgba(245,158,11,0.5);background:rgba(245,158,11,0.13)}
+.fchip.crit{border-color:rgba(239,68,68,0.55);background:rgba(239,68,68,0.15)}
+.fchip-id{font-weight:700;color:var(--txt);font-size:11px}
+.fchip-band{font-size:9.5px;font-weight:600;color:var(--mint-hi)}
 
-.drow-detail{
-  display:none;padding:6px 10px 12px 26px;
-  border-top:1px solid rgba(255,255,255,0.04);
-  grid-template-columns:repeat(3,1fr);gap:8px;
-}
+.st-dot{width:7px;height:7px;border-radius:50%;background:var(--mint-hi);box-shadow:0 0 6px rgba(52,211,153,0.7);flex:none}
+.st-dot.warn{background:var(--amber);box-shadow:0 0 8px rgba(245,158,11,0.85)}
+.st-dot.crit{background:var(--red);box-shadow:0 0 8px rgba(239,68,68,0.9)}
+.st-dot.off{background:#52525B;box-shadow:none}
+
+/* Fleet Accordion List */
+.fleet-list{display:flex;flex-direction:column;gap:3px;flex:1}
+.drow{border-radius:11px;border:1px solid transparent;background:rgba(255,255,255,0.02);overflow:hidden;transition:background .15s,border-color .15s}
+.drow:hover{background:rgba(255,255,255,0.045)}
+.drow.selected{background:rgba(255,255,255,0.07);border-color:var(--border-hi)}
+.drow-main{height:36px;padding:0 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11.5px;font-variant-numeric:tabular-nums}
+.drow-id{font-weight:700;color:var(--txt)}
+.drow-ip{font-size:10px;color:var(--mut);font-family:var(--mono)}
+.drow-band{margin-left:auto;font-size:10.5px;color:var(--mint-hi);font-weight:600}
+.drow-band.warn{color:#FBBF24}
+.drow-band.crit{color:#F87171}
+.drow-rtt{width:38px;text-align:right;font-size:10px;color:var(--mut);font-family:var(--mono)}
+.drow-detail{display:none;padding:8px 10px 10px 24px;border-top:1px solid rgba(255,255,255,0.05);grid-template-columns:repeat(2,1fr);gap:6px 10px}
 .drow.selected .drow-detail{display:grid}
-.dd-cell span{display:block;font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
-.dd-cell b{display:block;font-size:12px;font-weight:500;color:var(--txt);margin-top:2px;font-variant-numeric:tabular-nums}
+.dd-cell span{display:block;font-size:8.5px;font-weight:600;letter-spacing:.07em;text-transform:uppercase;color:var(--mut)}
+.dd-cell b{display:block;font-size:11px;font-weight:600;color:var(--txt);margin-top:1px;font-variant-numeric:tabular-nums}
 
-.left-foot{display:flex;align-items:center;justify-content:space-between;padding-top:8px;border-top:1px solid var(--border);font-size:11px;color:var(--mut)}
-.seg{display:flex;background:rgba(0,0,0,0.28);border:1px solid var(--border);border-radius:8px;padding:2px}
-.seg button{background:none;border:0;color:var(--mut);font-size:10px;font-weight:600;padding:3px 7px;border-radius:6px;cursor:pointer}
-.seg button.on{background:rgba(255,255,255,0.1);color:var(--txt)}
-
-/* ---------- Right Floating Panel (Measurable Resilience) ---------- */
-#right{
-  position:fixed;top:24px;right:24px;width:336px;z-index:10;
-  display:flex;flex-direction:column;padding:18px;gap:18px;
+/* ---------- Desktop Right Floating Panel (and Mobile Drawer): Metrics + QoS + Controls ---------- */
+.right-panel{
+  position:fixed;top:16px;right:16px;width:308px;max-height:calc(100dvh - 108px);
+  z-index:20;border-radius:20px;padding:15px;
+  display:flex;flex-direction:column;gap:14px;
 }
-.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.sheet-handle-area{display:none}
+.sheet-body{display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+
+.sec-hdr{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:700;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .kpi{
-  background:rgba(255,255,255,0.025);border:1px solid var(--border);
-  border-radius:14px;padding:12px 12px 10px;display:flex;flex-direction:column;gap:4px;
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:14px;padding:10px 11px 9px;display:flex;flex-direction:column;gap:3px;
 }
-.kpi-label{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
-.kpi-val{font-size:32px;font-weight:500;line-height:1.05;letter-spacing:-0.03em;color:var(--txt);font-variant-numeric:tabular-nums;margin-top:2px;transition:color .25s}
-.kpi-val .unit{font-size:13px;font-weight:500;color:var(--mut);margin-left:3px;letter-spacing:0}
+.kpi-label{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut)}
+.kpi-val{font-size:24px;font-weight:600;line-height:1.1;letter-spacing:-0.03em;color:var(--txt);font-variant-numeric:tabular-nums;transition:color .25s}
+.kpi-val .unit{font-size:11px;font-weight:500;color:var(--mut);margin-left:2px;letter-spacing:0}
 .kpi-val.warn{color:var(--amber)}
 .kpi-val.crit{color:var(--red)}
-.kpi-sub{font-size:10px;color:var(--mut);display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
-.kpi-spark{width:100%;height:24px;display:block;margin-top:4px}
+.kpi-sub{font-size:9.5px;color:var(--mut);display:flex;justify-content:space-between;font-variant-numeric:tabular-nums}
+.kpi-spark{width:100%;height:20px;display:block;margin-top:2px}
 
-.qos-list{display:flex;flex-direction:column;gap:11px}
-.qos-row{display:flex;flex-direction:column;gap:5px}
+/* QoS Traffic Bars */
+.qos-list{display:flex;flex-direction:column;gap:9px}
+.qos-row{display:flex;flex-direction:column;gap:4px}
 .qos-head{display:flex;align-items:center;justify-content:space-between;font-size:11px}
-.qos-name{font-weight:500;color:var(--txt);display:flex;align-items:center;gap:6px}
+.qos-name{font-weight:600;color:var(--txt);display:flex;align-items:center;gap:6px}
 .qos-dot{width:6px;height:6px;border-radius:50%}
 .qos-meta{font-size:10px;color:var(--mut);font-variant-numeric:tabular-nums}
 .qos-track{height:4px;border-radius:999px;background:rgba(255,255,255,0.07);overflow:hidden}
 .qos-fill{height:100%;border-radius:999px;transition:width .3s ease,background .3s}
 
-/* ---------- Bottom Floating Action Dock (Tesla Quick Controls) ---------- */
+/* ---------- Desktop Floating Bottom Action Dock ---------- */
 .bottom-dock{
-  position:fixed;bottom:24px;left:50%;transform:translateX(-50%);z-index:15;
-  display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:999px;
+  position:fixed;bottom:18px;left:50%;transform:translateX(-50%);
+  z-index:25;display:flex;align-items:center;gap:7px;
+  padding:8px 10px;border-radius:20px;max-width:calc(100vw - 24px);
 }
-.dock-pill{
-  display:flex;align-items:center;gap:8px;padding:9px 15px;border-radius:999px;
-  background:rgba(255,255,255,0.04);border:1px solid var(--border);
-  color:var(--txt2);font-size:12px;font-weight:500;cursor:pointer;
-  transition:all .2s ease;white-space:nowrap;
+.dock-pill,.ctrl-btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:7px;
+  padding:9px 14px;border-radius:13px;
+  background:rgba(255,255,255,0.045);border:1px solid var(--border);
+  color:var(--txt2);font-size:12px;font-weight:600;cursor:pointer;
+  transition:all .18s ease;white-space:nowrap;
 }
-.dock-pill svg{ opacity:.8;flex:none }
-.dock-pill:hover{background:rgba(255,255,255,0.08);color:var(--txt);border-color:var(--border-hi)}
-.dock-pill:active{transform:scale(0.98)}
-.dock-pill.active-red{
-  background:rgba(239,68,68,0.16);border-color:rgba(239,68,68,0.55);color:#FCA5A5;
-  box-shadow:0 0 24px rgba(239,68,68,0.3);
+.dock-pill svg,.ctrl-btn svg{opacity:.85;flex:none}
+.dock-pill:hover,.ctrl-btn:hover{background:rgba(255,255,255,0.09);color:var(--txt);border-color:var(--border-hi)}
+.dock-pill:active,.ctrl-btn:active{transform:scale(0.97)}
+.dock-pill.active-red,.ctrl-btn.active-red{
+  background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.6);color:#FCA5A5;
+  box-shadow:0 0 18px rgba(239,68,68,0.28);
 }
-.dock-pill.active-amber{
-  background:rgba(245,158,11,0.16);border-color:rgba(245,158,11,0.55);color:#FDE68A;
-  box-shadow:0 0 24px rgba(245,158,11,0.28);
+.dock-pill.active-amber,.ctrl-btn.active-amber{
+  background:rgba(245,158,11,0.18);border-color:rgba(245,158,11,0.6);color:#FDE68A;
+  box-shadow:0 0 18px rgba(245,158,11,0.25);
 }
-.dock-pill.prot-on{background:rgba(52,211,153,0.10);border-color:rgba(52,211,153,0.40);color:#6EE7B7}
-.dock-pill.prot-off{
-  background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.65);color:#FCA5A5;
-  box-shadow:0 0 24px rgba(239,68,68,0.35);
+.dock-pill.prot-on,.ctrl-btn.prot-on{background:rgba(16,185,129,0.14);border-color:rgba(16,185,129,0.45);color:#6EE7B7}
+.dock-pill.prot-off,.ctrl-btn.prot-off{
+  background:rgba(239,68,68,0.20);border-color:rgba(239,68,68,0.68);color:#FCA5A5;
+  box-shadow:0 0 18px rgba(239,68,68,0.32);
 }
-.dock-div{width:1px;height:20px;background:var(--border);margin:0 2px}
+.dock-sep{width:1px;height:22px;background:var(--border);margin:0 2px;flex:none}
 .dock-icon-btn{
-  width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
-  background:rgba(255,255,255,0.04);border:1px solid var(--border);color:var(--txt2);
-  cursor:pointer;font-size:12px;transition:all .2s;
+  height:34px;padding:0 11px;border-radius:11px;display:inline-flex;align-items:center;gap:5px;
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--txt2);
+  cursor:pointer;font-size:11.5px;font-weight:600;transition:all .18s;white-space:nowrap;
 }
-.dock-icon-btn:hover{background:rgba(255,255,255,0.09);color:var(--txt)}
+.dock-icon-btn:hover{background:rgba(255,255,255,0.1);color:var(--txt)}
 .dock-icon-btn.running{color:var(--amber);border-color:rgba(245,158,11,0.5)}
+.seg{display:flex;background:rgba(0,0,0,0.32);border:1px solid var(--border);border-radius:10px;padding:2px}
+.seg button{background:none;border:0;color:var(--mut);font-size:10.5px;font-weight:600;padding:4px 8px;border-radius:7px;cursor:pointer}
+.seg button.on{background:rgba(255,255,255,0.12);color:var(--txt)}
 
-/* ---------- Map Floating Card (Selected Drone Only) & Map Zoom ---------- */
-.node-card{
-  position:fixed;z-index:12;pointer-events:none;
-  width:230px;padding:13px 14px;border-radius:16px;
-  background:rgba(18,18,21,0.88);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border:1px solid var(--border-hi);box-shadow:0 16px 40px rgba(0,0,0,0.55);
-  font-size:11px;color:var(--txt2);transform:translate(-50%,-100%);margin-top:-18px;
-}
-.nc-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
-.nc-id{font-size:13px;font-weight:600;color:var(--txt)}
-.nc-badge{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:2px 7px;border-radius:999px;background:rgba(52,211,153,0.15);color:var(--mint)}
-.nc-badge.warn{background:rgba(245,158,11,0.18);color:var(--amber)}
-.nc-badge.crit{background:rgba(239,68,68,0.2);color:var(--red)}
-.nc-grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px;font-variant-numeric:tabular-nums}
-.nc-grid span{font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:var(--mut);display:block}
-.nc-grid b{font-size:12px;font-weight:500;color:var(--txt)}
-.nc-route{margin-top:8px;padding-top:7px;border-top:1px solid var(--border);font-size:10px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-
+/* ---------- Floating Map Camera Controls ---------- */
 .map-zoom{
-  position:fixed;right:24px;bottom:24px;z-index:10;display:flex;gap:6px;
+  position:fixed;right:16px;bottom:92px;
+  z-index:18;display:flex;flex-direction:column;gap:6px;
 }
 .zbtn{
-  width:34px;height:34px;border-radius:12px;display:grid;place-items:center;
-  background:var(--glass);backdrop-filter:blur(20px);border:1px solid var(--border);
-  color:var(--txt2);font-size:14px;cursor:pointer;
+  width:34px;height:34px;border-radius:11px;display:grid;place-items:center;
+  background:var(--glass);backdrop-filter:blur(18px);border:1px solid var(--border);
+  color:var(--txt2);font-size:12px;font-weight:600;cursor:pointer;box-shadow:0 8px 20px rgba(0,0,0,0.4);
 }
 .zbtn:hover{color:var(--txt);border-color:var(--border-hi)}
+
+/* ---------- Selected Drone Floating Card ---------- */
+.node-card{
+  position:absolute;z-index:15;pointer-events:none;
+  width:236px;padding:11px 13px;border-radius:15px;
+  background:rgba(14,14,18,0.90);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
+  border:1px solid var(--border-hi);box-shadow:0 16px 36px rgba(0,0,0,0.65);
+  font-size:10.5px;color:var(--txt2);transform:translate(-50%,-100%);margin-top:-18px;
+}
+.nc-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px}
+.nc-id{font-size:12px;font-weight:700;color:var(--txt)}
+.nc-badge{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:999px;background:rgba(16,185,129,0.18);color:var(--mint-hi);white-space:nowrap}
+.nc-badge.warn{background:rgba(245,158,11,0.22);color:#FBBF24}
+.nc-badge.crit{background:rgba(239,68,68,0.22);color:#F87171}
+.nc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 8px;font-variant-numeric:tabular-nums}
+.nc-grid span{font-size:8.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);display:block}
+.nc-grid b{font-size:11px;font-weight:600;color:var(--txt)}
+.nc-route{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:9.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* ---------- Mobile Compatible Responsive Breakpoint (<= 740px) ---------- */
+@media (max-width: 740px) {
+  .left-panel{
+    top:10px;left:10px;right:10px;bottom:auto;width:auto;
+    padding:10px 12px;gap:8px;border-radius:16px;
+  }
+  .left-panel .fleet-list{display:none}
+  .mobile-chips-wrap{display:block}
+  .top-center{
+    top:138px;left:10px;right:10px;transform:none;
+    width:auto;min-width:0;
+  }
+  .map-zoom{right:10px;bottom:auto;top:195px}
+  .bottom-dock{
+    bottom:10px;left:10px;right:10px;transform:none;
+    overflow-x:auto;justify-content:flex-start;padding:7px 9px;border-radius:16px;
+  }
+  .right-panel{
+    top:auto;left:10px;right:10px;bottom:68px;width:auto;
+    max-height:54dvh;border-radius:18px;padding:10px 12px;
+    transition:transform .28s cubic-bezier(0.22,1,0.36,1), max-height .28s ease;
+  }
+  .right-panel.snap-peek{max-height:42px;overflow:hidden}
+  .right-panel.snap-mid{max-height:42dvh}
+  .right-panel.snap-full{max-height:72dvh}
+  .sheet-handle-area{
+    display:flex;flex-direction:column;align-items:center;gap:4px;
+    padding-bottom:6px;cursor:pointer;
+  }
+  .sheet-pill{width:36px;height:4px;border-radius:999px;background:rgba(255,255,255,0.24)}
+  .sheet-title-row{
+    width:100%;display:flex;align-items:center;justify-content:space-between;
+    font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);
+  }
+}
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 </style>
 </head>
 <body>
 <div id="app">
-  <!-- ================= FULL-BLEED MAP ================= -->
+  <!-- ================= FULL-BLEED 3D DORTMUND MAP (MapLibre GL + 3D LoS Canvas) ================= -->
   <main id="mapWrap">
+    <div id="glMap"></div>
     <canvas id="map"></canvas>
     <div id="nodeCard" class="node-card hidden"></div>
   </main>
 
-  <!-- ================= TOP CENTER: 1-LINE LIVE TOAST + DRAWER ================= -->
+  <!-- ================= TOP CENTER: 1-LINE LIVE EVENT TOAST + LOG DRAWER ================= -->
   <div class="top-center">
-    <div class="toast-bar" id="toastBar" title="Click to toggle event log drawer">
+    <div class="glass toast-bar" id="toastBar" title="Click to toggle event log">
       <span class="toast-dot" id="toastDot"></span>
       <span class="toast-time" id="toastTime">00:00:00</span>
-      <span class="toast-msg" id="toastMsg">Dortmund Air Shield initialized</span>
+      <span class="toast-msg" id="toastMsg">Hybrid FSOC Laser + DECT NR+ mesh online</span>
       <span class="toast-threat" id="hdrThreat">NOMINAL</span>
       <span class="toast-chev">▾</span>
     </div>
+
     <div class="glass log-drawer hidden" id="logDrawer">
       <div class="drawer-head">
-        <span>System Event Log · <b id="hdrMission" style="color:var(--txt)">00:00:00</b></span>
+        <span>Event Log · <b id="hdrMission" style="color:var(--txt)">00:00:00</b> · <span id="clock">--:--:--</span></span>
         <div class="drawer-actions">
           <button class="mini-btn" id="logFollow">Auto-Scroll</button>
           <button class="mini-btn" id="logClear">Clear</button>
@@ -263,22 +345,25 @@ button,input{font-family:inherit}
     </div>
   </div>
 
-  <!-- ================= LEFT FLOATING PANEL: COMPACT FLEET ================= -->
-  <aside class="glass" id="left">
+  <!-- ================= LEFT PANEL (Desktop Sidebar / Mobile Top Bar + Chips) ================= -->
+  <aside class="glass left-panel">
     <div class="brand-row">
       <div class="brand-left">
         <div class="logo">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M12 2L4.5 20.29l.71.71L12 18l6.79 3 .71-.71z"/>
           </svg>
         </div>
         <div>
           <div class="brand-title">Dortmund Air Shield</div>
-          <div class="brand-sub" id="fleetCount">10 Nodes · FANET</div>
+          <div class="brand-sub" id="fleetCount">10 Nodes · Hybrid FSOC / DECT NR+</div>
         </div>
       </div>
-      <div class="status-pill mock" id="srcBox" title="Toggle WebSocket config">
-        <span class="dot"></span><span id="srcLabel">MOCK</span>
+      <div class="nav-right">
+        <span class="arch-pill">60° 3D</span>
+        <div class="status-pill mock" id="srcBox" title="Toggle WebSocket config">
+          <span class="dot"></span><span id="srcLabel">MOCK</span>
+        </div>
       </div>
     </div>
 
@@ -287,77 +372,89 @@ button,input{font-family:inherit}
       <button id="wsBtn">Connect</button>
     </div>
 
-    <div class="sec-hdr">
-      <span>Fleet Telemetry</span>
-      <div class="fleet-summary">
-        <span><b id="fcOnline">10</b> Online</span>
-        <span><b id="fcFallback">0</b> LoRa</span>
-        <span><b id="fcOffline">0</b> Off</span>
+    <div class="fleet-summary-bar">
+      <div class="fleet-counts">
+        <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10B981"></i><b id="fcOnline">10</b> FSOC LoS</span>
+        <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F59E0B"></i><b id="fcFallback">0</b> NLOS DECT</span>
+        <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#71717A"></i><b id="fcOffline">0</b> Off</span>
       </div>
     </div>
 
+    <!-- Mobile horizontal status chips (shown automatically on mobile screens) -->
+    <div class="mobile-chips-wrap">
+      <div class="fleet-chips hscroll" id="fleetChips"></div>
+    </div>
+
+    <!-- Desktop full fleet list -->
     <div class="fleet-list scroll" id="fleetList"></div>
+  </aside>
 
-    <div class="left-foot">
-      <span id="clock">--:--:--</span>
-      <div class="seg" id="speedSeg" title="Simulation speed">
-        <button data-speed="0">❚❚</button>
-        <button data-speed="1">1×</button>
-        <button data-speed="6" class="on">6×</button>
-        <button data-speed="20">20×</button>
+  <!-- ================= RIGHT PANEL (Desktop Telemetry Card / Mobile Collapsible Sheet) ================= -->
+  <aside class="glass right-panel snap-mid" id="bottomSheet">
+    <div class="sheet-handle-area" id="sheetHandle" title="Tap to expand / collapse metrics">
+      <div class="sheet-pill"></div>
+      <div class="sheet-title-row">
+        <span>Resilience Metrics & QoS</span>
+        <button class="mini-btn" id="btnSheetToggle">Collapse</button>
       </div>
     </div>
+
+    <div class="sheet-body scroll" id="sheetBody">
+      <div class="sec-hdr">
+        <span>Resilience Metrics</span>
+        <span id="metricSrc" style="color:var(--mint-hi)">LIVE SIM</span>
+      </div>
+      <div class="kpi-grid" id="gauges"></div>
+
+      <div class="sec-hdr">
+        <span>Traffic Priorities (QoS)</span>
+        <span id="qosPolicy" style="color:var(--txt2)">NOMINAL</span>
+      </div>
+      <div class="qos-list" id="traffic"></div>
+    </div>
   </aside>
 
-  <!-- ================= RIGHT FLOATING PANEL: MEASURABLE RESILIENCE ================= -->
-  <aside class="glass" id="right">
-    <div class="sec-hdr">
-      <span>Measurable Resilience</span>
-      <span id="metricSrc">LIVE SIM</span>
-    </div>
-    <div class="kpi-grid" id="gauges"></div>
-
-    <div class="sec-hdr" style="margin-top:2px">
-      <span>Traffic Priorities (QoS)</span>
-      <span id="qosPolicy" style="color:var(--txt2)">NOMINAL</span>
-    </div>
-    <div class="qos-list" id="traffic"></div>
-  </aside>
-
-  <!-- ================= BOTTOM FLOATING DOCK: TESLA QUICK CONTROLS ================= -->
-  <nav class="glass bottom-dock">
-    <button class="dock-pill prot-on" id="btnProt" title="Toggle all automatic defenses to compare · Shortcut: P">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3Z"/></svg>
-      <span id="protLabel">Protected</span>
-    </button>
-    <div class="dock-div"></div>
-    <button class="dock-pill" id="btnJam" title="Shortcut: J">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h3l2-6 3 12 3-9 2 5 2-2h5"/></svg>
-      <span>Jamming</span>
-    </button>
-    <button class="dock-pill" id="btnSpoof" title="Shortcut: G">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/></svg>
-      <span>GPS Spoofing</span>
-    </button>
-    <button class="dock-pill" id="btnFail" title="Shortcut: F">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
-      <span>Node Failure</span>
-    </button>
-    <button class="dock-pill" id="btnRth" title="Shortcut: R">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
-      <span>Return Home</span>
-    </button>
-    <div class="dock-div"></div>
-    <button class="dock-icon-btn" id="btnDemo" title="Run Demo Scenario">▶</button>
-    <button class="dock-icon-btn" id="btnReset" title="Reset Simulation">↺</button>
-  </nav>
-
-  <!-- ================= MAP ZOOM CONTROLS ================= -->
+  <!-- ================= CAMERA & 3D CONTROLS ================= -->
   <div class="map-zoom">
     <button class="zbtn" id="zIn" title="Zoom in">+</button>
     <button class="zbtn" id="zOut" title="Zoom out">−</button>
-    <button class="zbtn" id="zFit" title="Reset view">⌖</button>
+    <button class="zbtn" id="zTilt" title="Toggle 3D pitch (60° / 22°)">3D</button>
+    <button class="zbtn" id="zFit" title="Reset Dortmund 3D view">⌖</button>
   </div>
+
+  <!-- ================= BOTTOM FLOATING ACTION DOCK ================= -->
+  <nav class="glass bottom-dock">
+    <button class="ctrl-btn prot-on" id="btnProt" title="Toggle Hybrid DECT NR+ & INS Protection · Shortcut: P">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3Z"/></svg>
+      <span id="protLabel">Protected</span>
+    </button>
+    <div class="dock-sep"></div>
+    <button class="ctrl-btn" id="btnJam" title="Inject RF/Optical Jamming · Shortcut: J">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M2 12h3l2-6 3 12 3-9 2 5 2-2h5"/></svg>
+      <span>Jamming</span>
+    </button>
+    <button class="ctrl-btn" id="btnFail" title="Force Node Failure · Shortcut: F">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg>
+      <span>Node Failure</span>
+    </button>
+    <button class="ctrl-btn" id="btnSpoof" title="Inject GNSS Spoofing · Shortcut: G">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/></svg>
+      <span>GPS Spoofing</span>
+    </button>
+    <button class="ctrl-btn" id="btnRth" title="Safe Return Home · Shortcut: R">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 11 9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
+      <span>Return Home</span>
+    </button>
+    <div class="dock-sep"></div>
+    <button class="dock-icon-btn" id="btnDemo" title="Run 70s Automated Demo Scenario">▶ Run Demo</button>
+    <button class="dock-icon-btn" id="btnReset" title="Reset Simulation">↺</button>
+    <div class="seg" id="speedSeg" title="Simulation speed">
+      <button data-speed="0">❚❚</button>
+      <button data-speed="1">1×</button>
+      <button data-speed="3" class="on">3×</button>
+      <button data-speed="8">8×</button>
+    </div>
+  </nav>
 </div>
 
 <script>
@@ -368,15 +465,15 @@ button,input{font-family:inherit}
  * 1. CONFIG & FLEET DEFINITION
  * ===================================================================== */
 const CFG = {
-  VERSION: '1.0.0',
+  VERSION: '2.0.0',
   ORIGIN: { lat: 51.5136, lon: 7.4653 },
-  HQ: { lat: 51.5150, lon: 7.4560, alt: 45, name: 'CONTROL CENTER DORTMUND' },
-  ZONE: { lat: 51.5050, lon: 7.3650, radius: 2200, sector: 'SECTOR OUEST' },
-  WIFI_RANGE: 4000,          // m, 2.4 GHz air-to-air mesh
-  LORA_RANGE: 9000,          // m, 868 MHz LoRa fallback
-  WIFI_CAP_KBPS: 54000,
-  LORA_CAP_KBPS: 5.5,        // SF7/125 kHz
-  DEMAND_KBPS: { c2: 1.2, telemetry: 3.0, inter: 8, video: 2500 },
+  HQ: { lat: 51.5136, lon: 7.4653, alt: 65, name: 'REINOLDIKIRCHE · CONTROL CENTER' },
+  ZONE: { lat: 51.5132, lon: 7.4545, radius: 620, sector: 'SECTOR WEST · U-TOWER' },
+  FSOC_RANGE: 2800,          // m, optical laser air-to-air / ground-to-air (requires LoS)
+  DECT_RANGE: 4500,          // m, DECT NR+ 1.9 GHz NLOS RF mesh fallback
+  FSOC_CAP_KBPS: 1000000,    // 1 Gbps effective optical link
+  DECT_CAP_KBPS: 4800,       // 4.8 Mbps DECT NR+ sub-GHz/1.9 GHz mesh
+  DEMAND_KBPS: { c2: 1.2, telemetry: 3.0, inter: 12, video: 3500 },
   NET_TICK_MS: 200,
   HISTORY: 120,              // samples (every 500 ms -> 60 s)
   REBOOT_MS: 20000,
@@ -384,17 +481,31 @@ const CFG = {
   TARGETS: { reach: 95, latency: 50, loss: 2, recovery: 3 },
 };
 
+// 3D Building Obstacle Clusters in Dortmund Innenstadt for 3D Line-of-Sight (LoS) Raycasting
+// Heights exceed typical drone cruise altitudes (65-115 m) so flying behind them occludes FSOC laser beams.
+const OBSTACLES = [
+  { id: 'U-TOWER',      name: 'Dortmunder U-Tower Block',     lat: 51.5149, lon: 7.4534, rx: 95,  ry: 80,  height: 155 },
+  { id: 'HBF-TOWER',    name: 'Dortmund Hbf / DB Tower',      lat: 51.5176, lon: 7.4592, rx: 85,  ry: 65,  height: 138 },
+  { id: 'SPARKASSE',    name: 'Sparkassen-Finanzzentrum',     lat: 51.5142, lon: 7.4612, rx: 68,  ry: 58,  height: 142 },
+  { id: 'ELLIPSE',      name: 'Ellipson & Westentor Block',   lat: 51.5122, lon: 7.4568, rx: 72,  ry: 58,  height: 135 },
+  { id: 'RWE-TOWER',    name: 'RWE / City-Quartier Tower',    lat: 51.5114, lon: 7.4638, rx: 72,  ry: 60,  height: 148 },
+  { id: 'STADTHAUS',    name: 'Stadthaus & Friedensplatz',    lat: 51.5105, lon: 7.4675, rx: 75,  ry: 62,  height: 132 },
+  { id: 'WESTFALEN-T',  name: 'Westfalentower Block',         lat: 51.5092, lon: 7.4755, rx: 75,  ry: 60,  height: 145 },
+  { id: 'TELEKOM-BLK',  name: 'Ostwall High-Rise Block',      lat: 51.5152, lon: 7.4728, rx: 72,  ry: 62,  height: 136 },
+];
+
+// Orbits scaled to Dortmund Innenstadt so drones actively weave around 3D buildings & U-Tower
 const FLEET = [
-  { id: 'DR-01', lat: 51.5350, lon: 7.4650, r: 900,  v: 13, dir:  1, phase: 0.0, alt: 110, battery: 94, ecc: 0.8 },
-  { id: 'DR-02', lat: 51.5200, lon: 7.4200, r: 800,  v: 12, dir: -1, phase: 1.2, alt: 100, battery: 88 },
-  { id: 'DR-03', lat: 51.5320, lon: 7.3850, r: 1100, v: 14, dir:  1, phase: 2.1, alt: 120, battery: 76 },
-  { id: 'DR-04', lat: 51.5450, lon: 7.4950, r: 1000, v: 13, dir: -1, phase: 0.6, alt: 115, battery: 91 },
-  { id: 'DR-05', lat: 51.4950, lon: 7.4150, r: 900,  v: 12, dir:  1, phase: 3.3, alt: 105, battery: 83 },
-  { id: 'DR-06', lat: 51.4930, lon: 7.4800, r: 1000, v: 13, dir: -1, phase: 4.0, alt: 125, battery: 69 },
-  { id: 'DR-07', lat: 51.5050, lon: 7.3880, r: 1500, v: 15, dir:  1, phase: 2.2, alt: 95,  battery: 81, ecc: 0.75 },
-  { id: 'DR-08', lat: 51.5120, lon: 7.5050, r: 1000, v: 14, dir:  1, phase: 5.1, alt: 130, battery: 97 },
-  { id: 'DR-09', lat: 51.4750, lon: 7.4550, r: 900,  v: 12, dir: -1, phase: 1.9, alt: 110, battery: 72 },
-  { id: 'DR-10', lat: 51.4830, lon: 7.3520, r: 1000, v: 13, dir: -1, phase: 1.0, alt: 100, battery: 64 },
+  { id: 'DR-01', lat: 51.5150, lon: 7.4545, r: 420, v: 26, dir:  1, phase: 0.2, alt: 88,  battery: 94, ecc: 0.72 },
+  { id: 'DR-02', lat: 51.5168, lon: 7.4605, r: 390, v: 24, dir: -1, phase: 1.4, alt: 92,  battery: 88, ecc: 0.80 },
+  { id: 'DR-03', lat: 51.5138, lon: 7.4518, r: 460, v: 27, dir:  1, phase: 2.5, alt: 82,  battery: 79, ecc: 0.75 },
+  { id: 'DR-04', lat: 51.5162, lon: 7.4710, r: 430, v: 25, dir: -1, phase: 0.8, alt: 96,  battery: 91, ecc: 0.82 },
+  { id: 'DR-05', lat: 51.5112, lon: 7.4582, r: 410, v: 25, dir:  1, phase: 3.4, alt: 85,  battery: 84, ecc: 0.78 },
+  { id: 'DR-06', lat: 51.5102, lon: 7.4695, r: 450, v: 26, dir: -1, phase: 4.1, alt: 94,  battery: 73, ecc: 0.80 },
+  { id: 'DR-07', lat: 51.5142, lon: 7.4555, r: 520, v: 29, dir:  1, phase: 2.0, alt: 78,  battery: 82, ecc: 0.68 },
+  { id: 'DR-08', lat: 51.5128, lon: 7.4750, r: 440, v: 25, dir:  1, phase: 5.1, alt: 98,  battery: 96, ecc: 0.76 },
+  { id: 'DR-09', lat: 51.5088, lon: 7.4628, r: 430, v: 24, dir: -1, phase: 1.8, alt: 90,  battery: 75, ecc: 0.82 },
+  { id: 'DR-10', lat: 51.5118, lon: 7.4505, r: 470, v: 27, dir: -1, phase: 1.0, alt: 80,  battery: 68, ecc: 0.74 },
 ];
 
 const COLORS = { green: '#10B981', red: '#EF4444', cyan: '#06B6D4', orange: '#F59E0B', grey: '#64748B', txt: '#E6EDF3' };
@@ -446,8 +557,60 @@ const Geo = {
   dist3: (a, b) => Math.hypot(a.x - b.x, a.y - b.y, (a.alt || 0) - (b.alt || 0)),
 };
 const linkKey = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
-const bandLabel = b => (b === 'WIFI' ? '2.4 GHz Mesh' : b === 'LORA' ? '868 MHz LoRa Fallback' : 'NO LINK');
-const normBand = b => { const s = String(b).toUpperCase(); return s.includes('LORA') || s.includes('868') || s.includes('SUB') ? 'LORA' : s.includes('NONE') ? 'NONE' : 'WIFI'; };
+const bandLabel = b => (b === 'FSOC' ? 'FSOC Laser (LoS)' : b === 'DECT' ? 'NLOS - DECT Fallback' : 'NO LINK');
+const normBand = b => {
+  const s = String(b).toUpperCase();
+  return s.includes('DECT') || s.includes('LORA') || s.includes('NLOS') || s.includes('868') || s.includes('SUB')
+    ? 'DECT'
+    : s.includes('NONE')
+    ? 'NONE'
+    : 'FSOC';
+};
+
+// Precompute 3D obstacle bounding boxes in local ENU metres for Line-of-Sight (LoS) raycasting
+const OBSTACLE_BOXES = OBSTACLES.map(o => {
+  const c = Geo.toXY(o.lat, o.lon);
+  return { ...o, x: c.x, y: c.y, minX: c.x - o.rx, maxX: c.x + o.rx, minY: c.y - o.ry, maxY: c.y + o.ry };
+});
+
+// 3D Line-of-Sight segment vs. 3D building AABB intersection test (slab method)
+// Returns the first occluding building { obstacle, hitX, hitY, hitZ, t } or null if clear LoS.
+function checkLineOfSight3D(a, b) {
+  const ax = a.x, ay = a.y, az = a.alt || 65;
+  const bx = b.x, by = b.y, bz = b.alt || 65;
+  const dx = bx - ax, dy = by - ay, dz = bz - az;
+  for (const ob of OBSTACLE_BOXES) {
+    let tmin = 0.04, tmax = 0.96; // ignore endpoints right on edge
+    if (Math.abs(dx) < 1e-6) {
+      if (ax < ob.minX || ax > ob.maxX) continue;
+    } else {
+      let t1 = (ob.minX - ax) / dx, t2 = (ob.maxX - ax) / dx;
+      if (t1 > t2) [t1, t2] = [t2, t1];
+      tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+      if (tmin > tmax) continue;
+    }
+    if (Math.abs(dy) < 1e-6) {
+      if (ay < ob.minY || ay > ob.maxY) continue;
+    } else {
+      let t1 = (ob.minY - ay) / dy, t2 = (ob.maxY - ay) / dy;
+      if (t1 > t2) [t1, t2] = [t2, t1];
+      tmin = Math.max(tmin, t1); tmax = Math.min(tmax, t2);
+      if (tmin > tmax) continue;
+    }
+    const tMid = 0.5 * (tmin + tmax);
+    const zAtHit = az + dz * tMid;
+    if (zAtHit < ob.height) {
+      return {
+        obstacle: ob,
+        t: tMid,
+        x: ax + dx * tMid,
+        y: ay + dy * tMid,
+        z: zAtHit,
+      };
+    }
+  }
+  return null;
+}
 
 class Emitter {
   constructor() { this._h = {}; }
@@ -491,7 +654,8 @@ class Drone {
     this.spoofOffset = { x: 0, y: 0 };
     this.spoofDetected = false;
     this.jam = 0;
-    this.band = 'WIFI';               // WIFI | LORA | NONE
+    this.band = 'FSOC';               // FSOC | DECT | NONE
+    this.nlosReason = null;           // obstacle name if LoS is blocked by 3D building
     this.route = null;                // [self, ..., 'HQ']
     this.lastRoute = null;            // route held before a break (unprotected mode only waits for it)
     this.offCourseWarned = false;
@@ -514,16 +678,16 @@ class Drone {
     const now = sim.now;
     if (this.status === 'OFFLINE') {
       this.vx = this.vy = this.speed = 0;
-      this.alt = Math.max(this.alt - dt * 0.8, 40);
+      this.alt = Math.max(this.alt - dt * 0.8, 35);
       if (this.rebootAt && now >= this.rebootAt) sim.rebootDrone(this);
       return;
     }
     const ext = this.external && now < this.external.until ? this.external : null;
-    let target, vmax = 26;
+    let target, vmax = 34;
     if (ext) { target = ext; vmax = 400; }
     else if (this.mode === 'RTH') {
-      vmax = 60;
-      const rr = 260 + this.index * 55, a = this.orbit.phase + t * 0.03 * this.orbit.dir;
+      vmax = 55;
+      const rr = 120 + this.index * 24, a = this.orbit.phase + t * 0.05 * this.orbit.dir;
       target = { x: sim.hq.x + rr * Math.cos(a), y: sim.hq.y + rr * Math.sin(a) };
     } else target = this.orbitTarget(t);
     // Without the plausibility check the autopilot trusts the spoofed fix, so it steers the real airframe off by the spoof offset.
@@ -596,14 +760,15 @@ class ThreatEnvironment {
 }
 
 /* =====================================================================
- * 4. MESH NETWORK — link budget, band fallback, Dijkstra routing,
- *    route convergence (= measurable recovery time)
+ * 4. MESH NETWORK — 3D Line-of-Sight (LoS) FSOC Laser + DECT NR+ RF Fallback,
+ *    Dijkstra routing, route convergence (= measurable recovery time)
  * ===================================================================== */
 class MeshNetwork {
   constructor(sim) {
     this.sim = sim;
     this.links = []; this.linkMap = new Map(); this.adj = new Map();
     this.prevKeys = new Set(); this.broken = [];
+    this.blockedSightlines = []; // 3D building LoS occlusions for visual raycast rendering
     this.routeEdges = new Set(); this.altEdges = new Set();
     this.external = null; this.externalUntil = 0;
   }
@@ -611,20 +776,22 @@ class MeshNetwork {
     this.external = Array.isArray(list) ? list : (list && list.links) || [];
     this.externalUntil = this.sim.now + CFG.EXTERNAL_TTL_MS;
   }
-  makeLink(a, b, band, q, jam = 0) {
+  makeLink(a, b, band, q, jam = 0, hit = null) {
     const env = this.sim.env;
     let latency, loss, cap;
-    if (band === 'WIFI') {
-      latency = 3 + 22 * Math.pow(1 - q, 1.5) + (env.jamming ? 5 : 0);
-      loss = 0.001 + 0.05 * (1 - q) ** 2 + (env.jamming ? 0.008 : 0) + jam * 0.12;
-      cap = CFG.WIFI_CAP_KBPS * q;
+    if (band === 'FSOC') {
+      // High-speed Free-Space Optical Laser: ultra-low latency (<8ms), gigabit capacity, requires clear LoS
+      latency = 1.5 + 8 * Math.pow(1 - q, 1.5) + (env.jamming ? 3 : 0);
+      loss = 0.0005 + 0.02 * (1 - q) ** 2 + jam * 0.08;
+      cap = CFG.FSOC_CAP_KBPS * q;
     } else {
-      latency = 140 + 150 * (1 - q) + 60 * jam;
-      loss = 0.025 + 0.10 * (1 - q) + 0.08 * jam;
-      cap = CFG.LORA_CAP_KBPS;
+      // DECT NR+ (1.9 GHz non-line-of-sight RF mesh): penetrates/diffracts through 3D city blocks
+      latency = 18 + 38 * (1 - q) + 28 * jam;
+      loss = 0.006 + 0.045 * (1 - q) + 0.06 * jam;
+      cap = CFG.DECT_CAP_KBPS * q;
     }
-    latency *= rand(0.88, 1.22);
-    return { key: linkKey(a.id, b.id), a: a.id, b: b.id, band, q, latency, loss: clamp(loss, 0, 0.95), cap, load: 0 };
+    latency *= rand(0.92, 1.12);
+    return { key: linkKey(a.id, b.id), a: a.id, b: b.id, band, q, latency, loss: clamp(loss, 0, 0.95), cap, load: 0, hit };
   }
 
   compute() {
@@ -632,61 +799,90 @@ class MeshNetwork {
     const online = sim.drones.filter(d => d.status !== 'OFFLINE');
     const nodes = [sim.hq, ...online];
     const links = [];
+    const blocked = [];
     const bandNext = new Map();
+    const nlosReasonMap = new Map();
 
     if (this.external && now < this.externalUntil) {
       for (const l of this.external) {
         const a = sim.node(l.a), b = sim.node(l.b);
         if (!a || !b || a.status === 'OFFLINE' || b.status === 'OFFLINE') continue;
-        links.push(this.makeLink(a, b, normBand(l.band || 'WIFI'), clamp(+l.quality || 0.7, 0.05, 1)));
+        links.push(this.makeLink(a, b, normBand(l.band || 'FSOC'), clamp(+l.quality || 0.7, 0.05, 1)));
       }
       for (const d of online) {
         const mine = links.filter(l => l.a === d.id || l.b === d.id);
-        bandNext.set(d.id, mine.some(l => l.band === 'WIFI') ? 'WIFI' : mine.length ? 'LORA' : 'NONE');
+        bandNext.set(d.id, mine.some(l => l.band === 'FSOC') ? 'FSOC' : mine.length ? 'DECT' : 'NONE');
       }
     } else {
       const jamOf = n => (n.id === 'HQ' ? 0 : n.jam);
       const forced = n => (n.id === 'HQ' ? null : n.override('band', now));
-      const wifiDeg = new Map();
+      const fsocDeg = new Map();
+      const dectAdded = new Set();
+
       for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i], b = nodes[j];
-        if (forced(a) === 'LORA' || forced(b) === 'LORA') continue;
-        const jam = Math.max(jamOf(a), jamOf(b));
-        if (jam > 0.5) continue;
+        if (forced(a) === 'DECT' || forced(b) === 'DECT') continue;
         const d = Geo.dist3(a, b);
-        let q = 1 - Math.pow(d / CFG.WIFI_RANGE, 3);
+        if (d > CFG.FSOC_RANGE) continue;
+        const jam = Math.max(jamOf(a), jamOf(b));
+
+        // 3D Raycast against Dortmund 3D building extrusions (U-Tower, Hbf, Sparkasse, etc.)
+        const hit = checkLineOfSight3D(a, b);
+        if (hit) {
+          // LoS is blocked by a 3D building! Record the broken laser raycast & switch link to DECT NR+ RF mesh
+          if (a.id === 'HQ' || b.id === 'HQ' || d < 1250) {
+            blocked.push({ a: a.id, b: b.id, hit });
+          }
+          if (a.id !== 'HQ') nlosReasonMap.set(a.id, hit.obstacle.name);
+          if (b.id !== 'HQ') nlosReasonMap.set(b.id, hit.obstacle.name);
+          if (sim.protection) {
+            const k = linkKey(a.id, b.id);
+            if (!dectAdded.has(k) && d < CFG.DECT_RANGE) {
+              dectAdded.add(k);
+              const qDect = (1 - Math.pow(d / CFG.DECT_RANGE, 1.8)) * (1 - 0.35 * jam);
+              links.push(this.makeLink(a, b, 'DECT', clamp(qDect, 0.15, 1), jam, hit));
+            }
+          }
+          continue;
+        }
+
+        if (jam > 0.55) continue;
+        let q = 1 - Math.pow(d / CFG.FSOC_RANGE, 2.6);
         if (q <= 0) continue;
-        q *= (1 - jam * 0.9) * (env.jamming ? 0.93 : 1);
+        q *= (1 - jam * 0.85) * (env.jamming ? 0.92 : 1);
         if (q < 0.12) continue;
-        links.push(this.makeLink(a, b, 'WIFI', q, jam));
-        wifiDeg.set(a.id, (wifiDeg.get(a.id) || 0) + 1);
-        wifiDeg.set(b.id, (wifiDeg.get(b.id) || 0) + 1);
+        links.push(this.makeLink(a, b, 'FSOC', q, jam));
+        fsocDeg.set(a.id, (fsocDeg.get(a.id) || 0) + 1);
+        fsocDeg.set(b.id, (fsocDeg.get(b.id) || 0) + 1);
       }
-      const loraAdded = new Set();
+
       for (const d of online) {
-        if (!sim.protection && forced(d) !== 'LORA') { bandNext.set(d.id, wifiDeg.get(d.id) ? 'WIFI' : 'NONE'); continue; }
-        const needLora = forced(d) === 'LORA' || d.jam > 0.5 || !wifiDeg.get(d.id);
-        if (!needLora) { bandNext.set(d.id, 'WIFI'); continue; }
+        // Also check direct sightline to HQ for NLOS status attribution
+        const hqHit = checkLineOfSight3D(d, sim.hq);
+        if (hqHit) nlosReasonMap.set(d.id, hqHit.obstacle.name);
+
+        if (!sim.protection && forced(d) !== 'DECT') {
+          bandNext.set(d.id, fsocDeg.get(d.id) && !hqHit ? 'FSOC' : fsocDeg.get(d.id) ? 'FSOC' : 'NONE');
+          continue;
+        }
+        const needDect = forced(d) === 'DECT' || d.jam > 0.5 || !fsocDeg.get(d.id) || !!hqHit;
+        if (!needDect) { bandNext.set(d.id, 'FSOC'); continue; }
         const cands = nodes.filter(n => n !== d).map(n => ({ n, dd: Geo.dist3(d, n) }))
-          .filter(c => c.dd < CFG.LORA_RANGE).sort((p, q) => p.dd - q.dd).slice(0, 3);
-        bandNext.set(d.id, cands.length ? 'LORA' : 'NONE');
+          .filter(c => c.dd < CFG.DECT_RANGE).sort((p, q) => p.dd - q.dd).slice(0, 3);
+        bandNext.set(d.id, cands.length ? 'DECT' : 'NONE');
         for (const c of cands) {
           const k = linkKey(d.id, c.n.id);
-          if (loraAdded.has(k)) continue;
-          loraAdded.add(k);
-          const q = (1 - Math.pow(c.dd / CFG.LORA_RANGE, 1.6)) * (1 - 0.3 * d.jam);
-          links.push(this.makeLink(d, c.n, 'LORA', clamp(q, 0.05, 1), d.jam));
+          if (dectAdded.has(k)) continue;
+          dectAdded.add(k);
+          const q = (1 - Math.pow(c.dd / CFG.DECT_RANGE, 1.6)) * (1 - 0.3 * d.jam);
+          const hit = checkLineOfSight3D(d, c.n);
+          links.push(this.makeLink(d, c.n, 'DECT', clamp(q, 0.12, 1), d.jam, hit));
         }
       }
-      if (sim.protection) this.bridgePartitions(nodes, links, bandNext, loraAdded);
+      if (sim.protection) this.bridgePartitions(nodes, links, bandNext, dectAdded);
     }
 
-    for (const d of online) {
-      const nb = bandNext.get(d.id) || 'NONE';
-      if (nb !== d.band) sim.onBandChange(d, d.band, nb);
-      d.band = nb;
-    }
-
+    this.blockedSightlines = blocked;
     this.links = links;
     this.linkMap = new Map(links.map(l => [l.key, l]));
     this.adj = new Map(nodes.map(n => [n.id, []]));
@@ -700,37 +896,49 @@ class MeshNetwork {
     const prev = this.dijkstra(nodes);
     this.updateRoutes(online, prev);
     this.computePathStats(online);
+
+    // Finalize each drone's active band based on whether its active route uses a DECT NR+ hop or direct LoS is occluded
+    for (const d of online) {
+      let nb = bandNext.get(d.id) || 'NONE';
+      if (d.route && d.route.length > 1) {
+        const usesDect = d.route.some((id, idx) => idx < d.route.length - 1 && this.linkMap.get(linkKey(id, d.route[idx + 1]))?.band === 'DECT');
+        if (usesDect) nb = 'DECT';
+      }
+      d.nlosReason = nb === 'DECT' ? (nlosReasonMap.get(d.id) || (d.jam > 0.5 ? 'RF Jamming Zone' : '3D Building LoS Occlusion')) : null;
+      if (nb !== d.band) sim.onBandChange(d, d.band, nb);
+      d.band = nb;
+    }
   }
 
   // Islands that still mesh locally but lost every path to HQ: the member
-  // closest to the reachable network opens an 868 MHz uplink for the group.
-  bridgePartitions(nodes, links, bandNext, loraAdded) {
+  // closest to the reachable network opens a DECT NR+ uplink for the group.
+  bridgePartitions(nodes, links, bandNext, dectAdded) {
     for (let guard = 0; guard < nodes.length; guard++) {
       const adj = new Map(nodes.map(n => [n.id, []]));
       for (const l of links) { adj.get(l.a).push(l.b); adj.get(l.b).push(l.a); }
       const reach = new Set(['HQ']), queue = ['HQ'];
       while (queue.length) for (const nb of adj.get(queue.shift())) if (!reach.has(nb)) { reach.add(nb); queue.push(nb); }
       const inside = nodes.filter(n => reach.has(n.id)), outside = nodes.filter(n => !reach.has(n.id));
-      let gw = null, gwDist = CFG.LORA_RANGE;
+      let gw = null, gwDist = CFG.DECT_RANGE;
       for (const u of outside) for (const r of inside) {
         const dd = Geo.dist3(u, r);
         if (dd < gwDist) { gwDist = dd; gw = u; }
       }
       if (!gw) return;
-      const cands = inside.map(n => ({ n, dd: Geo.dist3(gw, n) })).filter(c => c.dd < CFG.LORA_RANGE)
+      const cands = inside.map(n => ({ n, dd: Geo.dist3(gw, n) })).filter(c => c.dd < CFG.DECT_RANGE)
         .sort((p, q) => p.dd - q.dd).slice(0, 3);
-      bandNext.set(gw.id, 'LORA');
+      bandNext.set(gw.id, 'DECT');
       for (const c of cands) {
         const k = linkKey(gw.id, c.n.id);
-        if (loraAdded.has(k)) continue;
-        loraAdded.add(k);
-        const q = (1 - Math.pow(c.dd / CFG.LORA_RANGE, 1.6)) * (1 - 0.3 * gw.jam);
-        links.push(this.makeLink(gw, c.n, 'LORA', clamp(q, 0.05, 1), gw.jam));
+        if (dectAdded.has(k)) continue;
+        dectAdded.add(k);
+        const q = (1 - Math.pow(c.dd / CFG.DECT_RANGE, 1.6)) * (1 - 0.3 * gw.jam);
+        links.push(this.makeLink(gw, c.n, 'DECT', clamp(q, 0.1, 1), gw.jam));
       }
     }
   }
 
-  edgeCost(l) { return l.latency + l.loss * 400 + (l.band === 'LORA' ? 120 : 0); }
+  edgeCost(l) { return l.latency + l.loss * 400 + (l.band === 'DECT' ? 42 : 0); }
 
   dijkstra(nodes) {
     const dist = new Map(nodes.map(n => [n.id, Infinity])), prev = new Map(), done = new Set();
@@ -764,8 +972,8 @@ class MeshNetwork {
   }
   convergenceDelay(p) {
     const hops = p ? p.length - 1 : 2;
-    const lora = p && p.some((id, i) => i < p.length - 1 && this.linkMap.get(linkKey(id, p[i + 1]))?.band === 'LORA');
-    return 450 + 220 * hops + (lora ? 900 : 0) + rand(0, 450);
+    const dect = p && p.some((id, i) => i < p.length - 1 && this.linkMap.get(linkKey(id, p[i + 1]))?.band === 'DECT');
+    return 320 + 180 * hops + (dect ? 420 : 0) + rand(0, 280);
   }
 
   updateRoutes(online, prev) {
@@ -867,7 +1075,7 @@ class TrafficEngine {
         const nominal = CFG.DEMAND_KBPS[c.key];
         let want = nominal;
         if (c.key === 'video') {
-          if (d.band !== 'WIFI') want = 0;
+          if (d.band !== 'FSOC') want = nominal * 0.35; // DECT NR+ throttles HD video to preserve C2/telemetry
           else if (env.jamming || sim.rth) want = nominal * 0.25;
         }
         const alloc = Math.min(want, avail); avail -= alloc;
@@ -942,7 +1150,7 @@ class Simulation extends Emitter {
     this.net = new MeshNetwork(this);
     this.traffic = new TrafficEngine(this);
     this.metrics = new MetricsEngine(this);
-    this.simTime = 0; this.speed = 6; this.now = nowMs(); this.lastNet = 0;
+    this.simTime = 0; this.speed = 3; this.now = nowMs(); this.lastNet = 0;
     this.rth = false; this.booted = false; this.protection = true;
   }
   node(id) { return id === 'HQ' ? this.hq : this.droneMap.get(id); }
@@ -957,7 +1165,7 @@ class Simulation extends Emitter {
       this.net.compute(); this.traffic.compute(); this.metrics.compute();
       if (!this.booted && this.drones.every(d => d.routeState !== 'JOINING')) {
         this.booted = true;
-        this.logger.ok(`Mesh converged · ${this.net.links.length} links · ${this.drones.filter(d => d.routeState === 'OK').length}/${this.drones.length} nodes reachable`);
+        this.logger.ok(`Hybrid FSOC + DECT NR+ mesh converged · ${this.net.links.length} links · ${this.drones.filter(d => d.routeState === 'OK').length}/${this.drones.length} nodes reachable`);
       }
       this.emit('net');
     }
@@ -974,11 +1182,15 @@ class Simulation extends Emitter {
   }
   onBandChange(d, from, to) {
     const L = this.logger;
-    if (to === 'LORA') {
-      L.warn(`${d.id} signal loss on 2.4GHz (RSSI −97 dBm, SNR −4 dB)`);
-      L.net(`${d.id} auto fallback to 868MHz LoRa (SF9 · 125 kHz)`);
-    } else if (to === 'WIFI' && from === 'LORA') L.ok(`${d.id} 2.4GHz mesh link restored – leaving LoRa fallback`);
-    else if (to === 'NONE') L.crit(`${d.id} all radio links lost (2.4 GHz + 868 MHz)`);
+    if (to === 'DECT') {
+      const why = d.nlosReason ? `LoS blocked by ${d.nlosReason}` : 'FSOC optical beam attenuated';
+      L.warn(`${d.id} FSOC Laser link interrupted (${why})`);
+      L.net(`${d.id} NLOS - DECT Fallback engaged (DECT NR+ 1.9 GHz RF mesh through building)`);
+    } else if (to === 'FSOC' && from === 'DECT') {
+      L.ok(`${d.id} clear Line-of-Sight restored – locked onto FSOC Laser (10 Gbps)`);
+    } else if (to === 'NONE') {
+      L.crit(`${d.id} all optical & DECT NR+ links lost`);
+    }
   }
 
   /* ---- commands (UI, demo script or backend) ---- */
@@ -1029,8 +1241,8 @@ class Simulation extends Emitter {
   setProtection(on, origin = 'ui') {
     if (this.protection === on) return;
     this.protection = on;
-    if (on) this.logger.ok('PROTECTION ON – LoRa fallback · GNSS plausibility check · mesh self-healing · C2-first QoS');
-    else this.logger.crit('PROTECTION OFF – no LoRa fallback, GNSS trusted blindly, static routes, best-effort traffic');
+    if (on) this.logger.ok('PROTECTION ON – DECT NR+ NLOS fallback · GNSS plausibility check · mesh self-healing · C2-first QoS');
+    else this.logger.crit('PROTECTION OFF – FSOC LoS only (no DECT NR+ fallback), GNSS trusted blindly, static routes');
     this.command('SET_PROTECTION', on, origin); this.emit('env');
   }
   setRTH(on, origin = 'ui') {
@@ -1110,7 +1322,7 @@ class Simulation extends Emitter {
 }
 
 /* =====================================================================
- * 8. MAP RENDERER — Minimalist Tesla / Apple Maps Dark Mode Canvas 2D
+ * 8. MAP RENDERER — MapLibre GL 3D Buildings (60° Pitch) + 3D LoS Laser/DECT Overlay
  * ===================================================================== */
 function rrect(ctx, x, y, w, h, r) {
   ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
@@ -1122,36 +1334,168 @@ class MapRenderer extends Emitter {
   constructor(canvas, sim) {
     super();
     this.c = canvas; this.ctx = canvas.getContext('2d'); this.sim = sim;
-    this.cam = { x: -1200, y: -200, s: 0.05 }; this.camTarget = null;
+    this.cam = { x: 0, y: 0, s: 0.24, pitch: 60, bearing: -18 }; this.camTarget = null;
     this.layers = { labels: true, ranges: false, packets: true };
     this.particles = []; this.drops = [];
     this.selected = null; this.hover = null; this.mouse = null;
-    const xy = ([lat, lon]) => Geo.toXY(lat, lon);
-    this.base = {
-      boundary: BASEMAP.boundary.map(xy), water: BASEMAP.water.map(l => l.map(xy)),
-      roads: BASEMAP.roads.map(r => ({ ...r, pts: r.pts.map(xy) })),
-      lakes: BASEMAP.lakes.map(l => ({ ...l, ...Geo.toXY(l.lat, l.lon) })),
-      ring: { ...Geo.toXY(BASEMAP.ring.lat, BASEMAP.ring.lon), r: BASEMAP.ring.r },
-    };
+    this.gl = null; this.glReady = false;
+    this.initMapLibre();
     this.resize();
     new ResizeObserver(() => this.resize()).observe(canvas.parentElement);
     this.bind();
     sim.on('net', () => this.spawnPackets());
   }
+
+  initMapLibre() {
+    if (typeof maplibregl === 'undefined') return;
+    try {
+      const m = new maplibregl.Map({
+        container: 'glMap',
+        style: 'https://tiles.openfreemap.org/styles/dark',
+        center: [CFG.ORIGIN.lon, CFG.ORIGIN.lat], // [7.4653, 51.5136] Dortmund center
+        zoom: 14.35,
+        pitch: 60,
+        bearing: -18,
+        antialias: true,
+        attributionControl: false,
+        interactive: false, // pointer events handled on top canvas and forwarded
+      });
+      this.gl = m;
+      m.on('load', () => {
+        this.glReady = true;
+        this.add3DBuildingsLayer(m);
+      });
+    } catch (e) {
+      console.warn('MapLibre fallback to internal 3D projection:', e);
+    }
+  }
+
+  add3DBuildingsLayer(m) {
+    try {
+      const layers = m.getStyle().layers || [];
+      let labelLayerId;
+      for (const layer of layers) {
+        if (layer.type === 'symbol' && layer.layout && layer.layout['text-field']) {
+          labelLayerId = layer.id;
+          break;
+        }
+      }
+      // 1) Real OpenStreetMap 3D buildings fill-extrusion layer over Dortmund
+      if (!m.getLayer('dortmund-3d-buildings')) {
+        m.addLayer({
+          id: 'dortmund-3d-buildings',
+          source: 'openmaptiles',
+          'source-layer': 'building',
+          type: 'fill-extrusion',
+          minzoom: 12,
+          paint: {
+            'fill-extrusion-color': [
+              'interpolate', ['linear'], ['coalesce', ['get', 'render_height'], ['get', 'height'], 18],
+              0, '#161922',
+              40, '#212736',
+              90, '#2e384d',
+              140, '#3b4963'
+            ],
+            'fill-extrusion-height': ['coalesce', ['get', 'render_height'], ['get', 'height'], 18],
+            'fill-extrusion-base': ['coalesce', ['get', 'render_min_height'], ['get', 'min_height'], 0],
+            'fill-extrusion-opacity': 0.88,
+          },
+        }, labelLayerId);
+      }
+
+      // 2) Highlighted 3D LoS Obstacle Towers (Dortmunder U-Tower & high-rise blocks) so occlusion is unmistakable
+      const features = OBSTACLE_BOXES.map(ob => {
+        const sw = Geo.toLatLon(ob.minX, ob.minY), ne = Geo.toLatLon(ob.maxX, ob.maxY);
+        return {
+          type: 'Feature',
+          properties: { name: ob.name, height: ob.height, isUTower: ob.id === 'U-TOWER' ? 1 : 0 },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [[
+              [sw.lon, sw.lat], [ne.lon, sw.lat], [ne.lon, ne.lat], [sw.lon, ne.lat], [sw.lon, sw.lat]
+            ]],
+          },
+        };
+      });
+      m.addSource('los-obstacles', { type: 'geojson', data: { type: 'FeatureCollection', features } });
+      m.addLayer({
+        id: 'los-obstacles-3d',
+        type: 'fill-extrusion',
+        source: 'los-obstacles',
+        paint: {
+          'fill-extrusion-color': ['case', ['==', ['get', 'isUTower'], 1], '#3b2e1e', '#262f42'],
+          'fill-extrusion-height': ['get', 'height'],
+          'fill-extrusion-base': 0,
+          'fill-extrusion-opacity': 0.78,
+        },
+      }, labelLayerId);
+    } catch (err) {
+      console.warn('3D building extrusion setup warning:', err);
+    }
+  }
+
   resize() {
     const r = this.c.parentElement.getBoundingClientRect();
     this.w = r.width; this.h = r.height; this.dpr = window.devicePixelRatio || 1;
     this.c.width = Math.round(r.width * this.dpr); this.c.height = Math.round(r.height * this.dpr);
+    if (this.gl) this.gl.resize();
     if (!this.fitted && this.w > 0) { this.fit(false); this.fitted = true; }
   }
+
   fit(animate = true) {
-    const t = { x: -900, y: -200, s: Math.min(this.w / 22000, this.h / 15000) };
-    if (animate) this.camTarget = t; else Object.assign(this.cam, t);
+    if (this.gl) {
+      const opts = { center: [CFG.ORIGIN.lon, CFG.ORIGIN.lat], zoom: 14.35, pitch: 60, bearing: -18, duration: animate ? 750 : 0 };
+      if (animate) this.gl.easeTo(opts); else this.gl.jumpTo(opts);
+    }
+    this.cam = { x: 0, y: 0, s: Math.min(this.w, this.h) / 2200, pitch: 60, bearing: -18 };
   }
-  zoom(f) { this.camTarget = { x: this.cam.x, y: this.cam.y, s: clamp(this.cam.s * f, 0.008, 0.6) }; }
-  focus(d) { this.camTarget = { x: d.x, y: d.y, s: Math.max(this.cam.s, 0.075) }; }
-  w2s(x, y) { return [this.w / 2 + (x - this.cam.x) * this.cam.s, this.h / 2 - (y - this.cam.y) * this.cam.s]; }
-  s2w(sx, sy) { return [(sx - this.w / 2) / this.cam.s + this.cam.x, -(sy - this.h / 2) / this.cam.s + this.cam.y]; }
+
+  togglePitch() {
+    if (!this.gl) return;
+    const nextPitch = this.gl.getPitch() > 40 ? 22 : 60;
+    this.gl.easeTo({ pitch: nextPitch, duration: 500 });
+  }
+
+  zoom(f) {
+    if (this.gl) {
+      const dz = Math.log2(f);
+      this.gl.easeTo({ zoom: clamp(this.gl.getZoom() + dz, 11.5, 17.5), duration: 260 });
+    }
+    this.cam.s = clamp(this.cam.s * f, 0.05, 1.5);
+  }
+
+  focus(d) {
+    if (this.gl) {
+      const ll = Geo.toLatLon(d.x, d.y);
+      this.gl.easeTo({ center: [ll.lon, ll.lat], zoom: Math.max(this.gl.getZoom(), 14.8), pitch: 60, duration: 550 });
+    }
+  }
+
+  // Project local ENU (x, y, alt_m) to 2D canvas screen pixels, factoring in 60° pitch altitude vertical lift
+  w2s(x, y, alt = 0) {
+    if (this.gl) {
+      const ll = Geo.toLatLon(x, y);
+      const p = this.gl.project([ll.lon, ll.lat]);
+      const zoom = this.gl.getZoom();
+      const pitchRad = (this.gl.getPitch() * Math.PI) / 180;
+      // Meters-to-screen-pixels scale at Dortmund latitude with 60° camera tilt
+      const pxPerMeter = Math.pow(2, zoom - 14.35) * 0.48 * Math.sin(pitchRad + 0.18);
+      return [p.x, p.y - alt * pxPerMeter];
+    }
+    const pitchRad = 60 * Math.PI / 180;
+    const sx = this.w / 2 + (x - this.cam.x) * this.cam.s;
+    const sy = this.h / 2 - (y - this.cam.y) * this.cam.s * Math.cos(pitchRad) - alt * this.cam.s * 0.85;
+    return [sx, sy];
+  }
+
+  s2w(sx, sy) {
+    if (this.gl) {
+      const ll = this.gl.unproject([sx, sy]);
+      const xy = Geo.toXY(ll.lat, ll.lng);
+      return [xy.x, xy.y];
+    }
+    return [(sx - this.w / 2) / this.cam.s + this.cam.x, -(sy - this.h / 2) / this.cam.s + this.cam.y];
+  }
 
   select(id, focus) {
     this.selected = id; const d = this.sim.droneMap.get(id);
@@ -1159,34 +1503,55 @@ class MapRenderer extends Emitter {
     this.emit('select', id);
   }
   pickDrone(sx, sy) {
-    let best = null, bd = 18;
-    for (const d of this.sim.drones) { const [x, y] = this.w2s(d.x, d.y); const dd = Math.hypot(x - sx, y - sy); if (dd < bd) { bd = dd; best = d; } }
+    let best = null, bd = 24;
+    for (const d of this.sim.drones) {
+      const [x, y] = this.w2s(d.x, d.y, d.alt);
+      const dd = Math.hypot(x - sx, y - sy);
+      if (dd < bd) { bd = dd; best = d; }
+    }
     return best;
   }
   bind() {
     const c = this.c;
     let drag = null;
     c.addEventListener('wheel', e => {
-      e.preventDefault(); this.camTarget = null;
-      const [wx, wy] = this.s2w(e.offsetX, e.offsetY);
-      this.cam.s = clamp(this.cam.s * Math.exp(-e.deltaY * 0.0015), 0.008, 0.6);
-      this.cam.x = wx - (e.offsetX - this.w / 2) / this.cam.s;
-      this.cam.y = wy + (e.offsetY - this.h / 2) / this.cam.s;
+      e.preventDefault();
+      if (this.gl) {
+        const dz = -e.deltaY * 0.0022;
+        this.gl.jumpTo({ zoom: clamp(this.gl.getZoom() + dz, 11.5, 17.5) });
+      }
     }, { passive: false });
-    c.addEventListener('pointerdown', e => { drag = { x: e.offsetX, y: e.offsetY, moved: 0 }; c.setPointerCapture(e.pointerId); });
+    c.addEventListener('pointerdown', e => {
+      drag = { x: e.offsetX, y: e.offsetY, moved: 0, rot: e.button === 2 || e.ctrlKey };
+      c.setPointerCapture(e.pointerId);
+    });
     c.addEventListener('pointermove', e => {
       this.mouse = { x: e.offsetX, y: e.offsetY };
       if (drag) {
         const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y;
         drag.moved += Math.abs(dx) + Math.abs(dy);
-        if (drag.moved > 4) { c.classList.add('dragging'); this.camTarget = null; this.cam.x -= dx / this.cam.s; this.cam.y += dy / this.cam.s; }
+        if (drag.moved > 4) {
+          c.classList.add('dragging');
+          if (this.gl) {
+            if (drag.rot) {
+              this.gl.jumpTo({
+                bearing: this.gl.getBearing() - dx * 0.35,
+                pitch: clamp(this.gl.getPitch() - dy * 0.25, 15, 75),
+              });
+            } else {
+              this.gl.panBy([-dx, -dy], { duration: 0 });
+            }
+          } else {
+            this.cam.x -= dx / this.cam.s; this.cam.y += dy / this.cam.s;
+          }
+        }
         drag.x = e.offsetX; drag.y = e.offsetY;
       }
       this.hover = this.pickDrone(e.offsetX, e.offsetY);
     });
     c.addEventListener('pointerup', e => {
       c.classList.remove('dragging');
-      if (drag && drag.moved <= 4) {
+      if (drag && drag.moved <= 5) {
         if (e.shiftKey) {
           const [wx, wy] = this.s2w(e.offsetX, e.offsetY);
           this.sim.env.moveZone(wx, wy);
@@ -1200,6 +1565,7 @@ class MapRenderer extends Emitter {
       }
       drag = null;
     });
+    c.addEventListener('contextmenu', e => e.preventDefault());
     c.addEventListener('pointerleave', () => { this.mouse = null; this.hover = null; });
     c.addEventListener('dblclick', () => this.fit());
   }
@@ -1210,7 +1576,10 @@ class MapRenderer extends Emitter {
     const sim = this.sim;
     for (const d of sim.drones) {
       if (d.status !== 'ONLINE' || d.routeState !== 'OK' || !d.route) continue;
-      if (Math.random() < 0.35) this.addParticle(d.route, '#34D399');
+      if (Math.random() < 0.45) {
+        const col = d.band === 'DECT' ? '#F59E0B' : '#10B981';
+        this.addParticle(d.route, col);
+      }
     }
   }
   addParticle(path, color) { if (this.particles.length < 180 && path.length > 1) this.particles.push({ path, seg: 0, t: 0, color }); }
@@ -1220,7 +1589,7 @@ class MapRenderer extends Emitter {
       const p = this.particles[i];
       const l = net.linkMap.get(linkKey(p.path[p.seg], p.path[p.seg + 1]));
       if (!l) { this.dropAt(p); this.particles.splice(i, 1); continue; }
-      const dur = l.band === 'LORA' ? 1.8 : 0.35 + l.latency / 180;
+      const dur = l.band === 'DECT' ? 0.85 : 0.28 + l.latency / 180;
       p.t += dt / dur;
       if (p.t >= 1) {
         if (Math.random() < l.loss * 1.5) { this.dropAt(p); this.particles.splice(i, 1); continue; }
@@ -1234,23 +1603,18 @@ class MapRenderer extends Emitter {
   particlePos(p) {
     const a = this.sim.node(p.path[p.seg]), b = this.sim.node(p.path[p.seg + 1]);
     if (!a || !b) return null;
-    return { x: lerp(a.x, b.x, Math.min(p.t, 1)), y: lerp(a.y, b.y, Math.min(p.t, 1)) };
+    const u = Math.min(p.t, 1);
+    return { x: lerp(a.x, b.x, u), y: lerp(a.y, b.y, u), alt: lerp(a.alt || 65, b.alt || 65, u) };
   }
   dropAt(p) { const pos = this.particlePos(p); if (pos) this.drops.push({ ...pos, t0: this.sim.now }); }
 
   /* ---------- frame ---------- */
   draw(dt) {
     const ctx = this.ctx, t = this.sim.now;
-    if (this.camTarget) {
-      const k = 1 - Math.exp(-dt * 6);
-      for (const key of ['x', 'y', 's']) this.cam[key] = lerp(this.cam[key], this.camTarget[key], k);
-      if (Math.abs(this.cam.s - this.camTarget.s) < 1e-5 && Math.abs(this.cam.x - this.camTarget.x) < 2 && Math.abs(this.cam.y - this.camTarget.y) < 2) this.camTarget = null;
-    }
     ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
     ctx.clearRect(0, 0, this.w, this.h);
-    this.drawBackground();
-    this.drawGrid();
-    this.drawBase();
+    if (!this.glReady) this.drawFallbackBackground();
+    this.drawObstaclesOverlay(t);
     this.drawZone(t);
     this.drawLinks(t);
     this.updateParticles(dt);
@@ -1260,123 +1624,146 @@ class MapRenderer extends Emitter {
     this.updateSelectedCard();
   }
 
-  drawBackground() {
+  drawFallbackBackground() {
     const ctx = this.ctx;
-    ctx.fillStyle = '#0B0B0C';
+    ctx.fillStyle = '#090A0F';
     ctx.fillRect(0, 0, this.w, this.h);
   }
-  drawGrid() {
-    const ctx = this.ctx, s = this.cam.s;
-    const step = s * 1000 > 55 ? 1000 : s * 2000 > 55 ? 2000 : 5000;
-    const [x0, y1] = this.s2w(0, 0), [x1, y0] = this.s2w(this.w, this.h);
-    ctx.lineWidth = 1;
-    ctx.strokeStyle = '#121215';
-    ctx.beginPath();
-    for (let gx = Math.floor(x0 / step) * step; gx <= x1; gx += step) {
-      const [sx] = this.w2s(gx, 0);
-      ctx.moveTo(Math.round(sx) + 0.5, 0); ctx.lineTo(Math.round(sx) + 0.5, this.h);
-    }
-    for (let gy = Math.floor(y0 / step) * step; gy <= y1; gy += step) {
-      const [, sy] = this.w2s(0, gy);
-      ctx.moveTo(0, Math.round(sy) + 0.5); ctx.lineTo(this.w, Math.round(sy) + 0.5);
-    }
-    ctx.stroke();
-  }
-  pathOf(pts, close) {
-    const ctx = this.ctx; ctx.beginPath();
-    pts.forEach((p, i) => { const [x, y] = this.w2s(p.x, p.y); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
-    if (close) ctx.closePath();
-  }
-  drawBase() {
-    const ctx = this.ctx, b = this.base, s = this.cam.s;
-    this.pathOf(b.boundary, true);
-    ctx.fillStyle = 'rgba(255,255,255,0.008)'; ctx.fill();
-    ctx.strokeStyle = '#19191D'; ctx.lineWidth = 1; ctx.stroke();
 
-    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-    for (const w of b.water) {
-      this.pathOf(w);
-      ctx.strokeStyle = '#131820'; ctx.lineWidth = 2.5; ctx.stroke();
-    }
-    for (const l of b.lakes) {
-      const [x, y] = this.w2s(l.x, l.y);
-      ctx.beginPath(); ctx.ellipse(x, y, Math.max(3, l.rx * s), Math.max(1.5, l.ry * s), -0.08, 0, Math.PI * 2);
-      ctx.fillStyle = '#131820'; ctx.fill();
-    }
-    for (const r of b.roads) {
-      this.pathOf(r.pts);
-      ctx.strokeStyle = r.major ? '#19191C' : '#141417';
-      ctx.lineWidth = r.major ? 2.2 : 1.3;
+  // Highlight key 3D LoS building volumes (especially Dortmunder U-Tower) with subtle 3D roof wireframe + label
+  drawObstaclesOverlay(t) {
+    const ctx = this.ctx;
+    ctx.save();
+    for (const ob of OBSTACLE_BOXES) {
+      const isU = ob.id === 'U-TOWER';
+      const corners = [
+        [ob.minX, ob.minY], [ob.maxX, ob.minY], [ob.maxX, ob.maxY], [ob.minX, ob.maxY]
+      ];
+      const roof = corners.map(([cx, cy]) => this.w2s(cx, cy, ob.height));
+      const base = corners.map(([cx, cy]) => this.w2s(cx, cy, 0));
+
+      // Subtle vertical edges for 3D prism cue
+      ctx.strokeStyle = isU ? 'rgba(245,158,11,0.38)' : 'rgba(148,163,184,0.16)';
+      ctx.lineWidth = isU ? 1.2 : 0.8;
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(base[i][0], base[i][1]);
+        ctx.lineTo(roof[i][0], roof[i][1]);
+        ctx.stroke();
+      }
+
+      // Roof polygon
+      ctx.beginPath();
+      roof.forEach(([rx, ry], i) => (i ? ctx.lineTo(rx, ry) : ctx.moveTo(rx, ry)));
+      ctx.closePath();
+      ctx.fillStyle = isU ? 'rgba(245,158,11,0.12)' : 'rgba(56,189,248,0.04)';
+      ctx.fill();
+      ctx.strokeStyle = isU ? 'rgba(245,158,11,0.65)' : 'rgba(148,163,184,0.25)';
+      ctx.lineWidth = isU ? 1.5 : 0.9;
       ctx.stroke();
+
+      if (isU) {
+        const [tx, ty] = this.w2s(ob.x, ob.y, ob.height + 12);
+        ctx.font = '700 9.5px Inter, -apple-system, sans-serif';
+        ctx.fillStyle = '#FBBF24';
+        ctx.textAlign = 'center';
+        ctx.fillText('DORTMUNDER U-TOWER (3D LoS BLOCKER)', tx, ty);
+      }
     }
-    const [rx, ry] = this.w2s(b.ring.x, b.ring.y);
-    ctx.beginPath(); ctx.arc(rx, ry, b.ring.r * s, 0, Math.PI * 2);
-    ctx.strokeStyle = '#18181B'; ctx.lineWidth = 1.5; ctx.stroke();
+    ctx.restore();
   }
 
   drawZone(t) {
-    const ctx = this.ctx, env = this.sim.env, z = env.zone, [sx, sy] = this.w2s(z.x, z.y), R = z.radius * this.cam.s;
+    const ctx = this.ctx, env = this.sim.env, z = env.zone;
+    const [sx, sy] = this.w2s(z.x, z.y, 0);
+    const [ex] = this.w2s(z.x + z.radius, z.y, 0);
+    const R = Math.max(28, Math.abs(ex - sx));
     ctx.save();
     if (!env.jamming && !env.spoofing) {
-      ctx.setLineDash([4, 8]); ctx.strokeStyle = 'rgba(255,255,255,0.06)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.arc(sx, sy, R, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([4, 8]); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.ellipse(sx, sy, R, R * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.restore(); return;
     }
     if (env.spoofing) {
-      const R2 = R * 1.5;
-      const g = ctx.createRadialGradient(sx, sy, R * 0.4, sx, sy, R2);
-      g.addColorStop(0, 'rgba(245,158,11,0.03)'); g.addColorStop(1, 'rgba(245,158,11,0.09)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, R2, 0, Math.PI * 2); ctx.fill();
-      ctx.setLineDash([6, 8]); ctx.strokeStyle = 'rgba(245,158,11,0.45)'; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.arc(sx, sy, R2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      const R2 = R * 1.35;
+      const g = ctx.createRadialGradient(sx, sy, R * 0.3, sx, sy, R2);
+      g.addColorStop(0, 'rgba(245,158,11,0.05)'); g.addColorStop(1, 'rgba(245,158,11,0.14)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx, sy, R2, R2 * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.setLineDash([6, 6]); ctx.strokeStyle = 'rgba(245,158,11,0.6)'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.ellipse(sx, sy, R2, R2 * 0.62, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
     }
     if (env.jamming) {
-      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 1.25);
-      g.addColorStop(0, 'rgba(239,68,68,0.18)'); g.addColorStop(0.7, 'rgba(239,68,68,0.07)'); g.addColorStop(1, 'rgba(239,68,68,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, R * 1.25, 0, Math.PI * 2); ctx.fill();
-      const pulse = (t % 2400) / 2400;
-      ctx.strokeStyle = `rgba(239,68,68,${(1 - pulse) * 0.35})`; ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(sx, sy, R * (0.3 + pulse * 0.7), 0, Math.PI * 2); ctx.stroke();
-      ctx.strokeStyle = 'rgba(239,68,68,0.55)'; ctx.lineWidth = 1.2;
-      ctx.beginPath(); ctx.arc(sx, sy, R, 0, Math.PI * 2); ctx.stroke();
+      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 1.2);
+      g.addColorStop(0, 'rgba(239,68,68,0.24)'); g.addColorStop(0.7, 'rgba(239,68,68,0.09)'); g.addColorStop(1, 'rgba(239,68,68,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx, sy, R * 1.2, R * 1.2 * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+      const pulse = (t % 2200) / 2200;
+      ctx.strokeStyle = `rgba(239,68,68,${(1 - pulse) * 0.45})`; ctx.lineWidth = 1.5;
+      const rp = R * (0.3 + pulse * 0.7);
+      ctx.beginPath(); ctx.ellipse(sx, sy, rp, rp * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = 'rgba(239,68,68,0.65)'; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.ellipse(sx, sy, R, R * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
     }
-    const label = env.jamming && env.spoofing ? 'JAMMING & SPOOFING · SECTOR OUEST' : env.jamming ? 'ACTIVE JAMMING · SECTOR OUEST' : 'GNSS SPOOFING · SECTOR OUEST';
-    ctx.font = '600 10px Inter, -apple-system, sans-serif';
-    ctx.fillStyle = env.jamming ? 'rgba(248,113,113,0.85)' : 'rgba(251,191,36,0.85)';
+    const label = env.jamming && env.spoofing ? 'JAMMING & SPOOFING · U-TOWER SECTOR' : env.jamming ? 'ACTIVE JAMMING · U-TOWER SECTOR' : 'GNSS SPOOFING · U-TOWER SECTOR';
+    ctx.font = '700 9.5px Inter, -apple-system, sans-serif';
+    ctx.fillStyle = env.jamming ? '#FCA5A5' : '#FDE68A';
     ctx.textAlign = 'center';
-    ctx.fillText(label, sx, sy - R - 10);
+    ctx.fillText(label, sx, sy - R * 0.62 - 8);
     ctx.restore();
   }
 
   drawLinks(t) {
     const ctx = this.ctx, net = this.sim.net;
     ctx.save(); ctx.lineCap = 'round';
+
+    // 1) Draw broken FSOC laser raycast stubs where 3D buildings block Line-of-Sight
+    for (const b of net.blockedSightlines) {
+      const a = this.sim.node(b.a), nB = this.sim.node(b.b);
+      if (!a || !nB) continue;
+      // Only show raycast occlusion stubs for HQ sightlines or selected drone to keep visual clarity sharp
+      if (b.a !== 'HQ' && b.b !== 'HQ' && b.a !== this.selected && b.b !== this.selected) continue;
+      const [ax, ay] = this.w2s(a.x, a.y, a.alt || 65);
+      const [hx, hy] = this.w2s(b.hit.x, b.hit.y, b.hit.z);
+      // Faint green laser beam from node up to building wall where it breaks
+      ctx.strokeStyle = 'rgba(16,185,129,0.28)';
+      ctx.lineWidth = 1.1;
+      ctx.setLineDash([2, 4]);
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(hx, hy); ctx.stroke();
+      ctx.setLineDash([]);
+      // Red/amber occlusion X marker on the 3D building face
+      ctx.strokeStyle = 'rgba(239,68,68,0.85)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(hx - 3.5, hy - 3.5); ctx.lineTo(hx + 3.5, hy + 3.5);
+      ctx.moveTo(hx + 3.5, hy - 3.5); ctx.lineTo(hx - 3.5, hy + 3.5);
+      ctx.stroke();
+    }
+
+    // 2) Draw active mesh links: Primary FSOC Laser (Green solid beam) vs. Fallback DECT NR+ (Amber dashed routing through buildings)
     for (const l of net.links) {
       const a = this.sim.node(l.a), b = this.sim.node(l.b); if (!a || !b) continue;
-      const [ax, ay] = this.w2s(a.x, a.y), [bx, by] = this.w2s(b.x, b.y);
-      const used = net.routeEdges.has(l.key), alt = net.altEdges.has(l.key);
-      if (l.band === 'LORA') {
-        ctx.shadowColor = '#EF4444'; ctx.shadowBlur = 8;
-        ctx.strokeStyle = rgba('#EF4444', used ? 0.85 : 0.5);
-        ctx.lineWidth = 1.5; ctx.setLineDash([2, 6]); ctx.lineDashOffset = -t * 0.008;
-      } else if (alt || l.q < 0.32) {
-        ctx.shadowColor = '#F59E0B'; ctx.shadowBlur = 6;
-        ctx.strokeStyle = rgba('#F59E0B', used ? 0.8 : 0.45);
-        ctx.lineWidth = 1.5; ctx.setLineDash([5, 5]); ctx.lineDashOffset = -t * 0.015;
+      const [ax, ay] = this.w2s(a.x, a.y, a.alt || 65);
+      const [bx, by] = this.w2s(b.x, b.y, b.alt || 65);
+      const used = net.routeEdges.has(l.key);
+
+      if (l.band === 'DECT') {
+        // Fallback Link: DECT NR+ (Amber/Orange dashed line routing right through 3D buildings)
+        ctx.shadowColor = '#F59E0B';
+        ctx.shadowBlur = used ? 10 : 5;
+        ctx.strokeStyle = rgba('#F59E0B', used ? 0.92 : 0.48);
+        ctx.lineWidth = used ? 2.2 : 1.4;
+        ctx.setLineDash([6, 5]);
+        ctx.lineDashOffset = -t * 0.022;
       } else {
-        ctx.shadowBlur = 0;
-        ctx.strokeStyle = rgba('#34D399', used ? 0.6 : 0.22);
-        ctx.lineWidth = 1.5; ctx.setLineDash([]);
+        // Primary Link: FSOC Laser (Crisp emerald/green optical beam with clear Line-of-Sight)
+        ctx.shadowColor = '#10B981';
+        ctx.shadowBlur = used ? 9 : 3;
+        ctx.strokeStyle = rgba('#10B981', used ? 0.85 : 0.30);
+        ctx.lineWidth = used ? 2.0 : 1.15;
+        ctx.setLineDash([]);
       }
       ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
     }
-    ctx.shadowBlur = 0;
-    for (const br of net.broken) {
-      const a = this.sim.node(br.a), b = this.sim.node(br.b); if (!a || !b) continue;
-      const age = (this.sim.now - br.t) / 2500, [ax, ay] = this.w2s(a.x, a.y), [bx, by] = this.w2s(b.x, b.y);
-      ctx.strokeStyle = rgba('#EF4444', 0.65 * (1 - age)); ctx.lineWidth = 1.5; ctx.setLineDash([2, 5]);
-      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
-    }
+    ctx.shadowBlur = 0; ctx.setLineDash([]);
     ctx.restore();
   }
 
@@ -1384,39 +1771,49 @@ class MapRenderer extends Emitter {
     const ctx = this.ctx;
     for (const p of this.particles) {
       const pos = this.particlePos(p); if (!pos) continue;
-      const [x, y] = this.w2s(pos.x, pos.y);
-      ctx.fillStyle = 'rgba(250,250,250,0.75)';
-      ctx.beginPath(); ctx.arc(x, y, 1.6, 0, Math.PI * 2); ctx.fill();
+      const [x, y] = this.w2s(pos.x, pos.y, pos.alt);
+      ctx.fillStyle = p.color || '#34D399';
+      ctx.beginPath(); ctx.arc(x, y, 2.0, 0, Math.PI * 2); ctx.fill();
     }
   }
 
   drawHQ(t) {
-    const ctx = this.ctx, hq = this.sim.hq, [x, y] = this.w2s(hq.x, hq.y), rth = this.sim.rth;
-    const col = rth ? '#EF4444' : '#FAFAFA';
+    const ctx = this.ctx, hq = this.sim.hq;
+    const [gx, gy] = this.w2s(hq.x, hq.y, 0);
+    const [x, y] = this.w2s(hq.x, hq.y, hq.alt);
+    const rth = this.sim.rth;
+    const col = rth ? '#EF4444' : '#10B981';
     ctx.save();
+    // 3D altitude mast from ground to HQ optical transceiver dome
+    ctx.strokeStyle = 'rgba(16,185,129,0.45)';
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([2, 3]);
+    ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(x, y); ctx.stroke();
+    ctx.setLineDash([]);
+
     if (rth) {
       const p = (t % 1800) / 1800;
-      ctx.strokeStyle = rgba('#EF4444', (1 - p) * 0.5); ctx.lineWidth = 1.5;
-      ctx.beginPath(); ctx.arc(x, y, 10 + p * 36, 0, Math.PI * 2); ctx.stroke();
+      ctx.strokeStyle = rgba('#EF4444', (1 - p) * 0.6); ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(x, y, 10 + p * 34, 0, Math.PI * 2); ctx.stroke();
     }
-    ctx.shadowColor = 'rgba(0,0,0,0.7)'; ctx.shadowBlur = 10;
-    ctx.fillStyle = '#18181B';
+    ctx.shadowColor = 'rgba(0,0,0,0.85)'; ctx.shadowBlur = 10;
+    ctx.fillStyle = '#111827';
     ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.fill();
     ctx.shadowBlur = 0;
-    ctx.strokeStyle = col; ctx.lineWidth = 1.8;
+    ctx.strokeStyle = col; ctx.lineWidth = 2.0;
     ctx.beginPath(); ctx.arc(x, y, 9, 0, Math.PI * 2); ctx.stroke();
-    ctx.fillStyle = col;
-    ctx.beginPath(); ctx.arc(x, y, 3, 0, Math.PI * 2); ctx.fill();
-    ctx.font = '600 10px Inter, -apple-system, sans-serif';
-    ctx.fillStyle = 'rgba(250,250,250,0.65)';
+    ctx.fillStyle = '#FAFAFA';
+    ctx.beginPath(); ctx.arc(x, y, 3.2, 0, Math.PI * 2); ctx.fill();
+    ctx.font = '700 10px Inter, -apple-system, sans-serif';
+    ctx.fillStyle = '#FAFAFA';
     ctx.textAlign = 'center';
-    ctx.fillText('HQ', x, y + 21);
+    ctx.fillText('HQ · FSOC/DECT', x, y + 20);
     ctx.restore();
   }
 
   isDistressed(d) {
     if (d.status === 'OFFLINE' || d.routeState === 'ISOLATED' || d.band === 'NONE' || d.gnss === 'LOST') return 'crit';
-    if (d.band === 'LORA' || d.routeState === 'REROUTING' || d.gnss === 'SPOOFED') return 'warn';
+    if (d.band === 'DECT' || d.routeState === 'REROUTING' || d.gnss === 'SPOOFED') return 'warn';
     return null;
   }
 
@@ -1428,24 +1825,35 @@ class MapRenderer extends Emitter {
     for (const d of this.sim.drones) {
       const o = d.spoofOffset, om = Math.hypot(o.x, o.y);
       if (om > 8 && d.status === 'ONLINE') {
-        const [gx, gy] = this.w2s(d.x + o.x, d.y + o.y), [x, y] = this.w2s(d.x, d.y);
-        ctx.setLineDash([2, 4]); ctx.strokeStyle = 'rgba(245,158,11,0.5)'; ctx.lineWidth = 1;
+        const [gx, gy] = this.w2s(d.x + o.x, d.y + o.y, d.alt), [x, y] = this.w2s(d.x, d.y, d.alt);
+        ctx.setLineDash([2, 4]); ctx.strokeStyle = 'rgba(245,158,11,0.55)'; ctx.lineWidth = 1;
         ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(gx, gy); ctx.stroke();
         ctx.setLineDash([]);
-        ctx.fillStyle = 'rgba(245,158,11,0.7)';
+        ctx.fillStyle = 'rgba(245,158,11,0.75)';
         ctx.beginPath(); ctx.arc(gx, gy, 3, 0, Math.PI * 2); ctx.fill();
       }
     }
 
     for (const d of this.sim.drones) {
-      const [x, y] = this.w2s(d.x, d.y);
+      const [gx, gy] = this.w2s(d.x, d.y, 0);
+      const [x, y] = this.w2s(d.x, d.y, d.alt);
       const distress = this.isDistressed(d);
       const isSel = d.id === this.selected || d.id === this.hover?.id;
+      const off = d.status === 'OFFLINE';
+
+      // 3D vertical altitude drop-line + ground shadow on Dortmund streets (makes 60° 3D altitude unmistakable)
+      ctx.fillStyle = 'rgba(0,0,0,0.45)';
+      ctx.beginPath(); ctx.ellipse(gx, gy, 5, 2.8, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = d.band === 'DECT' ? 'rgba(245,158,11,0.38)' : 'rgba(16,185,129,0.32)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([2, 3]);
+      ctx.beginPath(); ctx.moveTo(gx, gy); ctx.lineTo(x, y); ctx.stroke();
+      ctx.setLineDash([]);
 
       // Subtle selection halo
       if (isSel) {
-        ctx.strokeStyle = 'rgba(250,250,250,0.38)';
-        ctx.lineWidth = 1.2;
+        ctx.strokeStyle = 'rgba(250,250,250,0.45)';
+        ctx.lineWidth = 1.3;
         ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI * 2); ctx.stroke();
       }
 
@@ -1453,15 +1861,14 @@ class MapRenderer extends Emitter {
       ctx.save();
       ctx.translate(x, y);
       ctx.rotate(-d.heading);
-      const off = d.status === 'OFFLINE';
-      const armCol = off ? '#3F3F46' : '#A1A1AA';
-      const bodyCol = off ? '#27272A' : '#E4E4E7';
+      const armCol = off ? '#3F3F46' : d.band === 'DECT' ? '#FBBF24' : '#A1A1AA';
+      const bodyCol = off ? '#27272A' : '#F4F4F5';
       const noseCol = off ? '#52525B' : distress === 'crit' ? '#EF4444' : distress === 'warn' ? '#F59E0B' : '#10B981';
       const r = 6.2; // motor offset
       const rp = 3.8; // rotor radius
       const motors = [[r, -r, 1], [r, r, -1], [-r, -r, -1], [-r, r, 1]];
 
-      ctx.shadowColor = 'rgba(0,0,0,0.75)';
+      ctx.shadowColor = 'rgba(0,0,0,0.8)';
       ctx.shadowBlur = 7;
       ctx.shadowOffsetY = 2;
 
@@ -1477,13 +1884,13 @@ class MapRenderer extends Emitter {
       // Rotor discs + spinning blades
       ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
       for (const [mx, my, dir] of motors) {
-        ctx.fillStyle = off ? 'rgba(63,63,70,0.22)' : 'rgba(244,244,245,0.13)';
-        ctx.strokeStyle = off ? 'rgba(82,82,91,0.45)' : 'rgba(244,244,245,0.42)';
+        ctx.fillStyle = off ? 'rgba(63,63,70,0.22)' : 'rgba(244,244,245,0.15)';
+        ctx.strokeStyle = off ? 'rgba(82,82,91,0.45)' : 'rgba(244,244,245,0.48)';
         ctx.lineWidth = 0.9;
         ctx.beginPath(); ctx.arc(mx, my, rp, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
         if (!off) {
           const ang = (t * 0.022 + d.index * 1.1) * dir;
-          ctx.strokeStyle = 'rgba(250,250,250,0.65)';
+          ctx.strokeStyle = 'rgba(250,250,250,0.7)';
           ctx.lineWidth = 1.05;
           ctx.beginPath();
           ctx.moveTo(mx - Math.cos(ang) * (rp - 0.5), my - Math.sin(ang) * (rp - 0.5));
@@ -1530,13 +1937,18 @@ class MapRenderer extends Emitter {
         ctx.restore();
       }
 
-      // Tiny clean text label "01", "02" next to drone (11px Inter, muted white, no border box)
+      // Drone label + altitude + live NLOS badge right on map
       const shortNum = d.id.replace(/^DR-/, '');
-      ctx.font = '500 11px Inter, -apple-system, sans-serif';
-      ctx.fillStyle = d.status === 'OFFLINE' ? 'rgba(161,161,170,0.4)' : isSel ? '#FAFAFA' : 'rgba(250,250,250,0.68)';
+      ctx.font = '700 10.5px Inter, -apple-system, sans-serif';
+      ctx.fillStyle = off ? 'rgba(161,161,170,0.4)' : isSel ? '#FAFAFA' : 'rgba(250,250,250,0.88)';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(shortNum, x + 13, y + 0.5);
+      ctx.fillText(`${shortNum} · ${d.alt.toFixed(0)}m`, x + 13, y - (d.band === 'DECT' ? 4 : 0));
+      if (!off && d.band === 'DECT') {
+        ctx.font = '700 8.5px Inter, -apple-system, sans-serif';
+        ctx.fillStyle = '#FBBF24';
+        ctx.fillText('NLOS · DECT NR+', x + 13, y + 7);
+      }
     }
     ctx.restore();
   }
@@ -1545,27 +1957,36 @@ class MapRenderer extends Emitter {
     const el = document.getElementById('nodeCard');
     const d = this.selected ? this.sim.droneMap.get(this.selected) : null;
     if (!d) { el.classList.add('hidden'); return; }
-    const [sx, sy] = this.w2s(d.x, d.y);
+    const [sx, sy] = this.w2s(d.x, d.y, d.alt);
     el.classList.remove('hidden');
     const distress = this.isDistressed(d);
     const badgeCls = distress === 'crit' ? 'crit' : distress === 'warn' ? 'warn' : '';
-    const badgeTxt = d.status === 'OFFLINE' ? 'OFFLINE' : d.gnss === 'LOST' ? 'GNSS LOST' : d.gnss === 'SPOOFED' ? 'SPOOFED' : d.band === 'LORA' ? '868 MHz LoRa' : '2.4 GHz Mesh';
+    const badgeTxt = d.status === 'OFFLINE'
+      ? 'OFFLINE'
+      : d.gnss === 'LOST'
+      ? 'GNSS LOST'
+      : d.gnss === 'SPOOFED'
+      ? 'SPOOFED'
+      : d.band === 'DECT'
+      ? 'NLOS - DECT Fallback'
+      : 'FSOC Laser (LoS)';
     const ip = `10.41.0.${d.index + 1}`;
     const route = d.route ? d.route.join(' → ') : d.routeState;
+    const losInfo = d.nlosReason ? `Blocked: ${d.nlosReason}` : 'Clear 3D Line-of-Sight';
     el.innerHTML = `
       <div class="nc-top">
-        <span class="nc-id">${d.id} <span style="color:var(--mut);font-weight:400;font-size:11px">(${ip})</span></span>
+        <span class="nc-id">${d.id} <span style="color:var(--mut);font-weight:400;font-size:10px">(${ip})</span></span>
         <span class="nc-badge ${badgeCls}">${badgeTxt}</span>
       </div>
       <div class="nc-grid">
-        <div><span>Altitude</span><b>${d.alt.toFixed(0)} m</b></div>
+        <div><span>Altitude</span><b>${d.alt.toFixed(0)} m AGL</b></div>
         <div><span>Speed</span><b>${(d.speed * 3.6).toFixed(0)} km/h</b></div>
-        <div><span>Battery</span><b>${d.battery.toFixed(0)}%</b></div>
+        <div><span>Link / LoS</span><b>${d.band === 'DECT' ? 'DECT NR+' : 'FSOC 10G'}</b></div>
         <div><span>Latency / Hops</span><b>${d.routeState === 'OK' ? `${d.latency.toFixed(0)} ms · ${d.hops}H` : '—'}</b></div>
       </div>
-      <div class="nc-route">Route: ${route}</div>`;
-    const cx = clamp(sx, 140, this.w - 140);
-    const cy = clamp(sy, 140, this.h - 40);
+      <div class="nc-route">${losInfo} · ${route}</div>`;
+    const cx = clamp(sx, 120, this.w - 120);
+    const cy = clamp(sy, 145, this.h - 180);
     el.style.left = `${cx}px`;
     el.style.top = `${cy}px`;
   }
@@ -1640,7 +2061,7 @@ class BackendBridge extends Emitter {
 }
 
 /* =====================================================================
- * 10. UI CONTROLLER — Minimalist Tesla App Floating Panels & Dock
+ * 10. UI CONTROLLER — Portrait Mobile-First 9:16 Top Chips + Bottom Sheet
  * ===================================================================== */
 const KPIS = [
   { key: 'reach', label: 'REACHABILITY', unit: '%', target: 'Target >95%', fmt: v => v.toFixed(1),
@@ -1654,7 +2075,7 @@ const KPIS = [
 ];
 
 const QOS_ROWS = [
-  { key: 'c2',        name: 'C2',              color: '#EF4444' },
+  { key: 'c2',        name: 'C2 Command',      color: '#EF4444' },
   { key: 'telemetry', name: 'Telemetry',       color: '#38BDF8' },
   { key: 'inter',     name: 'Inter-Drone',     color: '#34D399' },
   { key: 'video',     name: 'Video (MediaMTX)',color: '#A1A1AA' },
@@ -1665,7 +2086,8 @@ class UI {
     this.sim = sim; this.map = map; this.bridge = bridge;
     this.$ = id => document.getElementById(id);
     this.follow = true; this.demoTimers = [];
-    this.buildFleet(); this.buildKPIs(); this.buildTraffic(); this.bindControls();
+    this.snapState = 'mid'; // 'peek' | 'mid' | 'full'
+    this.buildFleet(); this.buildKPIs(); this.buildTraffic(); this.bindControls(); this.bindSheet();
     sim.logger.on('line', e => this.appendLog(e));
     sim.on('env', () => this.updateControls());
     sim.on('fleet', () => this.buildFleet());
@@ -1676,8 +2098,30 @@ class UI {
 
   buildFleet() {
     const list = this.$('fleetList'); list.innerHTML = ''; this.cards = new Map();
+    const chipsHost = this.$('fleetChips'); chipsHost.innerHTML = ''; this.chips = new Map();
+
     for (const d of this.sim.drones) {
       const ip = `10.41.0.${d.index + 1}`;
+
+      // 1) Top Floating Horizontal Fleet Chip (Portrait Mobile HUD)
+      const chip = document.createElement('div');
+      chip.className = 'fchip';
+      chip.innerHTML = `
+        <span class="st-dot"></span>
+        <span class="fchip-id">${d.id}</span>
+        <span class="fchip-band">FSOC LoS</span>`;
+      chip.addEventListener('click', () => {
+        const next = this.map.selected === d.id ? null : d.id;
+        this.map.select(next, !!next);
+      });
+      chipsHost.appendChild(chip);
+      this.chips.set(d.id, {
+        el: chip,
+        dot: chip.querySelector('.st-dot'),
+        band: chip.querySelector('.fchip-band'),
+      });
+
+      // 2) Detailed Accordion Row inside Bottom Drawer
       const el = document.createElement('div');
       el.className = 'drow';
       el.innerHTML = `
@@ -1685,22 +2129,23 @@ class UI {
           <span class="st-dot"></span>
           <span class="drow-id">${d.id}</span>
           <span class="drow-ip">(${ip})</span>
-          <span class="drow-band">2.4 GHz</span>
-          <span class="drow-rtt">12ms</span>
+          <span class="drow-band">FSOC Laser</span>
+          <span class="drow-rtt">2ms</span>
         </div>
         <div class="drow-detail">
           <div class="dd-cell"><span>Altitude</span><b class="v-alt">0 m</b></div>
           <div class="dd-cell"><span>Speed</span><b class="v-spd">0 km/h</b></div>
           <div class="dd-cell"><span>Battery</span><b class="v-bat">0%</b></div>
           <div class="dd-cell"><span>Hops</span><b class="v-hops">1</b></div>
-          <div class="dd-cell"><span>Mesh IP</span><b>${ip}</b></div>
+          <div class="dd-cell"><span>3D LoS Status</span><b class="v-los">Clear LoS</b></div>
           <div class="dd-cell"><span>GNSS</span><b class="v-gnss">3D Fix</b></div>
         </div>`;
       const q = s => el.querySelector(s);
       this.cards.set(d.id, {
         el, ip,
         dot: q('.st-dot'), band: q('.drow-band'), rtt: q('.drow-rtt'),
-        alt: q('.v-alt'), spd: q('.v-spd'), bat: q('.v-bat'), hops: q('.v-hops'), gnss: q('.v-gnss'),
+        alt: q('.v-alt'), spd: q('.v-spd'), bat: q('.v-bat'), hops: q('.v-hops'),
+        los: q('.v-los'), gnss: q('.v-gnss'),
       });
       q('.drow-main').addEventListener('click', () => {
         const next = this.map.selected === d.id ? null : d.id;
@@ -1708,13 +2153,14 @@ class UI {
       });
       list.appendChild(el);
     }
-    this.$('fleetCount').textContent = `${this.sim.drones.length} Nodes · FANET`;
+    this.$('fleetCount').textContent = `${this.sim.drones.length} Nodes · Hybrid FSOC / DECT NR+`;
   }
 
   highlightCard(id) {
     for (const [cid, c] of this.cards) c.el.classList.toggle('selected', cid === id);
-    const c = id && this.cards.get(id);
-    if (c) c.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    for (const [cid, ch] of this.chips) ch.el.classList.toggle('selected', cid === id);
+    const ch = id && this.chips.get(id);
+    if (ch) ch.el.scrollIntoView({ inline: 'center', block: 'nearest', behavior: 'smooth' });
   }
 
   buildKPIs() {
@@ -1754,6 +2200,42 @@ class UI {
     });
   }
 
+  setSheetSnap(snap) {
+    const sheet = this.$('bottomSheet');
+    this.snapState = snap;
+    sheet.className = `glass right-panel snap-${snap}`;
+    const btn = this.$('btnSheetToggle');
+    if (btn) btn.textContent = snap === 'full' ? 'Collapse' : snap === 'peek' ? 'Expand' : 'Full';
+  }
+
+  bindSheet() {
+    const handle = this.$('sheetHandle');
+    const toggleBtn = this.$('btnSheetToggle');
+    const order = ['peek', 'mid', 'full'];
+
+    const cycle = () => {
+      const next = this.snapState === 'mid' ? 'full' : this.snapState === 'full' ? 'peek' : 'mid';
+      this.setSheetSnap(next);
+    };
+    if (toggleBtn) toggleBtn.onclick = e => { e.stopPropagation(); cycle(); };
+
+    let startY = null;
+    handle.addEventListener('pointerdown', e => {
+      if (e.target.closest('button')) return;
+      startY = e.clientY;
+      handle.setPointerCapture(e.pointerId);
+    });
+    handle.addEventListener('pointerup', e => {
+      if (startY == null) return;
+      const dy = e.clientY - startY;
+      startY = null;
+      const idx = order.indexOf(this.snapState);
+      if (dy < -25 && idx < 2) this.setSheetSnap(order[idx + 1]);
+      else if (dy > 25 && idx > 0) this.setSheetSnap(order[idx - 1]);
+      else if (Math.abs(dy) < 8) cycle();
+    });
+  }
+
   bindControls() {
     const s = this.sim;
     this.$('btnJam').onclick = () => s.setJamming(!s.env.jamming);
@@ -1767,6 +2249,7 @@ class UI {
     this.$('wsBtn').onclick = () => (this.bridge.state === 'MOCK' ? this.bridge.connect(this.$('wsUrl').value.trim()) : this.bridge.disconnect());
     this.$('zIn').onclick = () => this.map.zoom(1.4);
     this.$('zOut').onclick = () => this.map.zoom(1 / 1.4);
+    this.$('zTilt').onclick = () => this.map.togglePitch();
     this.$('zFit').onclick = () => this.map.fit();
     document.querySelectorAll('#speedSeg button').forEach(b => b.onclick = () => {
       s.speed = +b.dataset.speed;
@@ -1798,20 +2281,20 @@ class UI {
     this.stopDemo();
     s.reset();
     const steps = [
-      [500, () => L.info('DEMO ▶ Phase 1 – nominal FANET operation over Dortmund')],
-      [5000, () => { L.info('DEMO ▶ Phase 2 – hostile RF jammer activates in SECTOR OUEST'); s.setJamming(true); }],
+      [500, () => L.info('DEMO ▶ Phase 1 – Hybrid FSOC Laser + DECT NR+ mesh over 3D Dortmund')],
+      [5000, () => { L.info('DEMO ▶ Phase 2 – Hostile RF/optical jammer activates near Dortmunder U-Tower'); s.setJamming(true); }],
       [16000, () => { L.info('DEMO ▶ Phase 3 – GNSS spoofer joins the attack'); s.setSpoofing(true); }],
-      [28000, () => { L.info('DEMO ▶ Phase 4 – hardware failure on two relay nodes'); s.failNodes(2); }],
-      [42000, () => { L.info('DEMO ▶ Phase 5 – operator triggers SAFE-RETURN-HOME'); s.setRTH(true); }],
-      [62000, () => { L.info('DEMO ▶ Phase 6 – threat neutralised, mission resumes'); s.setRTH(false); s.setJamming(false); s.setSpoofing(false); }],
+      [28000, () => { L.info('DEMO ▶ Phase 4 – Hardware failure on two relay nodes'); s.failNodes(2); }],
+      [42000, () => { L.info('DEMO ▶ Phase 5 – Operator triggers SAFE-RETURN-HOME'); s.setRTH(true); }],
+      [62000, () => { L.info('DEMO ▶ Phase 6 – Threat neutralised, FSOC Laser LoS restored'); s.setRTH(false); s.setJamming(false); s.setSpoofing(false); }],
       [70000, () => { L.ok('DEMO ■ scenario complete'); this.stopDemo(); }],
     ];
     this.demoTimers = steps.map(([ms, fn]) => setTimeout(fn, ms));
-    this.$('btnDemo').classList.add('running'); this.$('btnDemo').textContent = '■';
+    this.$('btnDemo').classList.add('running'); this.$('btnDemo').textContent = '■ Stop Demo';
   }
   stopDemo(log) {
     this.demoTimers.forEach(clearTimeout); this.demoTimers = [];
-    this.$('btnDemo').classList.remove('running'); this.$('btnDemo').textContent = '▶';
+    this.$('btnDemo').classList.remove('running'); this.$('btnDemo').textContent = '▶ Run Demo';
     if (log) this.sim.logger.info('DEMO ■ stopped by operator');
   }
 
@@ -1821,7 +2304,7 @@ class UI {
     this.$('btnSpoof').classList.toggle('active-amber', s.env.spoofing);
     this.$('btnFail').classList.toggle('active-red', down > 0);
     this.$('btnRth').classList.toggle('active-amber', s.rth);
-    this.$('btnProt').className = `dock-pill ${s.protection ? 'prot-on' : 'prot-off'}`;
+    this.$('btnProt').className = `ctrl-btn ${s.protection ? 'prot-on' : 'prot-off'}`;
     this.$('protLabel').textContent = s.protection ? 'Protected' : 'Unprotected';
   }
 
@@ -1836,30 +2319,44 @@ class UI {
     const s = this.sim;
     let online = 0, fallback = 0, offline = 0;
     for (const d of s.drones) {
-      const c = this.cards.get(d.id); if (!c) continue;
+      const c = this.cards.get(d.id);
+      const ch = this.chips.get(d.id);
+      if (!c) continue;
       const off = d.status === 'OFFLINE';
-      if (off) offline++; else online++;
-      if (!off && d.band === 'LORA') fallback++;
+      if (off) offline++;
+      else if (d.band === 'DECT') fallback++;
+      else online++;
 
-      let dotCls = 'st-dot', bandCls = 'drow-band', bandTxt = '2.4 GHz';
+      let dotCls = 'st-dot', bandCls = 'drow-band', bandTxt = 'FSOC Laser', chipTxt = 'FSOC LoS';
       if (off) {
-        dotCls += ' off'; bandTxt = 'Offline';
+        dotCls += ' off'; bandTxt = 'Offline'; chipTxt = 'Offline';
       } else if (d.routeState === 'ISOLATED' || d.band === 'NONE' || d.gnss === 'LOST') {
         dotCls += ' crit'; bandCls += ' crit';
-        bandTxt = d.gnss === 'LOST' ? 'GNSS Lost' : 'Isolated';
-      } else if (d.band === 'LORA' || d.routeState === 'REROUTING' || d.gnss === 'SPOOFED') {
+        bandTxt = d.gnss === 'LOST' ? 'GNSS Lost' : 'LoS Blocked · Isolated';
+        chipTxt = d.gnss === 'LOST' ? 'GNSS Lost' : 'Isolated';
+      } else if (d.band === 'DECT' || d.routeState === 'REROUTING' || d.gnss === 'SPOOFED') {
         dotCls += ' warn'; bandCls += ' warn';
-        bandTxt = d.band === 'LORA' ? '868 MHz' : d.gnss === 'SPOOFED' ? 'Spoofed' : 'Rerouting';
+        bandTxt = d.band === 'DECT' ? 'NLOS - DECT Fallback' : d.gnss === 'SPOOFED' ? 'Spoofed' : 'Rerouting';
+        chipTxt = d.band === 'DECT' ? 'NLOS - DECT Fallback' : d.gnss === 'SPOOFED' ? 'Spoofed' : 'Rerouting';
       }
+
       c.dot.className = dotCls;
       c.band.className = bandCls;
       c.band.textContent = bandTxt;
       c.rtt.textContent = !off && d.routeState === 'OK' ? `${d.latency.toFixed(0)}ms` : '—';
 
+      if (ch) {
+        ch.dot.className = dotCls;
+        ch.band.textContent = chipTxt;
+        ch.el.classList.toggle('warn', !off && d.band === 'DECT');
+        ch.el.classList.toggle('crit', off || d.routeState === 'ISOLATED' || d.band === 'NONE');
+      }
+
       c.alt.textContent = `${d.alt.toFixed(0)} m`;
       c.spd.textContent = `${(d.speed * 3.6).toFixed(0)} km/h`;
       c.bat.textContent = `${d.battery.toFixed(0)}%`;
       c.hops.textContent = !off && d.routeState === 'OK' ? `${d.hops} (${d.route[1] || 'HQ'})` : '—';
+      c.los.textContent = d.nlosReason ? `Blocked (${d.nlosReason})` : 'Clear 3D LoS';
       c.gnss.textContent = d.gnss === 'OK' ? '3D Fix' : d.gnss === 'LOST' ? 'INS Fallback' : 'Spoofed';
     }
     this.$('fcOnline').textContent = online;
@@ -1875,7 +2372,7 @@ class UI {
     const act = s.drones.filter(d => d.status === 'ONLINE' && d.routeState !== 'JOINING');
     this.gauges.reach.extra.textContent = `${act.filter(d => d.routeState === 'OK').length}/${act.length}`;
     this.gauges.latency.extra.textContent = `${s.net.links.length} links`;
-    this.gauges.loss.extra.textContent = `${fallback} LoRa`;
+    this.gauges.loss.extra.textContent = `${fallback} DECT NLOS`;
     this.gauges.recovery.extra.textContent = m.healing ? 'Healing…' : m.recoveries.length ? `Avg ${m.avgRecovery.toFixed(1)}s` : 'Nominal';
     this.$('metricSrc').textContent = (m.isOverridden ? 'BACKEND' : this.bridge.state === 'LIVE' ? 'WS LIVE' : 'LIVE SIM') + (s.protection ? '' : ' · UNPROTECTED');
 
@@ -1947,7 +2444,7 @@ window.AirShield = {
   updateDroneData: p => sim.applyDroneData(p),
   /** Override resilience metrics: {reachability, latency_ms, packet_loss, recovery_s} */
   updateMetrics: m => sim.metrics.applyOverride(m),
-  /** Override mesh links: [{a:'DR-01', b:'HQ', band:'2.4GHz'|'868MHz', quality:0..1}] */
+  /** Override mesh links: [{a:'DR-01', b:'HQ', band:'FSOC'|'DECT', quality:0..1}] */
   updateLinks: l => sim.net.applyExternal(l),
   /** Inject event: {type:'JAMMING'|'SPOOFING'|'NODE_FAILURE'|'NODE_RESTORE'|'RTH'|'ZONE'|'RESET', active, lat, lon, radius_m, ids} */
   injectEvent: e => sim.applyEvent(e),
@@ -1963,10 +2460,9 @@ window.AirShield = {
 window.updateDroneData = window.AirShield.updateDroneData;
 
 const L = sim.logger;
-L.info(`DORTMUND AIR SHIELD v${CFG.VERSION} – mission control online`);
-L.info(`HQ ${CFG.HQ.name} · ${CFG.HQ.lat.toFixed(4)}°N ${CFG.HQ.lon.toFixed(4)}°E`);
-L.net(`FANET bootstrap: ${sim.drones.length} nodes · primary 2.4 GHz mesh · fallback 868 MHz LoRa`);
-L.debug('Backend hooks ready: window.AirShield.*, window.updateDroneData(), WebSocket, REST polling');
+L.info(`DORTMUND AIR SHIELD v${CFG.VERSION} – 3D LoS Mission Control online`);
+L.info(`HQ ${CFG.HQ.name} · ${CFG.HQ.lat.toFixed(4)}°N ${CFG.HQ.lon.toFixed(4)}°E · Pitch 60°`);
+L.net(`Hybrid Mesh: ${sim.drones.length} nodes · Primary FSOC Laser (LoS) · Fallback DECT NR+ (NLOS)`);
 
 const params = new URLSearchParams(location.search);
 if (params.get('ws')) { document.getElementById('wsUrl').value = params.get('ws'); bridge.connect(params.get('ws')); }
@@ -1978,8 +2474,7 @@ setInterval(() => {
   const ok = sim.drones.filter(d => d.status === 'ONLINE' && d.routeState === 'OK');
   if (!ok.length) return;
   const d = pick(ok);
-  L.debug(`RX ${d.id} telemetry · ${d.band === 'LORA' ? '868M' : '2.4G'} · ${d.hops} hop${d.hops > 1 ? 's' : ''} · ${d.latency.toFixed(0)} ms`);
-  if (sim.env.jamming && Math.random() < 0.35) L.net(`SPECTRUM ${sim.env.zone.sector}: 2.4 GHz noise floor −63 dBm (+38 dB) · LoRa SNR ${rand(-9, -4).toFixed(1)} dB`);
+  L.debug(`RX ${d.id} · ${d.band === 'DECT' ? 'NLOS DECT NR+' : 'FSOC Laser LoS'} · ${d.hops}H · ${d.latency.toFixed(0)} ms`);
 }, 3500);
 
 let last = performance.now(), uiAcc = 1, sampleAcc = 0;
