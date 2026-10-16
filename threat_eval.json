@@ -1,0 +1,359 @@
+{
+  "seed": 20260416,
+  "tick_s": 0.5,
+  "headline": {
+    "seed": 20260416,
+    "nominal_false_flags_rule_based": 0,
+    "nominal_false_flags_contrastive": 0,
+    "ramp_jam_delay_contrastive_s": 0.0,
+    "ramp_jam_delay_rule_based_s": 9.5,
+    "slow_spoof_delay_contrastive_s": 0.0,
+    "slow_spoof_delay_rule_based_s": 9.0,
+    "pass_1_novel_unexplained_count": 2,
+    "pass_2_novel_attributed_count": 2,
+    "operator_confirmed_prototypes": [
+      "coordinated_rf_gnss",
+      "carrier_blackout"
+    ]
+  },
+  "pass_1": {
+    "nominal": {
+      "scenario": "nominal",
+      "title": "Nominal Hybrid Mesh Operation",
+      "onset_s": 0.0,
+      "expected_label": "NOMINAL",
+      "is_novel": false,
+      "rule_based": {
+        "detected": false,
+        "delay_s": null,
+        "label": "NOMINAL",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": false,
+        "delay_s": null,
+        "label": "NOMINAL",
+        "attributed": false,
+        "similarity": 0.0,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "jamming": {
+      "scenario": "jamming",
+      "title": "Sudden Broadband RF/Optical Jamming",
+      "onset_s": 10.0,
+      "expected_label": "jamming",
+      "is_novel": false,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "attributed": true,
+        "similarity": 0.9866,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "ramp_jam": {
+      "scenario": "ramp_jam",
+      "title": "Slow-Ramping Smart Jammer",
+      "onset_s": 10.0,
+      "expected_label": "jamming",
+      "is_novel": false,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 9.5,
+        "label": "jamming",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "attributed": true,
+        "similarity": 0.9601,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "spoofing": {
+      "scenario": "spoofing",
+      "title": "Counterfeit L1 GNSS Spoofing",
+      "onset_s": 10.0,
+      "expected_label": "spoofing",
+      "is_novel": false,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "spoofing",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "spoofing",
+        "attributed": true,
+        "similarity": 1.0,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "slow_spoof": {
+      "scenario": "slow_spoof",
+      "title": "Stealth Slow-Drift GNSS Spoofing",
+      "onset_s": 10.0,
+      "expected_label": "spoofing",
+      "is_novel": false,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 9.0,
+        "label": "spoofing",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "spoofing",
+        "attributed": true,
+        "similarity": 1.0,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "coordinated": {
+      "scenario": "coordinated",
+      "title": "Coordinated Hybrid RF + GNSS Attack",
+      "onset_s": 10.0,
+      "expected_label": "coordinated_rf_gnss",
+      "is_novel": true,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "correct_attribution": false,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "UNEXPLAINED",
+        "attributed": false,
+        "similarity": 0.7223,
+        "correct_attribution": false,
+        "flagged_unexplained": true,
+        "false_flags": 0
+      }
+    },
+    "carrier_blackout": {
+      "scenario": "carrier_blackout",
+      "title": "Sector Carrier & Optical Blackout",
+      "onset_s": 10.0,
+      "expected_label": "carrier_blackout",
+      "is_novel": true,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "correct_attribution": false,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "UNEXPLAINED",
+        "attributed": false,
+        "similarity": 0.5069,
+        "correct_attribution": false,
+        "flagged_unexplained": true,
+        "false_flags": 0
+      }
+    }
+  },
+  "pass_2": {
+    "nominal": {
+      "scenario": "nominal",
+      "title": "Nominal Hybrid Mesh Operation",
+      "onset_s": 0.0,
+      "expected_label": "NOMINAL",
+      "is_novel": false,
+      "rule_based": {
+        "detected": false,
+        "delay_s": null,
+        "label": "NOMINAL",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": false,
+        "delay_s": null,
+        "label": "NOMINAL",
+        "attributed": false,
+        "similarity": 0.0,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "jamming": {
+      "scenario": "jamming",
+      "title": "Sudden Broadband RF/Optical Jamming",
+      "onset_s": 10.0,
+      "expected_label": "jamming",
+      "is_novel": false,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "attributed": true,
+        "similarity": 0.9866,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "ramp_jam": {
+      "scenario": "ramp_jam",
+      "title": "Slow-Ramping Smart Jammer",
+      "onset_s": 10.0,
+      "expected_label": "jamming",
+      "is_novel": false,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 9.5,
+        "label": "jamming",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "attributed": true,
+        "similarity": 0.9601,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "spoofing": {
+      "scenario": "spoofing",
+      "title": "Counterfeit L1 GNSS Spoofing",
+      "onset_s": 10.0,
+      "expected_label": "spoofing",
+      "is_novel": false,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "spoofing",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "spoofing",
+        "attributed": true,
+        "similarity": 1.0,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "slow_spoof": {
+      "scenario": "slow_spoof",
+      "title": "Stealth Slow-Drift GNSS Spoofing",
+      "onset_s": 10.0,
+      "expected_label": "spoofing",
+      "is_novel": false,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 9.0,
+        "label": "spoofing",
+        "correct_attribution": true,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "spoofing",
+        "attributed": true,
+        "similarity": 1.0,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "coordinated": {
+      "scenario": "coordinated",
+      "title": "Coordinated Hybrid RF + GNSS Attack",
+      "onset_s": 10.0,
+      "expected_label": "coordinated_rf_gnss",
+      "is_novel": true,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "correct_attribution": false,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "coordinated_rf_gnss",
+        "attributed": true,
+        "similarity": 0.9909,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    },
+    "carrier_blackout": {
+      "scenario": "carrier_blackout",
+      "title": "Sector Carrier & Optical Blackout",
+      "onset_s": 10.0,
+      "expected_label": "carrier_blackout",
+      "is_novel": true,
+      "rule_based": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "jamming",
+        "correct_attribution": false,
+        "false_flags": 0
+      },
+      "contrastive": {
+        "detected": true,
+        "delay_s": 0.0,
+        "label": "carrier_blackout",
+        "attributed": true,
+        "similarity": 0.9974,
+        "correct_attribution": true,
+        "flagged_unexplained": false,
+        "false_flags": 0
+      }
+    }
+  }
+}
