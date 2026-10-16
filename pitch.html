@@ -218,6 +218,29 @@
     position: fixed; right: 18px; top: 14px; z-index: 30; font-family: var(--mono); font-size: 12px; color: #52525B;
     transition: opacity .6s ease;
   }
+  .nav-bar {
+    position: fixed; bottom: 18px; right: 24px; z-index: 35;
+    display: flex; align-items: center; gap: 6px;
+    background: rgba(16, 17, 22, 0.85);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    padding: 5px 8px;
+    backdrop-filter: blur(12px);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45);
+  }
+  .nav-btn {
+    appearance: none; border: none; background: transparent;
+    color: var(--ink); font-family: var(--mono); font-size: 12px; font-weight: 600;
+    padding: 6px 12px; border-radius: 999px; cursor: pointer;
+    transition: background .15s ease, color .15s ease, opacity .15s ease;
+  }
+  .nav-btn:hover { background: rgba(255, 255, 255, 0.1); }
+  .nav-btn:disabled { opacity: 0.3; cursor: default; background: transparent; }
+  .nav-sep { width: 1px; height: 14px; background: rgba(255,255,255,0.12); }
+  .nav-count {
+    font-family: var(--mono); font-size: 11.5px; color: var(--sub);
+    padding: 0 8px; min-width: 54px; text-align: center;
+  }
 </style>
 </head>
 <body>
@@ -239,33 +262,33 @@
     </div>
   </section>
 
-  <!-- 2 · PROBLEM -->
-  <section class="slide" style="--glow: rgba(239,68,68,0.07)" data-notes="Over a European city, a drone goes dark in three ways, and they stack. Concrete blocks the laser. The radio that gets around the building is exactly what a jammer kills. And slow attacks fool threshold alarms for about nine seconds. Most demos draw lines on a flat map and pretend none of this exists. (~25 s)">
-    <div class="eyebrow">The problem</div>
-    <div class="title">Over a city, a drone goes dark in three ways. <span class="dim">They stack.</span></div>
+  <!-- 2 · PROBLEM (STATUS QUO TODAY) -->
+  <section class="slide" style="--glow: rgba(239,68,68,0.07)" data-notes="Today, commercial drone fleets fly on 2.4 or 5.8 GHz radio and public 4G/5G cellular, with GPS L1 for navigation. In an off-grid crisis or electronic attack over a city, that status quo collapses in three ways at once: a cheap broadband jammer wipes out 2.4 GHz and public cell towers fail; star-topology links have no drone-to-drone relay and video starves C2; and standard autopilots blindly follow spoofed GPS while rolling-average alarms miss slow attacks for nine seconds. (~25 s)">
+    <div class="eyebrow">The problem · How drone fleets fly today</div>
+    <div class="title">Today's fleets rely on <span class="c-crit">2.4 GHz, 4G/5G &amp; GPS.</span> <span class="dim">In a crisis, all three fail.</span></div>
     <div class="cols c3">
-      <div class="col accent-dect b">
-        <div class="n">01 · GEOMETRY</div>
-        <h3>Concrete</h3>
-        <p>The 95 m U-Tower and 100 m RWE Tower stand in the flight level. A laser stops at the first facade.</p>
-      </div>
       <div class="col accent-crit b">
-        <div class="n">02 · SPECTRUM</div>
-        <h3>Jamming</h3>
-        <p>The radio that passes through walls is exactly the one a jammer is built to kill. GNSS goes with it.</p>
+        <div class="n">01 · PUBLIC SPECTRUM</div>
+        <h3>2.4 GHz &amp; 4G/5G jam</h3>
+        <p>Commercial drones use 2.4 / 5.8 GHz ISM radio (OcuSync, MAVLink) or public LTE/5G. A broadband jammer or grid blackout wipes both out.</p>
+      </div>
+      <div class="col accent-dect b">
+        <div class="n">02 · STAR TOPOLOGY</div>
+        <h3>No relay, no QoS</h3>
+        <p>Each drone talks straight to ground. When a street canyon shadows the link, neighbors can't relay—and HD video starves command-and-control.</p>
       </div>
       <div class="col accent-sky b">
-        <div class="n">03 · DECEPTION</div>
-        <h3>Slow attacks</h3>
-        <p>Ramping jammers and drifting GPS spoofers hide inside rolling baselines. Threshold alarms stay blind for ~9 s.</p>
+        <div class="n">03 · BLIND NAVIGATION</div>
+        <h3>GPS spoofed, alarms late</h3>
+        <p>Autopilots trust unauthenticated GNSS L1 fixes, while rolling-window threshold alarms stay blind to slow-ramping attacks for ~9 s.</p>
       </div>
     </div>
   </section>
 
-  <!-- 3 · THE CITY IS THE OBSTACLE -->
-  <section class="slide" data-notes="We don't draw lines on a flat map. Every 200 ms, every candidate link is raycast in 3D against real Dortmund building heights. Most blocks are 22 to 28 meters, landmarks 74 to 100. A drone at 50 meters behind the U-Tower loses its laser to HQ at the facade — the red X. Two relay drones orbit at 120 meters, above every roof. A 3-second hysteresis stops links flickering on building edges. (~25 s)">
-    <div class="eyebrow">Layer 1 · 3D line of sight</div>
-    <div class="title">The city is the obstacle.</div>
+  <!-- 3 · OUR SHIFT TO OPTICAL + 3D GEOMETRY -->
+  <section class="slide" data-notes="To defeat RF jammers completely, we move the primary link onto 1550 nm Free-Space Optical lasers. Lasers cannot be RF-jammed — zero packet loss. But lasers introduce a new engineering challenge: Dortmund's 3D skyline. Every 200 ms, we raycast every link against real Dortmund building heights. When a drone drops to 50 m behind the 95 m U-Tower, the laser hits the facade — so we pair it with 120 m high-altitude relays and a 1.9 GHz DECT NR+ radio fallback. (~25 s)">
+    <div class="eyebrow">Our answer · Move off jammed RF</div>
+    <div class="title">Optical lasers beat the jammer. <span class="dim">Now the city is the obstacle.</span></div>
     <div class="split">
       <div class="figure">
         <svg viewBox="0 0 900 600" font-family="Inter, sans-serif">
@@ -494,6 +517,14 @@
 
 <div class="progress" id="progress"></div>
 <div class="hint" id="hint">→ next · ← back · N notes · T timer · F fullscreen</div>
+<div class="nav-bar" id="navBar">
+  <button class="nav-btn" id="btnPrevSlide" title="Previous Slide">« Slide</button>
+  <button class="nav-btn" id="btnPrev" title="Back (←)">← Back</button>
+  <span class="nav-count" id="navCount">01 / 10</span>
+  <button class="nav-btn" id="btnNext" title="Next (→ / Space)">Next →</button>
+  <div class="nav-sep"></div>
+  <button class="nav-btn" id="btnNotesToggle" title="Speaker Notes (N)">Notes</button>
+</div>
 <div class="notes" id="notes"><div class="hd"><span id="notesIdx">Slide 1</span><b id="timer">00:00</b></div><div id="notesTxt"></div></div>
 
 <script>
@@ -524,6 +555,10 @@
     document.getElementById('progress').style.width = `${((cur + 1) / total) * 100}%`;
     document.getElementById('notesIdx').textContent = `Slide ${cur + 1} / ${total}`;
     document.getElementById('notesTxt').textContent = slides[cur].dataset.notes || '';
+    document.getElementById('navCount').textContent = `${String(cur + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
+    document.getElementById('btnPrev').disabled = cur === 0 && step === 0;
+    document.getElementById('btnPrevSlide').disabled = cur === 0;
+    document.getElementById('btnNext').disabled = cur === total - 1 && step >= builds(cur).length;
     history.replaceState(null, '', `#${cur + 1}`);
   }
   function go(i, atEnd) {
@@ -539,6 +574,11 @@
     if (step > 0) { step--; render(); }
     else if (cur > 0) go(cur - 1, true);
   }
+
+  document.getElementById('btnPrev').onclick = e => { e.stopPropagation(); prev(); };
+  document.getElementById('btnPrevSlide').onclick = e => { e.stopPropagation(); if (cur > 0) go(cur - 1, true); else go(0, false); };
+  document.getElementById('btnNext').onclick = e => { e.stopPropagation(); next(); };
+  document.getElementById('btnNotesToggle').onclick = e => { e.stopPropagation(); document.getElementById('notes').classList.toggle('open'); };
 
   const timerEl = document.getElementById('timer');
   let t0 = null, tIv = null;
