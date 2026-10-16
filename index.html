@@ -1444,34 +1444,79 @@ class MapRenderer extends Emitter {
 
       // Subtle selection halo
       if (isSel) {
-        ctx.strokeStyle = 'rgba(250,250,250,0.35)';
+        ctx.strokeStyle = 'rgba(250,250,250,0.38)';
         ctx.lineWidth = 1.2;
-        ctx.beginPath(); ctx.arc(x, y, 14, 0, Math.PI * 2); ctx.stroke();
+        ctx.beginPath(); ctx.arc(x, y, 16, 0, Math.PI * 2); ctx.stroke();
       }
 
-      // 3D-style sleek white/silver chevron (10px) with drop shadow
+      // Top-down quadcopter silhouette (arms, fuselage, spinning rotors, heading nose)
       ctx.save();
       ctx.translate(x, y);
-      if (d.status === 'OFFLINE') {
-        ctx.fillStyle = '#3F3F46';
-        ctx.beginPath(); ctx.arc(0, 0, 4.5, 0, Math.PI * 2); ctx.fill();
-      } else {
-        ctx.rotate(-d.heading);
-        ctx.shadowColor = 'rgba(0,0,0,0.75)';
-        ctx.shadowBlur = 8;
-        ctx.shadowOffsetY = 2;
-        const grad = ctx.createLinearGradient(-6, -5, 7, 5);
-        grad.addColorStop(0, '#FFFFFF');
-        grad.addColorStop(1, '#B4B4BC');
-        ctx.fillStyle = grad;
-        ctx.beginPath();
-        ctx.moveTo(6.5, 0);
-        ctx.lineTo(-5, 4.8);
-        ctx.lineTo(-2.2, 0);
-        ctx.lineTo(-5, -4.8);
-        ctx.closePath();
-        ctx.fill();
+      ctx.rotate(-d.heading);
+      const off = d.status === 'OFFLINE';
+      const armCol = off ? '#3F3F46' : '#A1A1AA';
+      const bodyCol = off ? '#27272A' : '#E4E4E7';
+      const noseCol = off ? '#52525B' : distress === 'crit' ? '#EF4444' : distress === 'warn' ? '#F59E0B' : '#10B981';
+      const r = 6.2; // motor offset
+      const rp = 3.8; // rotor radius
+      const motors = [[r, -r, 1], [r, r, -1], [-r, -r, -1], [-r, r, 1]];
+
+      ctx.shadowColor = 'rgba(0,0,0,0.75)';
+      ctx.shadowBlur = 7;
+      ctx.shadowOffsetY = 2;
+
+      // X-frame arms
+      ctx.strokeStyle = armCol;
+      ctx.lineWidth = 1.8;
+      ctx.lineCap = 'round';
+      ctx.beginPath();
+      ctx.moveTo(-r, -r); ctx.lineTo(r, r);
+      ctx.moveTo(-r, r); ctx.lineTo(r, -r);
+      ctx.stroke();
+
+      // Rotor discs + spinning blades
+      ctx.shadowBlur = 0; ctx.shadowOffsetY = 0;
+      for (const [mx, my, dir] of motors) {
+        ctx.fillStyle = off ? 'rgba(63,63,70,0.22)' : 'rgba(244,244,245,0.13)';
+        ctx.strokeStyle = off ? 'rgba(82,82,91,0.45)' : 'rgba(244,244,245,0.42)';
+        ctx.lineWidth = 0.9;
+        ctx.beginPath(); ctx.arc(mx, my, rp, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        if (!off) {
+          const ang = (t * 0.022 + d.index * 1.1) * dir;
+          ctx.strokeStyle = 'rgba(250,250,250,0.65)';
+          ctx.lineWidth = 1.05;
+          ctx.beginPath();
+          ctx.moveTo(mx - Math.cos(ang) * (rp - 0.5), my - Math.sin(ang) * (rp - 0.5));
+          ctx.lineTo(mx + Math.cos(ang) * (rp - 0.5), my + Math.sin(ang) * (rp - 0.5));
+          ctx.stroke();
+        }
+        ctx.fillStyle = off ? '#52525B' : '#FAFAFA';
+        ctx.beginPath(); ctx.arc(mx, my, 1.1, 0, Math.PI * 2); ctx.fill();
       }
+
+      // Central fuselage pod (elongated along heading +x)
+      ctx.fillStyle = bodyCol;
+      ctx.strokeStyle = '#18181B';
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(5.2, 0);
+      ctx.lineTo(1.8, 2.7);
+      ctx.lineTo(-4.2, 2.2);
+      ctx.lineTo(-5.0, 0);
+      ctx.lineTo(-4.2, -2.2);
+      ctx.lineTo(1.8, -2.7);
+      ctx.closePath();
+      ctx.fill();
+      ctx.stroke();
+
+      // Forward heading nose LED / cameracone
+      ctx.fillStyle = noseCol;
+      ctx.beginPath();
+      ctx.moveTo(5.6, 0);
+      ctx.lineTo(2.4, 1.6);
+      ctx.lineTo(2.4, -1.6);
+      ctx.closePath();
+      ctx.fill();
       ctx.restore();
 
       // Tiny pulsing red/amber dot ONLY if drone is in distress
@@ -1479,19 +1524,19 @@ class MapRenderer extends Emitter {
         const dotCol = distress === 'crit' ? '#EF4444' : '#F59E0B';
         ctx.save();
         ctx.fillStyle = rgba(dotCol, 0.25 + 0.35 * pulse);
-        ctx.beginPath(); ctx.arc(x - 7, y - 7, 5.5, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x - 10, y - 10, 5.5, 0, Math.PI * 2); ctx.fill();
         ctx.fillStyle = dotCol;
-        ctx.beginPath(); ctx.arc(x - 7, y - 7, 2.6, 0, Math.PI * 2); ctx.fill();
+        ctx.beginPath(); ctx.arc(x - 10, y - 10, 2.6, 0, Math.PI * 2); ctx.fill();
         ctx.restore();
       }
 
-      // Tiny clean text label "01", "02" next to chevron (11px Inter, muted white, no border box)
+      // Tiny clean text label "01", "02" next to drone (11px Inter, muted white, no border box)
       const shortNum = d.id.replace(/^DR-/, '');
       ctx.font = '500 11px Inter, -apple-system, sans-serif';
       ctx.fillStyle = d.status === 'OFFLINE' ? 'rgba(161,161,170,0.4)' : isSel ? '#FAFAFA' : 'rgba(250,250,250,0.68)';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(shortNum, x + 10, y + 0.5);
+      ctx.fillText(shortNum, x + 13, y + 0.5);
     }
     ctx.restore();
   }
