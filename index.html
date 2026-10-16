@@ -173,12 +173,77 @@ button,input{font-family:inherit}
 
 /* ---------- Desktop Right Floating Panel (and Mobile Drawer): Metrics + QoS + Controls ---------- */
 .right-panel{
-  position:fixed;top:16px;right:16px;width:308px;max-height:calc(100dvh - 108px);
+  position:fixed;top:16px;right:16px;width:332px;max-height:calc(100dvh - 108px);
   z-index:20;border-radius:20px;padding:15px;
   display:flex;flex-direction:column;gap:14px;
 }
 .sheet-handle-area{display:none}
-.sheet-body{display:flex;flex-direction:column;gap:14px;overflow-y:auto}
+.sheet-body{display:flex;flex-direction:column;gap:13px;overflow-y:auto;padding-right:2px}
+
+/* ---------- Threat Intelligence (Contrastive) & Security Analyst (LLM) Cards ---------- */
+.ti-card,.llm-card{
+  background:rgba(255,255,255,0.03);border:1px solid var(--border);
+  border-radius:14px;padding:10px 11px;display:flex;flex-direction:column;gap:8px;
+}
+.ti-actions-bar{display:flex;gap:5px;flex-wrap:wrap}
+.ti-pill-btn{
+  background:rgba(255,255,255,0.05);border:1px solid var(--border);color:var(--txt2);
+  font-size:9.5px;font-weight:600;padding:3px 7px;border-radius:7px;cursor:pointer;
+  transition:all .15s;
+}
+.ti-pill-btn:hover{color:var(--txt);border-color:var(--border-hi);background:rgba(255,255,255,0.09)}
+.ti-pill-btn.active{background:rgba(245,158,11,0.18);border-color:rgba(245,158,11,0.55);color:#FDE68A}
+.ti-list{display:flex;flex-direction:column;gap:4px;max-height:168px;overflow-y:auto}
+.ti-row{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:4px 7px;border-radius:8px;background:rgba(0,0,0,0.26);
+  border:1px solid rgba(255,255,255,0.04);font-size:10.5px;font-variant-numeric:tabular-nums;
+}
+.ti-dev{font-weight:700;color:var(--txt);font-family:var(--mono);font-size:10px;width:40px;flex:none}
+.ti-badge{
+  font-size:9px;font-weight:700;letter-spacing:.05em;padding:2px 6px;border-radius:999px;
+  background:rgba(16,185,129,0.14);color:var(--mint-hi);white-space:nowrap;
+}
+.ti-badge.crit{background:rgba(239,68,68,0.22);color:#FCA5A5;border:1px solid rgba(239,68,68,0.4)}
+.ti-badge.warn{background:rgba(245,158,11,0.22);color:#FDE68A;border:1px solid rgba(245,158,11,0.45)}
+.ti-sim{font-size:9px;color:var(--mut);font-family:var(--mono);margin-left:auto;white-space:nowrap}
+.ti-confirm-btn{
+  background:rgba(245,158,11,0.22);border:1px solid rgba(245,158,11,0.65);color:#FDE68A;
+  font-size:9px;font-weight:700;padding:2px 6px;border-radius:6px;cursor:pointer;white-space:nowrap;
+}
+.ti-confirm-btn:hover{background:rgba(245,158,11,0.35);color:#FFF}
+
+.llm-top{display:flex;align-items:center;justify-content:space-between;gap:6px}
+.llm-hyp{
+  font-size:9.5px;font-weight:700;letter-spacing:.05em;padding:2px 8px;border-radius:999px;
+  background:rgba(16,185,129,0.15);color:var(--mint-hi);
+}
+.llm-hyp.warn{background:rgba(245,158,11,0.22);color:#FDE68A;border:1px solid rgba(245,158,11,0.45)}
+.llm-hyp.crit{background:rgba(239,68,68,0.22);color:#FCA5A5;border:1px solid rgba(239,68,68,0.4)}
+.llm-conf{font-size:9.5px;color:var(--mut);font-family:var(--mono)}
+.llm-mode-badge{
+  font-size:8.5px;font-weight:700;letter-spacing:.07em;padding:2px 6px;border-radius:6px;
+  background:rgba(56,189,248,0.14);border:1px solid rgba(56,189,248,0.35);color:var(--blue);
+}
+.llm-mode-badge.uni{background:rgba(167,139,250,0.18);border-color:rgba(167,139,250,0.45);color:#C4B5FD}
+.llm-summary{font-size:10.5px;line-height:1.45;color:var(--txt2);user-select:text}
+.llm-actions{display:flex;flex-wrap:wrap;gap:5px}
+.llm-act-btn{
+  background:rgba(16,185,129,0.13);border:1px solid rgba(16,185,129,0.38);color:#6EE7B7;
+  font-size:9.5px;font-weight:600;padding:4px 8px;border-radius:7px;cursor:pointer;transition:all .15s;
+}
+.llm-act-btn:hover{background:rgba(16,185,129,0.24);color:#FFF}
+.llm-issues-wrap{border-top:1px solid rgba(255,255,255,0.06);padding-top:6px;display:flex;flex-direction:column;gap:4px}
+.llm-issue-hdr{font-size:8.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--mut);display:flex;justify-content:space-between}
+.llm-issue-list{display:flex;flex-direction:column;gap:3px;max-height:110px;overflow-y:auto}
+.llm-issue-item{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  font-size:9.5px;padding:3px 6px;border-radius:6px;background:rgba(0,0,0,0.24);color:var(--txt2);
+}
+.llm-sev{font-size:8px;font-weight:700;padding:1px 5px;border-radius:4px;flex:none}
+.llm-sev.LOW{background:rgba(16,185,129,0.18);color:var(--mint-hi)}
+.llm-sev.MED{background:rgba(245,158,11,0.22);color:#FBBF24}
+.llm-sev.CRIT{background:rgba(239,68,68,0.24);color:#F87171}
 
 .sec-hdr{display:flex;align-items:center;justify-content:space-between;font-size:10px;font-weight:700;color:var(--mut);letter-spacing:.08em;text-transform:uppercase}
 .kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
@@ -411,6 +476,46 @@ button,input{font-family:inherit}
         <span id="qosPolicy" style="color:var(--txt2)">NOMINAL</span>
       </div>
       <div class="qos-list" id="traffic"></div>
+
+      <!-- ================= THREAT INTELLIGENCE (CONTRASTIVE PROTOTYPE DETECTOR) ================= -->
+      <div class="sec-hdr">
+        <span>Threat Intelligence (contrastive)</span>
+        <span id="contrastiveSummary" style="color:var(--mint-hi)">10 NOMINAL</span>
+      </div>
+      <div class="ti-card" id="contrastiveCard">
+        <div class="ti-actions-bar">
+          <button class="ti-pill-btn" id="btnRampJam" title="Inject slow-ramping smart jammer (0s contrastive vs 9.5s rule-based)">⚡ Ramp Jammer</button>
+          <button class="ti-pill-btn" id="btnCoordAttack" title="Inject novel Coordinated RF+GNSS profile (triggers UNEXPLAINED → Confirm)">🎯 Coordinated RF+GNSS</button>
+          <button class="ti-pill-btn hidden" id="btnConfirmAll" title="Confirm active UNEXPLAINED signature as new threat prototype">✓ Confirm Threat</button>
+        </div>
+        <div class="ti-list scroll" id="contrastiveList"></div>
+      </div>
+
+      <!-- ================= SECURITY ANALYST (LLM COPILOT) ================= -->
+      <div class="sec-hdr">
+        <span>Security Analyst (LLM)</span>
+        <div style="display:flex;align-items:center;gap:5px">
+          <button class="mini-btn" id="btnAnalyze" title="Request fresh LLM Security Analyst assessment">Analyze</button>
+          <span class="llm-mode-badge" id="llmBackendBadge">MOCK</span>
+        </div>
+      </div>
+      <div class="llm-card" id="llmAnalystCard">
+        <div class="llm-top">
+          <span class="llm-hyp" id="llmHypothesis">NOMINAL</span>
+          <span class="llm-conf" id="llmConfidence">Conf 98% · DR-01</span>
+        </div>
+        <div class="llm-summary" id="llmSummary">
+          Knoten DR-01 operiert innerhalb des gelernten Nominal-Prototyps. Optische FSOC-Verbindung und GNSS-Stützung sind konsistent.
+        </div>
+        <div class="llm-actions" id="llmActions"></div>
+        <div class="llm-issues-wrap">
+          <div class="llm-issue-hdr">
+            <span>Issue erstellt (Operator Queue)</span>
+            <span id="llmIssueCount">0 / 5</span>
+          </div>
+          <div class="llm-issue-list scroll" id="llmIssueList"></div>
+        </div>
+      </div>
     </div>
   </aside>
 
@@ -1152,6 +1257,13 @@ class Simulation extends Emitter {
     this.metrics = new MetricsEngine(this);
     this.simTime = 0; this.speed = 3; this.now = nowMs(); this.lastNet = 0;
     this.rth = false; this.booted = false; this.protection = true;
+    this.rampJam = false;
+    this.contrastiveVerdicts = new Map();
+    this.contrastiveExternalUntil = 0;
+    this.confirmedMockThreats = new Set();
+    this.llmAnalysis = null;
+    this.llmIssues = [];
+    this.lastMockAnalysisKey = '';
   }
   node(id) { return id === 'HQ' ? this.hq : this.droneMap.get(id); }
 
@@ -1163,12 +1275,191 @@ class Simulation extends Emitter {
     if (this.now - this.lastNet >= CFG.NET_TICK_MS) {
       this.lastNet = this.now;
       this.net.compute(); this.traffic.compute(); this.metrics.compute();
+      this.computeMockIntelligence();
       if (!this.booted && this.drones.every(d => d.routeState !== 'JOINING')) {
         this.booted = true;
         this.logger.ok(`Hybrid FSOC + DECT NR+ mesh converged · ${this.net.links.length} links · ${this.drones.filter(d => d.routeState === 'OK').length}/${this.drones.length} nodes reachable`);
       }
       this.emit('net');
     }
+  }
+
+  /* ---- Contrastive Prototype & LLM Security Analyst (Live WS + Deterministic Mock) ---- */
+  computeMockIntelligence() {
+    if (this.now < this.contrastiveExternalUntil) return;
+    const isCoord = this.env.jamming && this.env.spoofing;
+    let focusVerdict = null;
+    for (const d of this.drones) {
+      if (d.status !== 'ONLINE') {
+        this.contrastiveVerdicts.set(d.id, { device: d.id, label: 'NOMINAL', similarity: 1.0, z_score: 0.0, attributed: true });
+        continue;
+      }
+      const inJam = d.jam > 0.25;
+      const inSpoof = d.gnss === 'SPOOFED' || (this.env.spoofing && this.env.spoofFactorAt(d.x, d.y) > 0);
+      let label = 'NOMINAL', sim = 1.0, z = 0.8, attributed = true;
+      let dims = { rssi: 0.2, snr: 0.3, loss: 0.1, gnss_offset_m: 0.2 };
+      let ev = [-65.0, 34.0, 0.005, 1.1];
+
+      if (inJam && inSpoof) {
+        z = 24.6;
+        dims = { rssi: 6.4, snr: 15.8, loss: 7.2, gnss_offset_m: 16.5 };
+        ev = [-75.2, 16.4, 0.18, 15.4];
+        if (this.confirmedMockThreats.has('coordinated_rf_gnss')) {
+          label = 'coordinated_rf_gnss'; sim = 0.98; attributed = true;
+        } else {
+          label = 'UNEXPLAINED'; sim = 0.68; attributed = false;
+        }
+      } else if (inJam) {
+        label = 'jamming'; sim = this.rampJam ? 0.96 : 0.99; z = this.rampJam ? 8.9 : 34.2; attributed = true;
+        dims = { rssi: this.rampJam ? 3.1 : 12.1, snr: this.rampJam ? 8.1 : 32.8, loss: 4.2, gnss_offset_m: 0.2 };
+        ev = [this.rampJam ? -70.1 : -83.2, this.rampJam ? 25.1 : -1.8, 0.12, 1.1];
+      } else if (inSpoof) {
+        label = 'spoofing'; sim = 0.99; z = 21.4; attributed = true;
+        dims = { rssi: 0.2, snr: 0.3, loss: 0.1, gnss_offset_m: 21.4 };
+        ev = [-65.1, 33.8, 0.006, Math.max(18.0, Math.hypot(d.spoofOffset.x, d.spoofOffset.y))];
+      }
+      const v = { device: d.id, label, similarity: sim, z_score: z, dims, evidence: ev, attributed };
+      this.contrastiveVerdicts.set(d.id, v);
+      if (label === 'UNEXPLAINED' || (!focusVerdict && label !== 'NOMINAL')) focusVerdict = v;
+    }
+
+    const activeSig = focusVerdict ? `${focusVerdict.device}:${focusVerdict.label}` : 'NOMINAL';
+    if (activeSig !== this.lastMockAnalysisKey) {
+      this.lastMockAnalysisKey = activeSig;
+      this.applyAnalysis(this.buildMockAnalysis(focusVerdict || this.contrastiveVerdicts.get('DR-01')));
+    }
+  }
+
+  buildMockAnalysis(v) {
+    const dev = (v && v.device) || 'DR-01';
+    const label = (v && v.label) || 'NOMINAL';
+    const sim = (v && v.similarity) || 0.98;
+    const z = (v && v.z_score) || 0.8;
+    if (label === 'UNEXPLAINED') {
+      return {
+        backend: 'MOCK', device: dev,
+        hypothesis: 'unbekanntes Muster', confidence: 0.68,
+        summary: `Auffällige 4D-Signatur auf ${dev} entdeckt (z=${z.toFixed(1)} in [snr, gnss_offset_m]). Kein bekannter Bedrohungs-Prototyp erreicht die Kosinus-Schwelle (max. Ähnlichkeit ${sim.toFixed(2)}). Bitte Profil bestätigen und DECT NR+ Fallback prüfen.`,
+        recommended_actions: [
+          { command: 'CONFIRM_THREAT', label: 'Signatur als neuen Bedrohungs-Prototyp speichern' },
+          { command: 'SET_PROTECTION', label: 'DECT NR+ Fallback & INS-Lock erzwingen' },
+          { command: 'SAFE_RETURN_HOME', label: 'Sicherheits-RTH vorbereiten' },
+        ],
+        issue: { title: `[${dev}] Unbekanntes Angriffsmuster (snr, gnss_offset_m, z=${z.toFixed(1)})`, severity: 'CRIT', assignee_role: 'RF & Threat Intelligence Lead' },
+      };
+    }
+    if (label === 'jamming') {
+      return {
+        backend: 'MOCK', device: dev,
+        hypothesis: 'jamming', confidence: sim,
+        summary: `Breitband-Störsender auf ${dev} identifiziert (Kosinus-Ähnlichkeit ${sim.toFixed(2)}, z=${z.toFixed(1)}). Der Mesh-Knoten schaltet automatisch von FSOC-Laser auf das gebäudedurchdringende 1,9 GHz DECT NR+ Band um und drosselt Video zugunsten von C2.`,
+        recommended_actions: [
+          { command: 'SET_PROTECTION', label: 'Band-Fallback auf DECT NR+ sichern' },
+          { command: 'MOVE_ZONE', label: 'Störzone Sektor West neu zentrieren' },
+          { command: 'SAFE_RETURN_HOME', label: 'Safe Return Home (RTH) auslösen' },
+        ],
+        issue: { title: `[${dev}] RF/Optisches Jamming erkannt (z=${z.toFixed(1)})`, severity: 'CRIT', assignee_role: 'Spectrum Defense Engineer' },
+      };
+    }
+    if (label === 'spoofing') {
+      return {
+        backend: 'MOCK', device: dev,
+        hypothesis: 'spoofing', confidence: sim,
+        summary: `GNSS-L1-Spoofing auf ${dev} bestätigt (Kosinus-Ähnlichkeit ${sim.toFixed(2)}, z=${z.toFixed(1)}). Die Plausibilitätsprüfung verwirft den gefälschten Satelliten-Fix und hält die Drohne per Trägheitsnavigation auf dem realen Orbit.`,
+        recommended_actions: [
+          { command: 'SET_PROTECTION', label: 'INS-Plausibilitäts-Sperre aktivieren' },
+          { command: 'SAFE_RETURN_HOME', label: 'Flotte per INS nach HQ zurückführen (RTH)' },
+        ],
+        issue: { title: `[${dev}] GNSS-Spoofing Abweichung erkannt`, severity: 'CRIT', assignee_role: 'Navigation & GNC Specialist' },
+      };
+    }
+    if (label !== 'NOMINAL') {
+      return {
+        backend: 'MOCK', device: dev,
+        hypothesis: label, confidence: sim,
+        summary: `Wiedererkanntes Bedrohungsprofil '${label}' auf ${dev} (Kosinus-Ähnlichkeit ${sim.toFixed(2)}, z=${z.toFixed(1)}). Durch das zuvor vom Operator bestätigte Prototyp-Lernen wurde das Muster sofort klassifiziert.`,
+        recommended_actions: [
+          { command: 'SET_PROTECTION', label: 'DECT NR+ & INS-Schutzprofil durchsetzen' },
+          { command: 'SAFE_RETURN_HOME', label: 'Notfall-RTH für Sektor einleiten' },
+        ],
+        issue: { title: `[${dev}] Bestätigtes Bedrohungsprofil '${label}' aktiv`, severity: 'CRIT', assignee_role: 'Incident Commander' },
+      };
+    }
+    return {
+      backend: 'MOCK', device: dev,
+      hypothesis: 'NOMINAL', confidence: 0.98,
+      summary: `Knoten ${dev} operiert innerhalb des gelernten Nominal-Prototyps (SNR 34.0 dB, RSSI -65.0 dBm). Optische FSOC-Verbindung und GNSS-Stützung sind konsistent.`,
+      recommended_actions: [
+        { command: 'SET_PROTECTION', label: 'Hybriden DECT NR+ Schutz aktiv halten' },
+      ],
+      issue: { title: `[${dev}] Telemetrie im Nominalbereich`, severity: 'LOW', assignee_role: 'Mesh Telemetry Operator' },
+    };
+  }
+
+  applyContrastiveVerdict(v) {
+    if (!v || !v.device) return;
+    this.contrastiveExternalUntil = this.now + CFG.EXTERNAL_TTL_MS;
+    this.contrastiveVerdicts.set(v.device, v);
+    this.emit('contrastive', v);
+  }
+
+  applyContrastiveState(st) {
+    if (!st) return;
+    this.contrastiveExternalUntil = this.now + CFG.EXTERNAL_TTL_MS;
+    if (st.verdicts && typeof st.verdicts === 'object') {
+      for (const [dev, v] of Object.entries(st.verdicts)) {
+        this.contrastiveVerdicts.set(dev, v);
+      }
+    }
+    this.emit('contrastive', st);
+  }
+
+  applyAnalysis(a) {
+    if (!a || !a.summary) return;
+    this.llmAnalysis = a;
+    if (a.issue && a.issue.title) {
+      const top = this.llmIssues[0];
+      if (!top || top.title !== a.issue.title) {
+        this.llmIssues.unshift({ ...a.issue, ts: hhmmss(new Date()) });
+        if (this.llmIssues.length > 5) this.llmIssues.pop();
+      }
+    }
+    this.emit('analysis', a);
+  }
+
+  confirmThreat(device = 'DR-01', label = 'coordinated_rf_gnss') {
+    this.confirmedMockThreats.add(label);
+    this.logger.ok(`CONTRASTIVE · Operator confirmed '${label}' on ${device} → prototype stored`);
+    this.command('CONFIRM_THREAT', { device, label }, 'ui');
+    if (this.now >= this.contrastiveExternalUntil) {
+      this.lastMockAnalysisKey = '';
+      this.computeMockIntelligence();
+    }
+    this.emit('contrastive');
+  }
+
+  requestAnalysis(device = null) {
+    this.command('ANALYZE', { device }, 'ui');
+    if (this.now >= this.contrastiveExternalUntil) {
+      const v = (device && this.contrastiveVerdicts.get(device))
+        || Array.from(this.contrastiveVerdicts.values()).find(x => x.label !== 'NOMINAL')
+        || this.contrastiveVerdicts.get('DR-01');
+      this.applyAnalysis(this.buildMockAnalysis(v));
+    }
+  }
+
+  setRampJam(on) {
+    this.rampJam = on;
+    this.setJamming(on, 'ui');
+    this.command('SET_RAMP_JAM', on, 'ui');
+    if (on) this.logger.warn('RAMPING JAMMER active (8.5 dB + 1.55 dB/s) → Contrastive flags at 0.0 s (Rule-based blind until 9.5 s)');
+  }
+
+  setCoordinatedAttack(on) {
+    this.setJamming(on, 'ui');
+    this.setSpoofing(on, 'ui');
+    this.command('SET_COORDINATED', on, 'ui');
+    if (on) this.logger.crit('COORDINATED RF+GNSS ATTACK injected → novel 4D signature');
   }
 
   /* ---- reactions ---- */
@@ -1255,6 +1546,9 @@ class Simulation extends Emitter {
   }
   reset(origin = 'ui') {
     this.env.jamming = false; this.env.spoofing = false;
+    this.rampJam = false;
+    this.confirmedMockThreats.clear();
+    this.lastMockAnalysisKey = '';
     const z = Geo.toXY(CFG.ZONE.lat, CFG.ZONE.lon); this.env.moveZone(z.x, z.y);
     this.rth = false; this.simTime = 0;
     this.drones.forEach(d => d.reset());
@@ -1306,6 +1600,8 @@ class Simulation extends Emitter {
       case 'PROTECTION': this.setProtection(on, 'backend'); break;
       case 'RESET': this.reset('backend'); break;
       case 'ZONE': this.emit('env'); break;
+      case 'CONTRASTIVE': this.applyContrastiveVerdict(e); break;
+      case 'ANALYSIS': this.applyAnalysis(e); break;
       default: this.logger.warn(`Unknown backend event: ${t || JSON.stringify(e)}`);
     }
   }
@@ -1949,6 +2245,13 @@ class MapRenderer extends Emitter {
         ctx.fillStyle = '#FBBF24';
         ctx.fillText('NLOS · DECT NR+', x + 13, y + 7);
       }
+      const cv = !off && this.sim.contrastiveVerdicts && this.sim.contrastiveVerdicts.get(d.id);
+      if (cv && cv.label && cv.label !== 'NOMINAL') {
+        ctx.font = '700 8.5px "JetBrains Mono", monospace';
+        ctx.fillStyle = cv.label === 'UNEXPLAINED' ? '#FBBF24' : (cv.label === 'jamming' || cv.label === 'spoofing' ? '#F87171' : '#38BDF8');
+        const vy = y + (d.band === 'DECT' ? 16 : 7);
+        ctx.fillText(cv.label === 'UNEXPLAINED' ? '⚠ UNEXPLAINED' : `◆ ${cv.label}`, x + 13, vy);
+      }
     }
     ctx.restore();
   }
@@ -2046,6 +2349,12 @@ class BackendBridge extends Emitter {
     switch (type) {
       case 'drones': case 'drone': case 'telemetry': case 'drone_update': this.sim.applyDroneData(data); break;
       case 'event': this.sim.applyEvent(data); break;
+      case 'contrastive': this.sim.applyContrastiveVerdict(data); break;
+      case 'contrastive_state': this.sim.applyContrastiveState(data); break;
+      case 'threat_confirmed':
+        if (data && data.updated_verdicts) data.updated_verdicts.forEach(v => this.sim.applyContrastiveVerdict(v));
+        break;
+      case 'analysis': this.sim.applyAnalysis(data); break;
       case 'metrics': this.sim.metrics.applyOverride(data); break;
       case 'links': case 'mesh': this.sim.net.applyExternal(data); break;
       case 'log': this.sim.logger.log(String(data.level || 'INFO').toUpperCase(), data.msg || data.message || ''); break;
@@ -2054,6 +2363,7 @@ class BackendBridge extends Emitter {
         if (msg.drones) this.sim.applyDroneData(msg.drones);
         if (msg.metrics) this.sim.metrics.applyOverride(msg.metrics);
         if (msg.links) this.sim.net.applyExternal(msg.links);
+        if (msg.contrastive) this.sim.applyContrastiveState(msg.contrastive);
         if (msg.events) [].concat(msg.events).forEach(e => this.sim.applyEvent(e));
         if (msg.id) this.sim.applyDroneData(msg);
     }
@@ -2087,13 +2397,18 @@ class UI {
     this.$ = id => document.getElementById(id);
     this.follow = true; this.demoTimers = [];
     this.snapState = 'mid'; // 'peek' | 'mid' | 'full'
-    this.buildFleet(); this.buildKPIs(); this.buildTraffic(); this.bindControls(); this.bindSheet();
+    this.buildFleet(); this.buildKPIs(); this.buildTraffic(); this.buildContrastive(); this.bindControls(); this.bindSheet();
     sim.logger.on('line', e => this.appendLog(e));
     sim.on('env', () => this.updateControls());
-    sim.on('fleet', () => this.buildFleet());
+    sim.on('fleet', () => { this.buildFleet(); this.buildContrastive(); });
+    sim.on('contrastive', () => this.updateContrastive());
+    sim.on('analysis', a => this.renderAnalysis(a));
     map.on('select', id => this.highlightCard(id));
     bridge.on('state', s => this.updateSource(s));
     this.updateControls();
+    this.sim.computeMockIntelligence();
+    this.updateContrastive();
+    if (this.sim.llmAnalysis) this.renderAnalysis(this.sim.llmAnalysis);
   }
 
   buildFleet() {
@@ -2200,6 +2515,173 @@ class UI {
     });
   }
 
+  buildContrastive() {
+    const host = this.$('contrastiveList');
+    if (!host) return;
+    host.innerHTML = '';
+    this.tiRows = new Map();
+    for (const d of this.sim.drones) {
+      const el = document.createElement('div');
+      el.className = 'ti-row';
+      el.innerHTML = `
+        <span class="ti-id">${d.id}</span>
+        <span class="ti-badge nominal">NOMINAL</span>
+        <span class="ti-sim">sim 1.00</span>
+        <button class="ti-confirm-btn hidden" title="Confirm as new threat prototype">Confirm as new threat</button>`;
+      const btn = el.querySelector('.ti-confirm-btn');
+      btn.addEventListener('click', e => {
+        e.stopPropagation();
+        this.sim.confirmThreat(d.id, 'coordinated_rf_gnss');
+      });
+      host.appendChild(el);
+      this.tiRows.set(d.id, {
+        el,
+        badge: el.querySelector('.ti-badge'),
+        sim: el.querySelector('.ti-sim'),
+        btn,
+      });
+    }
+  }
+
+  updateContrastive() {
+    if (!this.tiRows) return;
+    let nomCount = 0, unexpCount = 0, threatCount = 0;
+    let firstUnexplainedDev = null;
+    for (const d of this.sim.drones) {
+      const r = this.tiRows.get(d.id);
+      if (!r) continue;
+      const v = this.sim.contrastiveVerdicts.get(d.id) || { label: 'NOMINAL', similarity: 1.0, attributed: true };
+      const lbl = v.label || 'NOMINAL';
+      const simVal = typeof v.similarity === 'number' ? v.similarity : 1.0;
+      let cls = 'ti-badge ';
+      if (lbl === 'NOMINAL') {
+        cls += 'nominal';
+        nomCount++;
+      } else if (lbl === 'UNEXPLAINED') {
+        cls += 'unexplained';
+        unexpCount++;
+        if (!firstUnexplainedDev) firstUnexplainedDev = d.id;
+      } else if (lbl === 'jamming' || lbl === 'spoofing') {
+        cls += 'threat';
+        threatCount++;
+      } else {
+        cls += 'learned';
+        threatCount++;
+      }
+      r.badge.className = cls;
+      r.badge.textContent = lbl === 'UNEXPLAINED' ? 'UNEXPLAINED · needs label' : lbl;
+      r.sim.textContent = `sim ${simVal.toFixed(2)}`;
+      r.btn.classList.toggle('hidden', lbl !== 'UNEXPLAINED');
+    }
+    const sumEl = this.$('contrastiveSummary');
+    if (sumEl) {
+      if (unexpCount > 0) {
+        sumEl.textContent = `${unexpCount} UNEXPLAINED · ${nomCount} NOM`;
+        sumEl.style.color = 'var(--amber-hi)';
+      } else if (threatCount > 0) {
+        sumEl.textContent = `${threatCount} ATTRIBUTED · ${nomCount} NOM`;
+        sumEl.style.color = 'var(--red-hi)';
+      } else {
+        sumEl.textContent = `${nomCount} NOMINAL`;
+        sumEl.style.color = 'var(--mint-hi)';
+      }
+    }
+    const btnConfirmAll = this.$('btnConfirmAll');
+    if (btnConfirmAll) {
+      btnConfirmAll.classList.toggle('hidden', unexpCount === 0);
+      btnConfirmAll.dataset.device = firstUnexplainedDev || 'DR-01';
+    }
+  }
+
+  executeRecommendedAction(act, defaultDevice = 'DR-01') {
+    const cmd = String(act.command || '').toUpperCase();
+    const payload = act.payload !== undefined ? act.payload : {};
+    const s = this.sim;
+    if (cmd === 'CONFIRM_THREAT') {
+      const dev = (payload && payload.device) || defaultDevice || 'DR-01';
+      const lbl = (payload && payload.label) || 'coordinated_rf_gnss';
+      s.confirmThreat(dev, lbl);
+    } else if (cmd === 'SET_PROTECTION') {
+      s.setProtection(payload !== false);
+    } else if (cmd === 'SAFE_RETURN_HOME') {
+      s.setRTH(payload !== false);
+    } else if (cmd === 'MOVE_ZONE') {
+      const lat = (payload && payload.lat) || 51.5185;
+      const lon = (payload && payload.lon) || 7.4720;
+      const z = Geo.toXY(lat, lon);
+      s.env.moveZone(z.x, z.y);
+      s.logger.info(`LLM CoPilot action: MOVE_ZONE → (${lat.toFixed(4)}°N, ${lon.toFixed(4)}°E)`);
+      s.command('MOVE_ZONE', { lat, lon, radius_m: (payload && payload.radius_m) || s.env.zone.radius }, 'ui');
+      s.emit('env');
+    } else if (cmd === 'SET_JAMMING') {
+      s.setJamming(!!payload);
+    } else if (cmd === 'SET_SPOOFING') {
+      s.setSpoofing(!!payload);
+    } else if (cmd === 'RESET') {
+      s.reset();
+    } else {
+      s.command(cmd, payload, 'ui');
+    }
+  }
+
+  renderAnalysis(a) {
+    if (!a) return;
+    const badge = this.$('llmBackendBadge');
+    if (badge) {
+      const b = String(a.backend || 'MOCK').toUpperCase();
+      badge.textContent = b;
+      badge.className = `llm-mode-badge${b === 'UNI' ? ' uni' : ''}`;
+    }
+    const hyp = this.$('llmHypothesis');
+    if (hyp) {
+      const hTxt = a.hypothesis || 'NOMINAL';
+      hyp.textContent = hTxt;
+      const isUnknown = hTxt === 'unbekanntes Muster' || a.verdict_label === 'UNEXPLAINED';
+      const isThreat = !isUnknown && hTxt !== 'NOMINAL';
+      hyp.className = `llm-hyp${isUnknown ? ' unknown' : isThreat ? ' threat' : ''}`;
+    }
+    const conf = this.$('llmConfidence');
+    if (conf) {
+      const pct = Math.round((typeof a.confidence === 'number' ? a.confidence : 0.9) * 100);
+      conf.textContent = `Conf ${pct}% · ${a.device || 'DR-01'}`;
+    }
+    const sum = this.$('llmSummary');
+    if (sum) sum.textContent = a.summary || '';
+
+    const actHost = this.$('llmActions');
+    if (actHost) {
+      actHost.innerHTML = '';
+      (a.recommended_actions || []).forEach(act => {
+        const b = document.createElement('button');
+        b.className = 'llm-act-btn';
+        b.textContent = act.label || act.command;
+        b.title = `Execute engine command: ${act.command}`;
+        b.addEventListener('click', () => this.executeRecommendedAction(act, a.device));
+        actHost.appendChild(b);
+      });
+    }
+
+    const issHost = this.$('llmIssueList');
+    const issCnt = this.$('llmIssueCount');
+    if (issHost) {
+      issHost.innerHTML = '';
+      const issues = this.sim.llmIssues.slice(0, 5);
+      if (issCnt) issCnt.textContent = `${issues.length} / 5`;
+      issues.forEach(iss => {
+        const row = document.createElement('div');
+        row.className = 'llm-issue-item';
+        const sev = String(iss.severity || 'LOW').toUpperCase();
+        row.innerHTML = `
+          <span class="llm-sev ${sev}">${sev}</span>
+          <span class="llm-iss-title"></span>
+          <span class="llm-iss-role"></span>`;
+        row.querySelector('.llm-iss-title').textContent = iss.title || 'Incident';
+        row.querySelector('.llm-iss-role').textContent = iss.assignee_role || 'Operator';
+        issHost.appendChild(row);
+      });
+    }
+  }
+
   setSheetSnap(snap) {
     const sheet = this.$('bottomSheet');
     this.snapState = snap;
@@ -2245,6 +2727,24 @@ class UI {
     this.$('btnProt').onclick = () => s.setProtection(!s.protection);
     this.$('btnReset').onclick = () => { this.stopDemo(); s.reset(); };
     this.$('btnDemo').onclick = () => (this.demoTimers.length ? this.stopDemo(true) : this.runDemo());
+    if (this.$('btnRampJam')) {
+      this.$('btnRampJam').onclick = () => s.setRampJam(!s.rampJam);
+    }
+    if (this.$('btnCoordAttack')) {
+      this.$('btnCoordAttack').onclick = () => {
+        const both = s.env.jamming && s.env.spoofing;
+        s.setCoordinatedAttack(!both);
+      };
+    }
+    if (this.$('btnConfirmAll')) {
+      this.$('btnConfirmAll').onclick = () => {
+        const dev = this.$('btnConfirmAll').dataset.device || 'DR-01';
+        s.confirmThreat(dev, 'coordinated_rf_gnss');
+      };
+    }
+    if (this.$('btnAnalyze')) {
+      this.$('btnAnalyze').onclick = () => s.requestAnalysis(this.map.selected || null);
+    }
     this.$('srcBox').onclick = () => this.$('wsBar').classList.toggle('hidden');
     this.$('wsBtn').onclick = () => (this.bridge.state === 'MOCK' ? this.bridge.connect(this.$('wsUrl').value.trim()) : this.bridge.disconnect());
     this.$('zIn').onclick = () => this.map.zoom(1.4);
@@ -2306,6 +2806,8 @@ class UI {
     this.$('btnRth').classList.toggle('active-amber', s.rth);
     this.$('btnProt').className = `ctrl-btn ${s.protection ? 'prot-on' : 'prot-off'}`;
     this.$('protLabel').textContent = s.protection ? 'Protected' : 'Unprotected';
+    if (this.$('btnRampJam')) this.$('btnRampJam').classList.toggle('active', !!s.rampJam && s.env.jamming);
+    if (this.$('btnCoordAttack')) this.$('btnCoordAttack').classList.toggle('active', s.env.jamming && s.env.spoofing);
   }
 
   updateSource(state) {
@@ -2392,6 +2894,7 @@ class UI {
     th.className = `toast-threat${lvl === 'CRITICAL' ? ' crit' : lvl === 'ELEVATED' ? ' warn' : ''}`;
     this.$('hdrMission').textContent = fmtDur(s.simTime);
     this.$('clock').textContent = hhmmss(new Date());
+    this.updateContrastive();
   }
 
   drawSparks() {
@@ -2454,6 +2957,8 @@ window.AirShield = {
   poll: (url, ms) => bridge.poll(url, ms),
   stopPolling: () => bridge.stopPolling(),
   getState: () => sim.getState(),
+  confirmThreat: (device, label) => sim.confirmThreat(device, label),
+  requestAnalysis: device => sim.requestAnalysis(device),
   /** Subscribe to operator commands (button clicks) – also forwarded over WS */
   onCommand: cb => sim.on('command', cb),
 };
