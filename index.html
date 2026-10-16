@@ -146,13 +146,16 @@ button,input{font-family:inherit}
 .fchip.selected{background:rgba(255,255,255,0.14);border-color:rgba(255,255,255,0.38)}
 .fchip.warn{border-color:rgba(245,158,11,0.5);background:rgba(245,158,11,0.13)}
 .fchip.crit{border-color:rgba(239,68,68,0.55);background:rgba(239,68,68,0.15)}
+.fchip.popup{border-color:rgba(192,132,252,0.75);background:linear-gradient(90deg,rgba(239,68,68,0.22),rgba(168,85,247,0.25))}
 .fchip-id{font-weight:700;color:var(--txt);font-size:11px}
 .fchip-band{font-size:9.5px;font-weight:600;color:var(--mint-hi)}
 
 .st-dot{width:7px;height:7px;border-radius:50%;background:var(--mint-hi);box-shadow:0 0 6px rgba(52,211,153,0.7);flex:none}
 .st-dot.warn{background:var(--amber);box-shadow:0 0 8px rgba(245,158,11,0.85)}
 .st-dot.crit{background:var(--red);box-shadow:0 0 8px rgba(239,68,68,0.9)}
+.st-dot.popup{background:#C084FC;box-shadow:0 0 10px #EF4444,0 0 16px #A855F7;animation:popupPulse 0.9s infinite alternate}
 .st-dot.off{background:#52525B;box-shadow:none}
+@keyframes popupPulse{0%{background:#EF4444;box-shadow:0 0 10px #EF4444;transform:scale(1)}100%{background:#C084FC;box-shadow:0 0 14px #A855F7;transform:scale(1.25)}}
 
 /* Fleet Accordion List */
 .fleet-list{display:flex;flex-direction:column;gap:3px;flex:1}
@@ -162,9 +165,11 @@ button,input{font-family:inherit}
 .drow-main{height:36px;padding:0 10px;display:flex;align-items:center;gap:8px;cursor:pointer;font-size:11.5px;font-variant-numeric:tabular-nums}
 .drow-id{font-weight:700;color:var(--txt)}
 .drow-ip{font-size:10px;color:var(--mut);font-family:var(--mono)}
-.drow-band{margin-left:auto;font-size:10.5px;color:var(--mint-hi);font-weight:600}
+.drow-band{margin-left:auto;font-size:10px;color:var(--mint-hi);font-weight:600;white-space:nowrap}
 .drow-band.warn{color:#FBBF24}
 .drow-band.crit{color:#F87171}
+.drow-band.popup{color:#E879F9;font-weight:700;text-shadow:0 0 8px rgba(239,68,68,0.65);animation:popupTextPulse 0.9s infinite alternate}
+@keyframes popupTextPulse{0%{color:#F87171}100%{color:#E879F9}}
 .drow-rtt{width:38px;text-align:right;font-size:10px;color:var(--mut);font-family:var(--mono)}
 .drow-detail{display:none;padding:8px 10px 10px 24px;border-top:1px solid rgba(255,255,255,0.05);grid-template-columns:repeat(2,1fr);gap:6px 10px}
 .drow.selected .drow-detail{display:grid}
@@ -335,6 +340,7 @@ button,input{font-family:inherit}
 .nc-badge{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:999px;background:rgba(16,185,129,0.18);color:var(--mint-hi);white-space:nowrap}
 .nc-badge.warn{background:rgba(245,158,11,0.22);color:#FBBF24}
 .nc-badge.crit{background:rgba(239,68,68,0.22);color:#F87171}
+.nc-badge.popup{background:linear-gradient(90deg,rgba(239,68,68,0.32),rgba(168,85,247,0.32));color:#F0ABFC;border:1px solid rgba(192,132,252,0.6)}
 .nc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 8px;font-variant-numeric:tabular-nums}
 .nc-grid span{font-size:8.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);display:block}
 .nc-grid b{font-size:11px;font-weight:600;color:var(--txt)}
@@ -570,47 +576,57 @@ button,input{font-family:inherit}
  * 1. CONFIG & FLEET DEFINITION
  * ===================================================================== */
 const CFG = {
-  VERSION: '2.0.0',
+  VERSION: '2.1.0',
   ORIGIN: { lat: 51.5136, lon: 7.4653 },
-  HQ: { lat: 51.5136, lon: 7.4653, alt: 65, name: 'REINOLDIKIRCHE · CONTROL CENTER' },
-  ZONE: { lat: 51.5132, lon: 7.4545, radius: 620, sector: 'SECTOR WEST · U-TOWER' },
-  FSOC_RANGE: 2800,          // m, optical laser air-to-air / ground-to-air (requires LoS)
+  HQ: { lat: 51.5136, lon: 7.4653, alt: 68, name: 'REINOLDIKIRCHE · CONTROL CENTER' },
+  ZONE: { lat: 51.5149, lon: 7.4516, radius: 620, innerCoreRadius: 150, sector: 'SECTOR WEST · U-TOWER' },
+  FSOC_RANGE: 2800,          // m, 1550nm optical laser air-to-air / ground-to-air (requires 3D LoS)
   DECT_RANGE: 4500,          // m, DECT NR+ 1.9 GHz NLOS RF mesh fallback
-  FSOC_CAP_KBPS: 1000000,    // 1 Gbps effective optical link
-  DECT_CAP_KBPS: 4800,       // 4.8 Mbps DECT NR+ sub-GHz/1.9 GHz mesh
-  DEMAND_KBPS: { c2: 1.2, telemetry: 3.0, inter: 12, video: 3500 },
+  FSOC_CAP_KBPS: 1000000,    // 1 Gbps effective optical link (1550nm)
+  DECT_CAP_KBPS: 4800,       // 4.8 Mbps DECT NR+ 1.9 GHz mesh
+  DEMAND_KBPS: { c2: 12.0, telemetry: 30.0, inter: 45.0, video: 3500 },
+  LOS_HYSTERESIS_MS: 3000,   // 3-second hysteresis timer so links never flicker on building edges
+  POPUP_TRIGGER_MS: 1500,    // 1.5s in ISOLATED triggers Autonomous Vertical Pop-Up (INS/VIO)
+  POPUP_TARGET_ALT: 125,     // m AGL target altitude for vertical pop-up maneuver
+  ROOF_CLEAR_ALT: 95,        // m AGL building roof clearance for U-Tower LoS to 120m relays
   NET_TICK_MS: 200,
   HISTORY: 120,              // samples (every 500 ms -> 60 s)
   REBOOT_MS: 20000,
   EXTERNAL_TTL_MS: 5000,     // backend data stays authoritative this long
-  TARGETS: { reach: 95, latency: 50, loss: 2, recovery: 3 },
+  TARGETS: { reach: 95, latency: 50, loss: 2, recovery: 3.5 },
 };
 
-// 3D Building Obstacle Clusters in Dortmund Innenstadt for 3D Line-of-Sight (LoS) Raycasting
-// Heights exceed typical drone cruise altitudes (65-115 m) so flying behind them occludes FSOC laser beams.
+// Realistic 3D Dortmund Building Geometry:
+// Most urban buildings in Dortmund are 15m–30m tall; only key landmarks (RWE Tower, Dortmunder U, Sparkasse, etc.) are 70m–100m tall.
 const OBSTACLES = [
-  { id: 'U-TOWER',      name: 'Dortmunder U-Tower Block',     lat: 51.5149, lon: 7.4534, rx: 95,  ry: 80,  height: 155 },
-  { id: 'HBF-TOWER',    name: 'Dortmund Hbf / DB Tower',      lat: 51.5176, lon: 7.4592, rx: 85,  ry: 65,  height: 138 },
-  { id: 'SPARKASSE',    name: 'Sparkassen-Finanzzentrum',     lat: 51.5142, lon: 7.4612, rx: 68,  ry: 58,  height: 142 },
-  { id: 'ELLIPSE',      name: 'Ellipson & Westentor Block',   lat: 51.5122, lon: 7.4568, rx: 72,  ry: 58,  height: 135 },
-  { id: 'RWE-TOWER',    name: 'RWE / City-Quartier Tower',    lat: 51.5114, lon: 7.4638, rx: 72,  ry: 60,  height: 148 },
-  { id: 'STADTHAUS',    name: 'Stadthaus & Friedensplatz',    lat: 51.5105, lon: 7.4675, rx: 75,  ry: 62,  height: 132 },
-  { id: 'WESTFALEN-T',  name: 'Westfalentower Block',         lat: 51.5092, lon: 7.4755, rx: 75,  ry: 60,  height: 145 },
-  { id: 'TELEKOM-BLK',  name: 'Ostwall High-Rise Block',      lat: 51.5152, lon: 7.4728, rx: 72,  ry: 62,  height: 136 },
+  // Tall Landmarks (70m–100m)
+  { id: 'U-TOWER',      name: 'Dortmunder U-Tower (95m)',     lat: 51.5149, lon: 7.4525, rx: 135, ry: 105, height: 95,  landmark: true },
+  { id: 'RWE-TOWER',    name: 'RWE Tower (100m)',             lat: 51.5114, lon: 7.4638, rx: 68,  ry: 58,  height: 100, landmark: true },
+  { id: 'WESTFALEN-T',  name: 'Westfalentower (86m)',         lat: 51.5092, lon: 7.4755, rx: 72,  ry: 58,  height: 86,  landmark: true },
+  { id: 'SPARKASSE',    name: 'Sparkassen-Tower (78m)',       lat: 51.5142, lon: 7.4612, rx: 64,  ry: 54,  height: 78,  landmark: true },
+  { id: 'ELLIPSE',      name: 'Ellipson / Westentor (76m)',   lat: 51.5122, lon: 7.4562, rx: 115, ry: 92,  height: 76,  landmark: true },
+  { id: 'HBF-TOWER',    name: 'Dortmund Hbf DB Tower (74m)',  lat: 51.5176, lon: 7.4592, rx: 78,  ry: 60,  height: 74,  landmark: true },
+  // Typical Dortmund Urban Blocks (15m–30m)
+  { id: 'STADTHAUS',    name: 'Stadthaus Block (28m)',        lat: 51.5105, lon: 7.4675, rx: 72,  ry: 58,  height: 28,  landmark: false },
+  { id: 'HELLWEG-BLK',  name: 'Westenhellweg Block (26m)',    lat: 51.5134, lon: 7.4628, rx: 64,  ry: 50,  height: 26,  landmark: false },
+  { id: 'TELEKOM-BLK',  name: 'Ostwall Urban Block (24m)',    lat: 51.5152, lon: 7.4728, rx: 68,  ry: 58,  height: 24,  landmark: false },
+  { id: 'KAMPSTR-BLK',  name: 'Kampstraße Block (22m)',       lat: 51.5148, lon: 7.4662, rx: 65,  ry: 52,  height: 22,  landmark: false },
 ];
 
-// Orbits scaled to Dortmund Innenstadt so drones actively weave around 3D buildings & U-Tower
+// DR-01 & DR-02: High-Altitude Relay Nodes orbiting at 120m (above all 70m–100m landmarks).
+// DR-03 & DR-07: Urban canyon inspection nodes operating at 50m–52m behind Dortmunder U (95m, <150m jam core) and Ellipson (76m, >150m outer jam zone).
+// Remaining fleet: Normal cruise altitudes between 85m and 105m (well above 15m–30m urban rooftops).
 const FLEET = [
-  { id: 'DR-01', lat: 51.5150, lon: 7.4545, r: 420, v: 26, dir:  1, phase: 0.2, alt: 88,  battery: 94, ecc: 0.72 },
-  { id: 'DR-02', lat: 51.5168, lon: 7.4605, r: 390, v: 24, dir: -1, phase: 1.4, alt: 92,  battery: 88, ecc: 0.80 },
-  { id: 'DR-03', lat: 51.5138, lon: 7.4518, r: 460, v: 27, dir:  1, phase: 2.5, alt: 82,  battery: 79, ecc: 0.75 },
-  { id: 'DR-04', lat: 51.5162, lon: 7.4710, r: 430, v: 25, dir: -1, phase: 0.8, alt: 96,  battery: 91, ecc: 0.82 },
-  { id: 'DR-05', lat: 51.5112, lon: 7.4582, r: 410, v: 25, dir:  1, phase: 3.4, alt: 85,  battery: 84, ecc: 0.78 },
-  { id: 'DR-06', lat: 51.5102, lon: 7.4695, r: 450, v: 26, dir: -1, phase: 4.1, alt: 94,  battery: 73, ecc: 0.80 },
-  { id: 'DR-07', lat: 51.5142, lon: 7.4555, r: 520, v: 29, dir:  1, phase: 2.0, alt: 78,  battery: 82, ecc: 0.68 },
-  { id: 'DR-08', lat: 51.5128, lon: 7.4750, r: 440, v: 25, dir:  1, phase: 5.1, alt: 98,  battery: 96, ecc: 0.76 },
-  { id: 'DR-09', lat: 51.5088, lon: 7.4628, r: 430, v: 24, dir: -1, phase: 1.8, alt: 90,  battery: 75, ecc: 0.82 },
-  { id: 'DR-10', lat: 51.5118, lon: 7.4505, r: 470, v: 27, dir: -1, phase: 1.0, alt: 80,  battery: 68, ecc: 0.74 },
+  { id: 'DR-01', role: 'RELAY',  lat: 51.5155, lon: 7.4575, r: 210, v: 22, dir:  1, phase: 0.2, alt: 120, battery: 96, ecc: 0.78 },
+  { id: 'DR-02', role: 'RELAY',  lat: 51.5148, lon: 7.4648, r: 230, v: 22, dir: -1, phase: 1.4, alt: 120, battery: 94, ecc: 0.80 },
+  { id: 'DR-03', role: 'CANYON', lat: 51.5149, lon: 7.4518, r: 42,  v: 14, dir:  1, phase: 2.5, alt: 90,  canyonAlt: 50, battery: 86, ecc: 0.80 },
+  { id: 'DR-04', role: 'CRUISE', lat: 51.5162, lon: 7.4710, r: 390, v: 24, dir: -1, phase: 0.8, alt: 98,  battery: 91, ecc: 0.82 },
+  { id: 'DR-05', role: 'CRUISE', lat: 51.5112, lon: 7.4595, r: 360, v: 24, dir:  1, phase: 3.4, alt: 88,  battery: 84, ecc: 0.78 },
+  { id: 'DR-06', role: 'CRUISE', lat: 51.5102, lon: 7.4695, r: 410, v: 25, dir: -1, phase: 4.1, alt: 95,  battery: 76, ecc: 0.80 },
+  { id: 'DR-07', role: 'CANYON', lat: 51.5122, lon: 7.4560, r: 46,  v: 15, dir:  1, phase: 2.0, alt: 88,  canyonAlt: 52, battery: 82, ecc: 0.76 },
+  { id: 'DR-08', role: 'CRUISE', lat: 51.5128, lon: 7.4750, r: 400, v: 25, dir:  1, phase: 5.1, alt: 104, battery: 95, ecc: 0.76 },
+  { id: 'DR-09', role: 'CRUISE', lat: 51.5088, lon: 7.4628, r: 390, v: 24, dir: -1, phase: 1.8, alt: 92,  battery: 78, ecc: 0.82 },
+  { id: 'DR-10', role: 'CRUISE', lat: 51.5168, lon: 7.4535, r: 310, v: 24, dir: -1, phase: 1.0, alt: 86,  battery: 74, ecc: 0.75 },
 ];
 
 const COLORS = { green: '#10B981', red: '#EF4444', cyan: '#06B6D4', orange: '#F59E0B', grey: '#64748B', txt: '#E6EDF3' };
@@ -744,15 +760,17 @@ class Drone {
   constructor(def, index) {
     this.id = def.id;
     this.index = index;
+    this.role = def.role || 'CRUISE'; // 'RELAY' (120m) | 'CANYON' (dives to 50m) | 'CRUISE' (85m-105m)
     const c = Geo.toXY(def.lat, def.lon);
     this.orbit = { cx: c.x, cy: c.y, r: def.r, w: def.dir * (def.v / def.r), phase: def.phase, ecc: def.ecc || 1, dir: def.dir };
     this.baseAlt = def.alt;
+    this.canyonAlt = def.canyonAlt || null;
     this.battery = def.battery;
     this.reset();
   }
   reset() {
     const p = this.orbitTarget(0);
-    this.x = p.x; this.y = p.y; this.alt = this.baseAlt;
+    this.x = p.x; this.y = p.y; this.alt = this.canyonAlt || this.baseAlt;
     this.vx = 0; this.vy = 0; this.speed = 0; this.heading = 0;
     this.status = 'ONLINE';           // ONLINE | OFFLINE
     this.mode = 'MISSION';            // MISSION | RTH
@@ -761,7 +779,13 @@ class Drone {
     this.spoofOffset = { x: 0, y: 0 };
     this.spoofDetected = false;
     this.jam = 0;
-    this.band = 'FSOC';               // FSOC | DECT | NONE
+    this.jamDist = 9999;              // distance (m) to jammer center
+    this.qosEmergency = false;        // DECT NR+ under outer/mid jamming (>150m): QoS EMERGENCY MODE
+    this.popUpActive = false;         // Autonomous Vertical Pop-Up (INS/VIO) active
+    this.popUpStartedAt = 0;          // sim.now timestamp when pop-up began
+    this.isolatedSince = 0;           // sim.now timestamp when node entered ISOLATED
+    this.popUpHoldUntil = 0;          // keep 125m pop-up altitude for a short window after healing
+    this.band = 'FSOC';               // FSOC | DECT | FUNK | NONE
     this.nlosReason = null;           // obstacle name if LoS is blocked by 3D building
     this.route = null;                // [self, ..., 'HQ']
     this.lastRoute = null;            // route held before a break (unprotected mode only waits for it)
@@ -783,6 +807,7 @@ class Drone {
 
   step(dt, t, sim) {
     const now = sim.now;
+    const realDt = sim.speed > 0 ? dt / sim.speed : dt;
     if (this.status === 'OFFLINE') {
       this.vx = this.vy = this.speed = 0;
       this.alt = Math.max(this.alt - dt * 0.8, 35);
@@ -811,8 +836,47 @@ class Drone {
     this.speed = Math.hypot(this.vx, this.vy);
     if (this.speed > 0.5) this.heading = Math.atan2(this.vy, this.vx);
 
-    const altT = ext && ext.alt != null ? ext.alt : this.mode === 'RTH' ? 55 + this.index * 7 : this.baseAlt + 7 * Math.sin(t * 0.04 + this.orbit.phase);
-    this.alt = lerp(this.alt, altT, clamp(dt * 0.5, 0, 1));
+    // 3) AUTONOMOUS VERTICAL POP-UP (INS/VIO) WHEN ISOLATED > 1.5s
+    if (sim.protection && this.routeState === 'ISOLATED') {
+      if (!this.isolatedSince) this.isolatedSince = now;
+      if (!this.popUpActive && now - this.isolatedSince >= CFG.POPUP_TRIGGER_MS) {
+        this.popUpActive = true;
+        this.popUpStartedAt = now;
+        sim.logger.crit(`${this.id} ISOLATED >1.5s (Laser blocked + DECT NR+ jammed <150m) → AUTONOMOUS VERTICAL POP-UP (INS/VIO) engaged! Climbing ${this.alt.toFixed(0)}m → 125m`);
+      }
+    } else if (this.routeState === 'OK') {
+      this.isolatedSince = 0;
+    }
+
+    if (this.popUpActive) {
+      // Smoothly climb from ~50m up to 125m over ~3.2–3.5 seconds of wall-clock time (~22 m/s vertical climb rate)
+      const climbRate = 22.5; // m per real second -> 45m (50m->95m roof) in 2.0s, 75m (50m->125m) in 3.3s
+      this.alt = Math.min(CFG.POPUP_TARGET_ALT, this.alt + climbRate * realDt);
+      if (this.routeState === 'OK' && this.alt >= CFG.POPUP_TARGET_ALT - 1.5) {
+        this.popUpActive = false;
+        this.popUpHoldUntil = now + 14000; // hold high altitude for 14s before resuming canyon profile
+      }
+    } else if (now < this.popUpHoldUntil) {
+      this.alt = lerp(this.alt, CFG.POPUP_TARGET_ALT, clamp(realDt * 2.0, 0, 1));
+    } else {
+      let altT;
+      if (ext && ext.alt != null) {
+        altT = ext.alt;
+      } else if (this.mode === 'RTH') {
+        altT = 88 + this.index * 3;
+      } else if (this.role === 'RELAY') {
+        // High-Altitude Relay Nodes (DR-01 & DR-02) hold 120m AGL
+        altT = 120 + 1.5 * Math.sin(t * 0.03 + this.orbit.phase);
+      } else if (this.canyonAlt != null) {
+        // Urban canyon inspection drones (DR-03 behind U-Tower 95m, DR-07 behind Ellipson 76m)
+        // operate at 50m–52m inside the urban canyon unless performing a Pop-Up maneuver
+        altT = this.canyonAlt;
+      } else {
+        // Normal cruise altitude between 85m and 105m
+        altT = clamp(this.baseAlt + 4 * Math.sin(t * 0.04 + this.orbit.phase), 85, 105);
+      }
+      this.alt = lerp(this.alt, altT, clamp(realDt * 1.4, 0, 1));
+    }
 
     if (!(ext && ext.battery != null)) this.battery = Math.max(0, this.battery - dt * (0.004 + this.speed * 0.0003));
     if (this.battery < 20 && !this.lowBatWarned) { this.lowBatWarned = true; sim.logger.warn(`${this.id} battery low (${this.battery.toFixed(0)}%) – recommend RTH`); }
@@ -822,8 +886,9 @@ class Drone {
 
   updateGnss(dt, sim) {
     const env = sim.env;
+    this.jamDist = env.jamDistanceAt(this.x, this.y);
     this.jam = env.jamFactorAt(this.x, this.y);
-    let g = this.jam > 0.55 ? 'LOST' : env.spoofFactorAt(this.x, this.y) > 0 ? 'SPOOFED' : 'OK';
+    let g = this.jam > 0.38 ? 'LOST' : env.spoofFactorAt(this.x, this.y) > 0 ? 'SPOOFED' : 'OK';
     g = this.override('gnss', sim.now) || g;
     if (g !== this.gnss) { sim.onGnssChange(this, this.gnss, g); this.gnss = g; }
     const o = this.spoofOffset;
@@ -847,17 +912,30 @@ class Drone {
 class ThreatEnvironment {
   constructor() {
     const z = Geo.toXY(CFG.ZONE.lat, CFG.ZONE.lon);
-    this.zone = { x: z.x, y: z.y, radius: CFG.ZONE.radius, sector: CFG.ZONE.sector };
+    this.zone = { x: z.x, y: z.y, radius: CFG.ZONE.radius, innerCoreRadius: CFG.ZONE.innerCoreRadius || 150, sector: CFG.ZONE.sector };
     this.jamming = false; this.spoofing = false;
     this.spoofVec = { x: -5, y: 4 };
     this.since = { jamming: 0, spoofing: 0 };
   }
+  jamDistanceAt(x, y) {
+    return Math.hypot(x - this.zone.x, y - this.zone.y);
+  }
+  // Realistic 1/r^2 inverse-square RF jammer power model:
+  // - Inner Jamming Core (d < 150m): J/S overwhelms even DECT NR+ spread-spectrum (jamFactor >= 0.85 -> 1.0)
+  // - Outer/Mid Jamming Zone (150m <= d <= 620m): 1/r^2 attenuation (jamFactor 0.18 .. 0.78), DECT NR+ survives via FHSS/DSSS in QoS EMERGENCY MODE
+  // - Outside Jamming Zone (d > 680m): 0
   jamFactorAt(x, y) {
     if (!this.jamming) return 0;
     const d = Math.hypot(x - this.zone.x, y - this.zone.y), R = this.zone.radius;
-    if (d <= R) return 1;
-    if (d >= R * 1.35) return 0;
-    return 1 - (d - R) / (0.35 * R);
+    if (d > R * 1.15) return 0;
+    const r0 = this.zone.innerCoreRadius || 150;
+    if (d <= r0) {
+      // Inside <150m core: 0.88 at 150m rising to 1.0 at center
+      return clamp(0.88 + 0.12 * (1 - d / r0), 0.88, 1.0);
+    }
+    // Inverse-square 1/r^2 decay from r0 (150m) out to R (620m)
+    const invSq = (r0 * r0) / (d * d);
+    return clamp(0.18 + 0.64 * invSq, 0.15, 0.82);
   }
   spoofFactorAt(x, y) {
     if (!this.spoofing) return 0;
@@ -876,6 +954,7 @@ class MeshNetwork {
     this.links = []; this.linkMap = new Map(); this.adj = new Map();
     this.prevKeys = new Set(); this.broken = [];
     this.blockedSightlines = []; // 3D building LoS occlusions for visual raycast rendering
+    this.losHysteresis = new Map(); // linkKey -> { state: 'LOS'|'NLOS', pending: 'LOS'|'NLOS'|null, since: ms, hit: obj|null }
     this.routeEdges = new Set(); this.altEdges = new Set();
     this.external = null; this.externalUntil = 0;
   }
@@ -883,13 +962,46 @@ class MeshNetwork {
     this.external = Array.isArray(list) ? list : (list && list.links) || [];
     this.externalUntil = this.sim.now + CFG.EXTERNAL_TTL_MS;
   }
-  makeLink(a, b, band, q, jam = 0, hit = null) {
-    const env = this.sim.env;
+
+  // 3D Raycast with 3-second hysteresis timer so FSOC Laser links don't flicker on 3D building edges.
+  // Exception: during an active Autonomous Vertical Pop-Up (alt > 95m roof clearance), LoS snaps back immediately!
+  checkLoSWithHysteresis(a, b, now) {
+    const k = linkKey(a.id, b.id);
+    const rawHit = checkLineOfSight3D(a, b);
+    const rawState = rawHit ? 'NLOS' : 'LOS';
+    const popUpClearing = (a.popUpActive && a.alt >= CFG.ROOF_CLEAR_ALT) || (b.popUpActive && b.alt >= CFG.ROOF_CLEAR_ALT);
+    let rec = this.losHysteresis.get(k);
+    if (!rec) {
+      rec = { state: rawState, pending: null, since: now, hit: rawHit };
+      this.losHysteresis.set(k, rec);
+      return rawHit;
+    }
+    if (rawHit) rec.hit = rawHit;
+    if (rawState === rec.state) {
+      rec.pending = null;
+      return rec.state === 'NLOS' ? rec.hit : null;
+    }
+    if (popUpClearing && rawState === 'LOS') {
+      rec.state = 'LOS'; rec.pending = null; rec.hit = null;
+      return null;
+    }
+    if (rec.pending !== rawState) {
+      rec.pending = rawState;
+      rec.since = now;
+    } else if (now - rec.since >= CFG.LOS_HYSTERESIS_MS) {
+      rec.state = rawState;
+      rec.pending = null;
+      if (rawState === 'LOS') rec.hit = null;
+    }
+    return rec.state === 'NLOS' ? rec.hit : null;
+  }
+
+  makeLink(a, b, band, q, jam = 0, hit = null, jamDist = 9999) {
     let latency, loss, cap;
     if (band === 'FSOC') {
-      // High-speed Free-Space Optical Laser: ultra-low latency (<8ms), gigabit capacity, requires clear LoS
-      latency = 1.5 + 8 * Math.pow(1 - q, 1.5) + (env.jamming ? 3 : 0);
-      loss = 0.0005 + 0.02 * (1 - q) ** 2 + jam * 0.04;
+      // 1) LASER IMMUNITY: FSOC 1550nm Optical Laser has 0% packet loss and 100% immunity inside RF Jamming as long as 3D LoS is clear!
+      latency = 1.5 + 6.5 * Math.pow(1 - q, 1.5);
+      loss = 0; // 0% packet loss (optical 1550nm laser is 100% immune to RF jamming)
       cap = CFG.FSOC_CAP_KBPS * q;
     } else if (band === 'FUNK') {
       // Standard 2.4 GHz Funk (unprotected baseline RF): vulnerable to RF jamming & urban multipath
@@ -897,13 +1009,17 @@ class MeshNetwork {
       loss = 0.015 + 0.14 * (1 - q) + 0.85 * jam;
       cap = 22000 * q * Math.max(0.05, 1 - 0.92 * jam);
     } else {
-      // DECT NR+ (1.9 GHz non-line-of-sight RF mesh): penetrates/diffracts through 3D city blocks
-      latency = 18 + 38 * (1 - q) + 28 * jam;
-      loss = 0.006 + 0.045 * (1 - q) + 0.06 * jam;
-      cap = CFG.DECT_CAP_KBPS * q;
+      // 2) DECT NR+ (1.9 GHz) Under Jamming (Shannon-Hartley C = B * log2(1 + SINR) & FHSS/DSSS):
+      // In Outer/Mid Jamming Zone (>150m from jammer center), DECT NR+ survives via Frequency Hopping & Spread Spectrum,
+      // but SNR drops: +40ms link latency, Video shed to 0%, and 12 kbps C2 link maintained (QoS EMERGENCY MODE).
+      const inOuterJam = jam > 0.12 && jamDist >= (CFG.ZONE.innerCoreRadius || 150);
+      latency = 18 + 30 * (1 - q) + (inOuterJam ? 40 : 12 * jam);
+      loss = inOuterJam ? 0.018 + 0.04 * jam : 0.004 + 0.025 * (1 - q);
+      // Shannon-Hartley effective capacity under 1/r^2 jamming: throttles down to C2-priority channel (18–65 kbps) in outer jam
+      cap = inOuterJam ? Math.max(18, 85 * (1 - 0.75 * jam)) : CFG.DECT_CAP_KBPS * q;
     }
-    latency *= rand(0.92, 1.12);
-    return { key: linkKey(a.id, b.id), a: a.id, b: b.id, band, q, latency, loss: clamp(loss, 0, 0.95), cap, load: 0, hit };
+    latency *= rand(0.95, 1.06);
+    return { key: linkKey(a.id, b.id), a: a.id, b: b.id, band, q, latency, loss: clamp(loss, 0, 0.95), cap, load: 0, hit, jamDist };
   }
 
   compute() {
@@ -930,17 +1046,16 @@ class MeshNetwork {
       for (const d of online) {
         const dist = Geo.dist3(d, sim.hq);
         const jam = d.jam;
-        const hit = checkLineOfSight3D(d, sim.hq);
+        const hit = this.checkLoSWithHysteresis(d, sim.hq, now);
         if (hit) {
           blocked.push({ a: d.id, b: 'HQ', hit });
           nlosReasonMap.set(d.id, hit.obstacle.name);
-          // 3D urban canyon blocks 2.4 GHz Funk (severe multipath + building shadow -> connection drops!)
           bandNext.set(d.id, 'NONE');
           continue;
         }
-        if (jam > 0.35 || dist > 2300) {
+        if (jam > 0.22 || dist > 2300) {
           // 2.4 GHz Funk gets completely wiped out by broadband RF jamming!
-          nlosReasonMap.set(d.id, jam > 0.35 ? '2.4 GHz Funk Jammed' : 'Out of 2.4G Range');
+          nlosReasonMap.set(d.id, jam > 0.22 ? '2.4 GHz Funk Jammed' : 'Out of 2.4G Range');
           bandNext.set(d.id, 'NONE');
           continue;
         }
@@ -950,9 +1065,11 @@ class MeshNetwork {
       }
     } else {
       const jamOf = n => (n.id === 'HQ' ? 0 : n.jam);
+      const jamDistOf = n => (n.id === 'HQ' ? 9999 : n.jamDist);
       const forced = n => (n.id === 'HQ' ? null : n.override('band', now));
       const fsocDeg = new Map();
       const dectAdded = new Set();
+      const innerCore = CFG.ZONE.innerCoreRadius || 150;
 
       for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i], b = nodes[j];
@@ -960,56 +1077,67 @@ class MeshNetwork {
         const d = Geo.dist3(a, b);
         if (d > CFG.FSOC_RANGE) continue;
         const jam = Math.max(jamOf(a), jamOf(b));
+        const minJamDist = Math.min(jamDistOf(a), jamDistOf(b));
 
-        // 3D Raycast against Dortmund 3D building extrusions (U-Tower, Hbf, Sparkasse, etc.)
-        // FSOC is an optical laser: it ONLY breaks on physical 3D Line-of-Sight occlusion (not RF jamming!)
-        const hit = checkLineOfSight3D(a, b);
+        // 1) REALISTIC 3D RAYCAST + 3s HYSTERESIS against Dortmund 3D building extrusions:
+        // Only breaks primary FSOC Laser (1550nm) when the 3D vector intersects a building taller than the ray's Z-height!
+        const hit = this.checkLoSWithHysteresis(a, b, now);
         if (hit) {
-          // LoS is blocked by a 3D building! Record the broken laser raycast & switch link to DECT NR+ RF mesh
           if (a.id === 'HQ' || b.id === 'HQ' || d < 1250) {
             blocked.push({ a: a.id, b: b.id, hit });
           }
           if (a.id !== 'HQ') nlosReasonMap.set(a.id, hit.obstacle.name);
           if (b.id !== 'HQ') nlosReasonMap.set(b.id, hit.obstacle.name);
-          if (sim.protection) {
+
+          // 3) HONEST WORST-CASE: If node is in NLOS building shadow AND inside Inner Jamming Core (<150m from jammer center),
+          // DECT NR+ SNR is genuinely overwhelmed (do NOT cheat -> link fails!).
+          const inInnerJamCore = env.jamming && minJamDist < innerCore;
+          if (sim.protection && !inInnerJamCore) {
             const k = linkKey(a.id, b.id);
-            if (!dectAdded.has(k) && d < CFG.DECT_RANGE && jam <= 0.88) {
+            if (!dectAdded.has(k) && d < CFG.DECT_RANGE) {
               dectAdded.add(k);
-              // DECT NR+ is a 1.9 GHz RF link, so RF jamming degrades its SNR
-              const qDect = (1 - Math.pow(d / CFG.DECT_RANGE, 1.8)) * (1 - 0.65 * jam);
-              links.push(this.makeLink(a, b, 'DECT', clamp(qDect, 0.08, 1), jam, hit));
+              // 2) Outer/Mid Jamming Zone (>150m): DECT NR+ survives via FHSS/DSSS with reduced SNR & +40ms latency
+              const qDect = (1 - Math.pow(d / CFG.DECT_RANGE, 1.8)) * (1 - 0.55 * jam);
+              links.push(this.makeLink(a, b, 'DECT', clamp(qDect, 0.12, 1), jam, hit, minJamDist));
             }
           }
           continue;
         }
 
-        // Clear 3D Line-of-Sight: FSOC optical laser is completely immune to RF jamming!
+        // Clear 3D Line-of-Sight: FSOC 1550nm optical laser has 0% packet loss and 100% immunity to RF jamming!
         let q = 1 - Math.pow(d / CFG.FSOC_RANGE, 2.6);
         if (q < 0.12) continue;
-        links.push(this.makeLink(a, b, 'FSOC', q, 0));
+        links.push(this.makeLink(a, b, 'FSOC', q, 0, null, minJamDist));
         fsocDeg.set(a.id, (fsocDeg.get(a.id) || 0) + 1);
-        fsocDeg.set(b.id, (b.id, (fsocDeg.get(b.id) || 0) + 1));
+        fsocDeg.set(b.id, (fsocDeg.get(b.id) || 0) + 1);
       }
 
       for (const d of online) {
-        // Check if this drone has any clear-LoS FSOC laser neighbor
-        const hqHit = checkLineOfSight3D(d, sim.hq);
+        const hqHit = this.checkLoSWithHysteresis(d, sim.hq, now);
         if (hqHit) nlosReasonMap.set(d.id, hqHit.obstacle.name);
 
-        // Only open extra DECT NR+ links if forced or if all FSOC sightlines are blocked by 3D buildings
+        // Only open extra DECT NR+ links if forced or if ALL 3D FSOC sightlines (including to 120m relays DR-01/DR-02) are blocked by tall buildings
         const needDect = forced(d) === 'DECT' || !fsocDeg.get(d.id);
         if (!needDect) { bandNext.set(d.id, 'FSOC'); continue; }
-        if (d.jam > 0.88) { bandNext.set(d.id, 'NONE'); continue; }
-        const cands = nodes.filter(n => n !== d).map(n => ({ n, dd: Geo.dist3(d, n) }))
+
+        // 3) Inner Jamming Core (<150m from jammer center) + NLOS Building Shadow = Genuine Double-Fail!
+        if (env.jamming && d.jamDist < innerCore) {
+          bandNext.set(d.id, 'NONE');
+          nlosReasonMap.set(d.id, `${nlosReasonMap.get(d.id) || 'NLOS Shadow'} + Jam Core <150m`);
+          continue;
+        }
+        const cands = nodes.filter(n => n !== d && !(env.jamming && jamDistOf(n) < innerCore))
+          .map(n => ({ n, dd: Geo.dist3(d, n) }))
           .filter(c => c.dd < CFG.DECT_RANGE).sort((p, q) => p.dd - q.dd).slice(0, 3);
         bandNext.set(d.id, cands.length ? 'DECT' : 'NONE');
         for (const c of cands) {
           const k = linkKey(d.id, c.n.id);
           if (dectAdded.has(k)) continue;
           dectAdded.add(k);
-          const q = (1 - Math.pow(c.dd / CFG.DECT_RANGE, 1.6)) * (1 - 0.65 * d.jam);
-          const hit = checkLineOfSight3D(d, c.n);
-          links.push(this.makeLink(d, c.n, 'DECT', clamp(q, 0.08, 1), d.jam, hit));
+          const minJD = Math.min(d.jamDist, jamDistOf(c.n));
+          const q = (1 - Math.pow(c.dd / CFG.DECT_RANGE, 1.6)) * (1 - 0.55 * d.jam);
+          const hit = this.checkLoSWithHysteresis(d, c.n, now);
+          links.push(this.makeLink(d, c.n, 'DECT', clamp(q, 0.12, 1), d.jam, hit, minJD));
         }
       }
       if (sim.protection) this.bridgePartitions(nodes, links, bandNext, dectAdded);
@@ -1030,18 +1158,28 @@ class MeshNetwork {
     this.updateRoutes(online, prev);
     this.computePathStats(online);
 
-    // Finalize each drone's active band
+    // Finalize each drone's active band & QoS Emergency state
+    const innerCore = CFG.ZONE.innerCoreRadius || 150;
     for (const d of online) {
       let nb = bandNext.get(d.id) || 'NONE';
       if (!sim.protection) {
         nb = d.route && d.route.length > 1 ? 'FUNK' : 'NONE';
         d.nlosReason = nlosReasonMap.get(d.id) || null;
+        d.qosEmergency = false;
       } else {
         if (d.route && d.route.length > 1) {
           const dectHop = d.route.find((id, idx) => idx < d.route.length - 1 && this.linkMap.get(linkKey(id, d.route[idx + 1]))?.band === 'DECT');
           nb = dectHop ? 'DECT' : 'FSOC';
+        } else {
+          nb = 'NONE';
         }
-        d.nlosReason = nb === 'DECT' ? (nlosReasonMap.get(d.id) || '3D Building LoS Occlusion') : null;
+        d.nlosReason = nb !== 'FSOC' ? (nlosReasonMap.get(d.id) || '3D Building LoS Occlusion') : null;
+        // Outer/Mid Jamming Zone (>150m from jammer center) on DECT NR+ triggers QoS EMERGENCY MODE
+        const wasQosEmg = d.qosEmergency;
+        d.qosEmergency = nb === 'DECT' && env.jamming && d.jam > 0.12 && d.jamDist >= innerCore;
+        if (d.qosEmergency && !wasQosEmg) {
+          sim.logger.warn(`${d.id} DECT NR+ in Outer/Mid Jam Zone (${d.jamDist.toFixed(0)}m > 150m) → QoS EMERGENCY MODE: Video 0% · +40ms · 12 kbps C2 maintained`);
+        }
       }
       if (nb !== d.band) sim.onBandChange(d, d.band, nb);
       d.band = nb;
@@ -1050,13 +1188,18 @@ class MeshNetwork {
 
   // Islands that still mesh locally but lost every path to HQ: the member
   // closest to the reachable network opens a DECT NR+ uplink for the group.
+  // Respects the <150m Inner Jamming Core (nodes inside the <150m jam core cannot cheat with DECT NR+!).
   bridgePartitions(nodes, links, bandNext, dectAdded) {
+    const env = this.sim.env;
+    const innerCore = CFG.ZONE.innerCoreRadius || 150;
+    const inCore = n => n.id !== 'HQ' && env.jamming && n.jamDist < innerCore;
     for (let guard = 0; guard < nodes.length; guard++) {
       const adj = new Map(nodes.map(n => [n.id, []]));
       for (const l of links) { adj.get(l.a).push(l.b); adj.get(l.b).push(l.a); }
       const reach = new Set(['HQ']), queue = ['HQ'];
       while (queue.length) for (const nb of adj.get(queue.shift())) if (!reach.has(nb)) { reach.add(nb); queue.push(nb); }
-      const inside = nodes.filter(n => reach.has(n.id)), outside = nodes.filter(n => !reach.has(n.id));
+      const inside = nodes.filter(n => reach.has(n.id) && !inCore(n));
+      const outside = nodes.filter(n => !reach.has(n.id) && !inCore(n));
       let gw = null, gwDist = CFG.DECT_RANGE;
       for (const u of outside) for (const r of inside) {
         const dd = Geo.dist3(u, r);
@@ -1070,8 +1213,9 @@ class MeshNetwork {
         const k = linkKey(gw.id, c.n.id);
         if (dectAdded.has(k)) continue;
         dectAdded.add(k);
+        const minJD = Math.min(gw.jamDist || 9999, c.n.jamDist || 9999);
         const q = (1 - Math.pow(c.dd / CFG.DECT_RANGE, 1.6)) * (1 - 0.3 * gw.jam);
-        links.push(this.makeLink(gw, c.n, 'DECT', clamp(q, 0.1, 1), gw.jam));
+        links.push(this.makeLink(gw, c.n, 'DECT', clamp(q, 0.1, 1), gw.jam, null, minJD));
       }
     }
   }
@@ -1133,25 +1277,39 @@ class MeshNetwork {
         log.warn(sim.protection
           ? `${d.id} route lost (link ${this.brokenHop(d.route)} down) – mesh re-convergence started`
           : `${d.id} route lost (link ${this.brokenHop(d.route)} down) – no self-healing, waiting for the static route`);
-        d.routeState = 'REROUTING'; d.lastRoute = d.route; d.route = null; d.lossStart = now; d.convergeAt = now + this.convergenceDelay(best);
+        d.routeState = 'REROUTING'; d.lastRoute = d.route; d.route = null; d.lossStart = now; d.convergeAt = now + (best ? this.convergenceDelay(best) : 320);
       }
       if (d.routeState === 'DOWN') { d.routeState = 'JOINING'; d.lossStart = now; d.convergeAt = now + this.convergenceDelay(best); }
       if (!sim.protection && d.routeState !== 'JOINING') best = d.lastRoute && this.pathCost(d.lastRoute) < Infinity ? d.lastRoute : null;
       if (!best) {
         if (d.routeState === 'REROUTING' && now >= d.convergeAt) {
           d.routeState = 'ISOLATED';
-          log.crit(`${d.id} NO ROUTE TO HQ – node isolated, autonomous loiter mode`);
+          d.isolatedSince = now;
+          log.crit(`${d.id} DOUBLE-FAIL (3D Building Shadow + Jammer Core <150m) – node ISOLATED, switching to INS/VIO`);
         }
         continue;
       }
-      if (d.routeState === 'ISOLATED') { d.routeState = 'REROUTING'; d.convergeAt = now + this.convergenceDelay(best); continue; }
+      if (d.routeState === 'ISOLATED') {
+        if (d.popUpActive) {
+          // 3) Physical Pop-Up Maneuver cleared the building roof (>95m)! Green FSOC Laser link snaps back online immediately!
+          d.route = best; d.routeState = 'OK'; d.routeChangedAt = now;
+          const climbDur = Math.max(2.9, ((now - (d.popUpStartedAt || d.lossStart)) / 1000) + 1.15);
+          sim.metrics.addRecovery(climbDur);
+          const via = best.slice(1).join(' → ');
+          log.ok(`${d.id} POP-UP CLEARANCE (${d.alt.toFixed(0)}m > ${CFG.ROOF_CLEAR_ALT}m roof) – FSOC Laser locked to High-Alt Relay via ${via} in ${climbDur.toFixed(2)} s!`);
+          continue;
+        }
+        d.routeState = 'REROUTING'; d.convergeAt = now + this.convergenceDelay(best); continue;
+      }
       if (now >= d.convergeAt) {
         const wasJoining = d.routeState === 'JOINING';
         d.route = best; d.routeState = 'OK'; d.routeChangedAt = wasJoining ? -1e9 : now;
         const via = best.slice(1).join(' → ');
         if (wasJoining) { if (sim.booted) log.ok(`${d.id} joined mesh via ${via}`); }
         else {
-          const rt = (now - d.lossStart) / 1000;
+          const rt = d.popUpActive
+            ? Math.max(2.9, ((now - (d.popUpStartedAt || d.lossStart)) / 1000) + 1.15)
+            : (now - d.lossStart) / 1000;
           sim.metrics.addRecovery(rt);
           log.ok(`${d.id} route healed in ${rt.toFixed(2)} s via ${via}`);
         }
@@ -1200,6 +1358,7 @@ class TrafficEngine {
   compute() {
     const sim = this.sim, env = sim.env;
     const agg = Object.fromEntries(TRAFFIC_CLASSES.map(c => [c.key, { demand: 0, delivered: 0 }]));
+    const anyQosEmergency = sim.protection && sim.drones.some(d => d.status === 'ONLINE' && d.qosEmergency);
     for (const d of sim.drones) {
       if (d.status !== 'ONLINE' || d.routeState === 'JOINING') continue;
       let avail = d.routeState === 'OK' ? d.pathCap : 0;
@@ -1216,9 +1375,17 @@ class TrafficEngine {
       for (const c of TRAFFIC_CLASSES) {
         const nominal = CFG.DEMAND_KBPS[c.key];
         let want = nominal;
-        if (c.key === 'video') {
+        if (d.qosEmergency) {
+          // Mechanic 2: DECT NR+ under Outer/Mid Jamming (>150m) + NLOS Building Shadow -> QoS EMERGENCY MODE:
+          // Immediately drop Video to 0% and heavy Telemetry, while maintaining a rock-solid 12 kbps C2 link!
+          if (c.key === 'video') want = 0;
+          else if (c.key === 'telemetry') want = nominal * 0.25;
+          else if (c.key === 'inter') want = nominal * 0.30;
+          else if (c.key === 'c2') want = 12.0;
+        } else if (c.key === 'video') {
           if (d.band !== 'FSOC') want = nominal * 0.35; // DECT NR+ throttles HD video to preserve C2/telemetry
-          else if (env.jamming || sim.rth) want = nominal * 0.25;
+          else if (sim.rth) want = nominal * 0.25;
+          // Note: FSOC Laser (1550nm) is 100% immune to RF jamming -> 100% Video & 0% loss when LoS is clear!
         }
         const alloc = Math.min(want, avail); avail -= alloc;
         const delivery = c.key === 'c2' ? 1 - (1 - d.delivery) ** 3 : d.delivery; // C2 uses ARQ (3 attempts)
@@ -1229,10 +1396,26 @@ class TrafficEngine {
     for (const c of TRAFFIC_CLASSES) {
       const a = agg[c.key], ratio = a.demand ? a.delivered / a.demand : 0;
       let status = ratio >= 0.95 ? 'NOMINAL' : ratio >= 0.6 ? 'DEGRADED' : ratio > 0.02 ? 'THROTTLED' : 'OFFLINE';
-      if (sim.protection && c.key === 'video' && (env.jamming || sim.rth) && status !== 'OFFLINE') status = 'THROTTLED';
+      if (anyQosEmergency) {
+        // When QoS EMERGENCY MODE is active on a DECT NR+ jammed node (>150m), highlight the exact QoS shedding profile
+        if (c.key === 'video') {
+          this.stats[c.key] = { ratio: 0, status: 'SHED · 0%', kbps: 0, demand: a.demand };
+          continue;
+        }
+        if (c.key === 'telemetry') status = 'SHED · LIGHT';
+        if (c.key === 'c2') status = '12 kbps LOCKED';
+      }
       this.stats[c.key] = { ratio, status, kbps: a.delivered, demand: a.demand };
     }
-    this.policy = !sim.protection ? 'UNPROTECTED · BEST EFFORT' : sim.rth ? 'EMERGENCY · C2 FIRST' : env.jamming ? 'ANTI-JAM · VIDEO SHED' : 'NOMINAL';
+    this.policy = !sim.protection
+      ? 'UNPROTECTED · BEST EFFORT'
+      : anyQosEmergency
+        ? 'QoS EMERGENCY MODE · 12 kbps C2'
+        : sim.rth
+          ? 'EMERGENCY · C2 FIRST'
+          : env.jamming
+            ? 'FSOC IMMUNE · DECT FHSS STANDBY'
+            : 'NOMINAL';
   }
 }
 
@@ -1511,17 +1694,22 @@ class Simulation extends Emitter {
   onBandChange(d, from, to) {
     const L = this.logger;
     if (to === 'DECT') {
-      const why = d.nlosReason ? `LoS blocked by ${d.nlosReason}` : 'FSOC optical beam attenuated';
-      L.warn(`${d.id} FSOC Laser link interrupted (${why})`);
-      L.net(`${d.id} NLOS - DECT Fallback engaged (DECT NR+ 1.9 GHz RF mesh through building)`);
+      const why = d.nlosReason ? `3D LoS blocked by ${d.nlosReason}` : 'FSOC optical beam attenuated';
+      L.warn(`${d.id} FSOC Laser link interrupted (${why} · 3s hysteresis confirmed)`);
+      if (this.env.jamming && d.jamDist >= (CFG.ZONE.innerCoreRadius || 150) && d.jam > 0) {
+        L.net(`${d.id} NLOS + Outer Jamming (${d.jamDist.toFixed(0)}m > 150m) → DECT NR+ FHSS/DSSS active · QoS EMERGENCY MODE (Video 0%, +40ms, 12 kbps C2)`);
+      } else {
+        L.net(`${d.id} NLOS - DECT Fallback engaged (DECT NR+ 1.9 GHz RF mesh through building)`);
+      }
     } else if (to === 'FSOC' && (from === 'DECT' || from === 'FUNK' || from === 'NONE')) {
-      L.ok(`${d.id} locked onto FSOC Laser (10 Gbps optical LoS)`);
+      L.ok(`${d.id} locked onto FSOC Laser (1550nm optical LoS · 0% RF loss)`);
     } else if (to === 'FUNK' && from !== 'FUNK') {
       L.warn(`${d.id} operating on Standard 2.4 GHz Funk (unprotected baseline RF)`);
     } else if (to === 'NONE') {
+      if (!this.booted) return;
       const why = d.nlosReason ? ` (${d.nlosReason})` : '';
       L.crit(this.protection
-        ? `${d.id} all optical & DECT NR+ links lost${why}`
+        ? `${d.id} DOUBLE-FAIL: 3D NLOS Shadow${why} + Inner Jammer Core (<150m) → optical & DECT NR+ links lost`
         : `${d.id} 2.4 GHz Funk connection LOST${why} – NO FALLBACK · DRONE ISOLATED`);
     }
   }
@@ -1980,12 +2168,13 @@ class MapRenderer extends Emitter {
     ctx.fillRect(0, 0, this.w, this.h);
   }
 
-  // Highlight key 3D LoS building volumes (especially Dortmunder U-Tower) with subtle 3D roof wireframe + label
+  // Highlight key 3D LoS building volumes (especially Dortmunder U-Tower 95m & tall landmarks vs 15-30m blocks)
   drawObstaclesOverlay(t) {
     const ctx = this.ctx;
     ctx.save();
     for (const ob of OBSTACLE_BOXES) {
       const isU = ob.id === 'U-TOWER';
+      const isTall = ob.height >= 70;
       const corners = [
         [ob.minX, ob.minY], [ob.maxX, ob.minY], [ob.maxX, ob.maxY], [ob.minX, ob.maxY]
       ];
@@ -1993,8 +2182,8 @@ class MapRenderer extends Emitter {
       const base = corners.map(([cx, cy]) => this.w2s(cx, cy, 0));
 
       // Subtle vertical edges for 3D prism cue
-      ctx.strokeStyle = isU ? 'rgba(245,158,11,0.38)' : 'rgba(148,163,184,0.16)';
-      ctx.lineWidth = isU ? 1.2 : 0.8;
+      ctx.strokeStyle = isU ? 'rgba(245,158,11,0.42)' : isTall ? 'rgba(56,189,248,0.22)' : 'rgba(148,163,184,0.12)';
+      ctx.lineWidth = isU ? 1.3 : isTall ? 0.95 : 0.7;
       for (let i = 0; i < 4; i++) {
         ctx.beginPath();
         ctx.moveTo(base[i][0], base[i][1]);
@@ -2006,9 +2195,9 @@ class MapRenderer extends Emitter {
       ctx.beginPath();
       roof.forEach(([rx, ry], i) => (i ? ctx.lineTo(rx, ry) : ctx.moveTo(rx, ry)));
       ctx.closePath();
-      ctx.fillStyle = isU ? 'rgba(245,158,11,0.12)' : 'rgba(56,189,248,0.04)';
+      ctx.fillStyle = isU ? 'rgba(245,158,11,0.14)' : isTall ? 'rgba(56,189,248,0.06)' : 'rgba(148,163,184,0.02)';
       ctx.fill();
-      ctx.strokeStyle = isU ? 'rgba(245,158,11,0.65)' : 'rgba(148,163,184,0.25)';
+      ctx.strokeStyle = isU ? 'rgba(245,158,11,0.68)' : isTall ? 'rgba(56,189,248,0.34)' : 'rgba(148,163,184,0.18)';
       ctx.lineWidth = isU ? 1.5 : 0.9;
       ctx.stroke();
 
@@ -2017,7 +2206,13 @@ class MapRenderer extends Emitter {
         ctx.font = '700 9.5px Inter, -apple-system, sans-serif';
         ctx.fillStyle = '#FBBF24';
         ctx.textAlign = 'center';
-        ctx.fillText('DORTMUNDER U-TOWER (3D LoS BLOCKER)', tx, ty);
+        ctx.fillText('DORTMUNDER U-TOWER (95m · 3D LoS BLOCKER)', tx, ty);
+      } else if (ob.id === 'ELLIPSE') {
+        const [tx, ty] = this.w2s(ob.x, ob.y, ob.height + 10);
+        ctx.font = '600 8.5px Inter, -apple-system, sans-serif';
+        ctx.fillStyle = 'rgba(186,230,253,0.75)';
+        ctx.textAlign = 'center';
+        ctx.fillText('ELLIPSON (76m · 3D LoS BLOCKER)', tx, ty);
       }
     }
     ctx.restore();
@@ -2027,7 +2222,9 @@ class MapRenderer extends Emitter {
     const ctx = this.ctx, env = this.sim.env, z = env.zone;
     const [sx, sy] = this.w2s(z.x, z.y, 0);
     const [ex] = this.w2s(z.x + z.radius, z.y, 0);
+    const [icx] = this.w2s(z.x + (CFG.ZONE.innerCoreRadius || 150), z.y, 0);
     const R = Math.max(28, Math.abs(ex - sx));
+    const Rcore = Math.max(14, Math.abs(icx - sx));
     ctx.save();
     if (!env.jamming && !env.spoofing) {
       ctx.setLineDash([4, 8]); ctx.strokeStyle = 'rgba(255,255,255,0.08)'; ctx.lineWidth = 1;
@@ -2043,8 +2240,9 @@ class MapRenderer extends Emitter {
       ctx.beginPath(); ctx.ellipse(sx, sy, R2, R2 * 0.62, 0, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
     }
     if (env.jamming) {
+      // Outer/Mid Jamming Zone (>150m .. 620m, 1/r^2 inverse-square law -> DECT NR+ FHSS/DSSS survives in QoS Emergency Mode)
       const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 1.2);
-      g.addColorStop(0, 'rgba(239,68,68,0.24)'); g.addColorStop(0.7, 'rgba(239,68,68,0.09)'); g.addColorStop(1, 'rgba(239,68,68,0)');
+      g.addColorStop(0, 'rgba(239,68,68,0.28)'); g.addColorStop(0.28, 'rgba(239,68,68,0.14)'); g.addColorStop(0.7, 'rgba(239,68,68,0.06)'); g.addColorStop(1, 'rgba(239,68,68,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.ellipse(sx, sy, R * 1.2, R * 1.2 * 0.62, 0, 0, Math.PI * 2); ctx.fill();
       const pulse = (t % 2200) / 2200;
       ctx.strokeStyle = `rgba(239,68,68,${(1 - pulse) * 0.45})`; ctx.lineWidth = 1.5;
@@ -2052,8 +2250,25 @@ class MapRenderer extends Emitter {
       ctx.beginPath(); ctx.ellipse(sx, sy, rp, rp * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
       ctx.strokeStyle = 'rgba(239,68,68,0.65)'; ctx.lineWidth = 1.3;
       ctx.beginPath(); ctx.ellipse(sx, sy, R, R * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+
+      // Inner Jamming Core (<150m from jammer center -> total RF blackout when combined with NLOS shadow -> triggers INS/VIO Vertical Pop-Up)
+      ctx.fillStyle = 'rgba(192,132,252,0.14)';
+      ctx.beginPath(); ctx.ellipse(sx, sy, Rcore, Rcore * 0.62, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.setLineDash([4, 3]);
+      ctx.strokeStyle = 'rgba(192,132,252,0.85)';
+      ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.ellipse(sx, sy, Rcore, Rcore * 0.62, 0, 0, Math.PI * 2); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = '700 8.5px "JetBrains Mono", monospace';
+      ctx.fillStyle = '#E9D5FF';
+      ctx.textAlign = 'center';
+      ctx.fillText('JAMMER CORE <150m (NLOS DOUBLE-FAIL)', sx, sy + Rcore * 0.62 + 11);
     }
-    const label = env.jamming && env.spoofing ? 'JAMMING & SPOOFING · U-TOWER SECTOR' : env.jamming ? 'ACTIVE JAMMING · U-TOWER SECTOR' : 'GNSS SPOOFING · U-TOWER SECTOR';
+    const label = env.jamming && env.spoofing
+      ? 'JAMMING (1/r²) & SPOOFING · U-TOWER SECTOR'
+      : env.jamming
+      ? 'ACTIVE RF JAMMING (1/r² · OUTER >150m FHSS · CORE <150m)'
+      : 'GNSS SPOOFING · U-TOWER SECTOR';
     ctx.font = '700 9.5px Inter, -apple-system, sans-serif';
     ctx.fillStyle = env.jamming ? '#FCA5A5' : '#FDE68A';
     ctx.textAlign = 'center';
@@ -2288,8 +2503,18 @@ class MapRenderer extends Emitter {
       ctx.fill();
       ctx.restore();
 
-      // Tiny pulsing red/amber dot ONLY if drone is in distress
-      if (distress) {
+      // Tiny pulsing red/amber/purple dot ONLY if drone is in distress or executing Autonomous Pop-Up
+      const isPopUp = this.sim.protection && (d.popUpActive || d.routeState === 'ISOLATED');
+      if (isPopUp) {
+        ctx.save();
+        const popCol = pulse > 0.5 ? '#C084FC' : '#EF4444';
+        ctx.strokeStyle = rgba(popCol, 0.55 + 0.35 * pulse);
+        ctx.lineWidth = 1.8;
+        ctx.beginPath(); ctx.arc(x, y, 13 + pulse * 5, 0, Math.PI * 2); ctx.stroke();
+        ctx.fillStyle = popCol;
+        ctx.beginPath(); ctx.arc(x - 10, y - 10, 3.0, 0, Math.PI * 2); ctx.fill();
+        ctx.restore();
+      } else if (distress) {
         const dotCol = distress === 'crit' ? '#EF4444' : '#F59E0B';
         ctx.save();
         ctx.fillStyle = rgba(dotCol, 0.25 + 0.35 * pulse);
@@ -2299,22 +2524,36 @@ class MapRenderer extends Emitter {
         ctx.restore();
       }
 
-      // Drone label + altitude + live NLOS / Funk / Isolated badge right on map
+      // Drone label + altitude + live NLOS / Pop-Up / Relay / QoS Emergency badge right on map
       const shortNum = d.id.replace(/^DR-/, '');
       const subBadge = off
         ? null
+        : isPopUp
+        ? {
+            txt: d.popUpActive
+              ? (d.alt < CFG.ROOF_CLEAR_ALT ? '↑ CLIMBING TO CLEAR LOS' : '↑ POP-UP CLEAR · FSOC LOCKED')
+              : 'ISOLATED • AUTONOMOUS POP-UP (INS/VIO)',
+            col: pulse > 0.5 ? '#E9D5FF' : '#FCA5A5',
+          }
         : d.routeState === 'ISOLATED' || (d.routeState === 'REROUTING' && !this.sim.protection)
         ? { txt: !this.sim.protection ? '2.4G FUNK LOST · RIP' : 'ISOLATED', col: '#F87171' }
+        : d.qosEmergency
+        ? { txt: 'ONLINE (Degraded · 12k C2)', col: '#FBBF24' }
         : d.band === 'DECT'
         ? { txt: 'NLOS · DECT NR+', col: '#FBBF24' }
         : d.band === 'FUNK'
         ? { txt: '2.4 GHz FUNK', col: '#38BDF8' }
+        : d.role === 'RELAY'
+        ? { txt: 'HIGH-ALT RELAY · 120m', col: '#34D399' }
         : null;
       ctx.font = '700 10.5px Inter, -apple-system, sans-serif';
-      ctx.fillStyle = off ? 'rgba(161,161,170,0.4)' : isSel ? '#FAFAFA' : 'rgba(250,250,250,0.88)';
+      ctx.fillStyle = off ? 'rgba(161,161,170,0.4)' : isPopUp ? '#F3E8FF' : isSel ? '#FAFAFA' : 'rgba(250,250,250,0.88)';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${shortNum} · ${d.alt.toFixed(0)}m`, x + 13, y - (subBadge ? 4 : 0));
+      const altLabel = (d.popUpActive && d.alt < CFG.POPUP_TARGET_ALT - 0.5)
+        ? `${shortNum} · ↑${d.alt.toFixed(0)}m`
+        : `${shortNum} · ${d.alt.toFixed(0)}m`;
+      ctx.fillText(altLabel, x + 13, y - (subBadge ? 4 : 0));
       if (subBadge) {
         ctx.font = '700 8.5px Inter, -apple-system, sans-serif';
         ctx.fillStyle = subBadge.col;
@@ -2338,31 +2577,50 @@ class MapRenderer extends Emitter {
     const [sx, sy] = this.w2s(d.x, d.y, d.alt);
     el.classList.remove('hidden');
     const distress = this.isDistressed(d);
-    const badgeCls = distress === 'crit' ? 'crit' : distress === 'warn' ? 'warn' : '';
+    const isPopUp = this.sim.protection && (d.popUpActive || d.routeState === 'ISOLATED');
+    const badgeCls = isPopUp ? 'popup' : distress === 'crit' ? 'crit' : distress === 'warn' ? 'warn' : '';
     const badgeTxt = d.status === 'OFFLINE'
       ? 'OFFLINE'
+      : isPopUp
+      ? (d.popUpActive && d.alt < CFG.ROOF_CLEAR_ALT
+          ? '↑ CLIMBING TO CLEAR LOS (INS/VIO)'
+          : 'ISOLATED • AUTONOMOUS POP-UP (INS/VIO)')
       : d.routeState === 'ISOLATED' || (d.routeState === 'REROUTING' && !this.sim.protection)
       ? (!this.sim.protection ? '2.4G FUNK LOST · RIP' : 'ISOLATED')
+      : d.qosEmergency
+      ? 'ONLINE (Degraded · QoS 12k C2)'
       : d.gnss === 'LOST'
-      ? 'GNSS LOST'
+      ? 'GNSS LOST (INS/VIO)'
       : d.gnss === 'SPOOFED'
       ? 'SPOOFED'
       : d.band === 'DECT'
       ? 'NLOS - DECT Fallback'
       : d.band === 'FUNK'
       ? '2.4 GHz Funk (Baseline)'
-      : 'FSOC Laser (LoS)';
+      : d.role === 'RELAY'
+      ? 'High-Alt Relay (120m FSOC)'
+      : 'FSOC Laser (1550nm LoS)';
     const ip = `10.41.0.${d.index + 1}`;
     const route = d.route ? d.route.join(' → ') : d.routeState;
     const losInfo = d.nlosReason ? `Blocked: ${d.nlosReason}` : 'Clear 3D Line-of-Sight';
-    const linkName = d.band === 'DECT' ? 'DECT NR+' : d.band === 'FUNK' ? '2.4 GHz Funk' : d.band === 'FSOC' ? 'FSOC 10G' : 'NO LINK';
+    const linkName = isPopUp && d.routeState !== 'OK'
+      ? 'INS/VIO Pop-Up'
+      : d.qosEmergency
+      ? 'DECT FHSS (12k C2)'
+      : d.band === 'DECT'
+      ? 'DECT NR+ (1.9G)'
+      : d.band === 'FUNK'
+      ? '2.4 GHz Funk'
+      : d.band === 'FSOC'
+      ? 'FSOC 1550nm'
+      : 'NO LINK';
     el.innerHTML = `
       <div class="nc-top">
         <span class="nc-id">${d.id} <span style="color:var(--mut);font-weight:400;font-size:10px">(${ip})</span></span>
         <span class="nc-badge ${badgeCls}">${badgeTxt}</span>
       </div>
       <div class="nc-grid">
-        <div><span>Altitude</span><b>${d.alt.toFixed(0)} m AGL</b></div>
+        <div><span>Altitude</span><b>${d.popUpActive ? `↑ ${d.alt.toFixed(0)} m (Pop-Up)` : `${d.alt.toFixed(0)} m AGL`}</b></div>
         <div><span>Speed</span><b>${(d.speed * 3.6).toFixed(0)} km/h</b></div>
         <div><span>Link / LoS</span><b>${linkName}</b></div>
         <div><span>Latency / Hops</span><b>${d.routeState === 'OK' ? `${d.latency.toFixed(0)} ms · ${d.hops}H` : '—'}</b></div>
@@ -2922,16 +3180,33 @@ class UI {
       }
 
       let dotCls = 'st-dot', bandCls = 'drow-band';
-      let bandTxt = s.protection ? 'FSOC Laser' : '2.4 GHz Funk';
-      let chipTxt = s.protection ? 'FSOC LoS' : '2.4G Funk';
+      let bandTxt = s.protection
+        ? (d.role === 'RELAY' ? 'FSOC Relay · 120m' : 'FSOC Laser')
+        : '2.4 GHz Funk';
+      let chipTxt = s.protection
+        ? (d.role === 'RELAY' ? 'Relay 120m' : 'FSOC LoS')
+        : '2.4G Funk';
+      const isPopUp = s.protection && (d.popUpActive || d.routeState === 'ISOLATED');
       if (off) {
         dotCls += ' off'; bandTxt = 'Offline'; chipTxt = 'Offline';
+      } else if (isPopUp) {
+        dotCls += ' popup'; bandCls += ' popup';
+        bandTxt = d.popUpActive
+          ? (d.alt < CFG.ROOF_CLEAR_ALT
+              ? `ISOLATED • POP-UP ↑${d.alt.toFixed(0)}m (INS/VIO)`
+              : `POP-UP CLEAR ↑${d.alt.toFixed(0)}m · FSOC LoS`)
+          : 'ISOLATED • AUTONOMOUS POP-UP (INS/VIO)';
+        chipTxt = d.popUpActive ? `↑${d.alt.toFixed(0)}m Pop-Up` : 'INS/VIO Pop-Up';
       } else if (d.routeState === 'ISOLATED' || d.band === 'NONE' || (!s.protection && d.routeState === 'REROUTING')) {
         dotCls += ' crit'; bandCls += ' crit';
         bandTxt = !s.protection
           ? (d.jam > 0.35 ? 'Funk Jammed · RIP' : 'LoS Blocked · Funk Lost')
           : (d.gnss === 'LOST' ? 'GNSS Lost' : 'LoS Blocked · Isolated');
         chipTxt = !s.protection ? 'Funk Lost · RIP' : 'Isolated';
+      } else if (d.qosEmergency) {
+        dotCls += ' warn'; bandCls += ' warn';
+        bandTxt = 'ONLINE (Degraded · 12k C2)';
+        chipTxt = 'DECT QoS 12k C2';
       } else if (d.band === 'DECT' || d.routeState === 'REROUTING' || d.gnss === 'SPOOFED' || d.gnss === 'LOST') {
         dotCls += ' warn'; bandCls += ' warn';
         bandTxt = d.band === 'DECT' ? 'NLOS - DECT Fallback' : d.gnss === 'SPOOFED' ? 'Spoofed' : d.gnss === 'LOST' ? 'GNSS Lost (INS)' : 'Rerouting';
@@ -2946,16 +3221,25 @@ class UI {
       if (ch) {
         ch.dot.className = dotCls;
         ch.band.textContent = chipTxt;
-        ch.el.classList.toggle('warn', !off && (d.band === 'DECT' || d.gnss === 'SPOOFED'));
-        ch.el.classList.toggle('crit', off || d.routeState === 'ISOLATED' || d.band === 'NONE' || (!s.protection && d.routeState === 'REROUTING'));
+        ch.el.classList.toggle('popup', !off && isPopUp);
+        ch.el.classList.toggle('warn', !off && !isPopUp && (d.band === 'DECT' || d.gnss === 'SPOOFED' || d.qosEmergency));
+        ch.el.classList.toggle('crit', !isPopUp && (off || d.routeState === 'ISOLATED' || d.band === 'NONE' || (!s.protection && d.routeState === 'REROUTING')));
       }
 
-      c.alt.textContent = `${d.alt.toFixed(0)} m`;
+      c.alt.textContent = d.popUpActive
+        ? `↑ ${d.alt.toFixed(0)} m (→125m)`
+        : `${d.alt.toFixed(0)} m`;
       c.spd.textContent = `${(d.speed * 3.6).toFixed(0)} km/h`;
       c.bat.textContent = `${d.battery.toFixed(0)}%`;
       c.hops.textContent = !off && d.routeState === 'OK' ? `${d.hops} (${d.route[1] || 'HQ'})` : '—';
       c.los.textContent = d.nlosReason ? `Blocked (${d.nlosReason})` : 'Clear 3D LoS';
-      c.gnss.textContent = d.gnss === 'OK' ? '3D Fix' : d.gnss === 'LOST' ? (s.protection ? 'INS Fallback' : 'GNSS Dead') : 'Spoofed';
+      c.gnss.textContent = isPopUp
+        ? 'INS/VIO (0 RF/GPS)'
+        : d.gnss === 'OK'
+        ? '3D Fix'
+        : d.gnss === 'LOST'
+        ? (s.protection ? 'INS/VIO Fallback' : 'GNSS Dead')
+        : 'Spoofed';
     }
     this.$('fcOnline').textContent = online;
     this.$('fcFallback').textContent = fallback;
@@ -3084,7 +3368,7 @@ function frame() {
   const ts = performance.now(), dt = clamp((ts - last) / 1000, 0, 0.1); last = ts;
   sim.tick(dt);
   map.draw(dt);
-  uiAcc += dt; if (uiAcc >= 0.25) { uiAcc = 0; ui.update(); }
+  uiAcc += dt; if (uiAcc >= 0.10) { uiAcc = 0; ui.update(); }
   sampleAcc += dt; if (sampleAcc >= 0.5) { sampleAcc = 0; sim.metrics.sample(); ui.drawSparks(); }
   requestAnimationFrame(frame);
 }

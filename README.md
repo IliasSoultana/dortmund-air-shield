@@ -1,12 +1,12 @@
-# Dortmund Air Shield
+# Dortmund OFF-Grid Air (`Dortmund-OFF-grid-air`)
 
-**A hybrid FSOC laser and DECT NR+ mesh, flown over a 3D Dortmund.**
+**A hybrid FSOC laser (1550 nm) and DECT NR+ (1.9 GHz) mesh, flown over a 3D Dortmund with real-world aerospace & RF physics.**
 
 Ten drones. One control center at the Reinoldikirche. A city that keeps getting in the way. The dashboard is a single file, `index.html`, with no build step. Open it and the mission is already running. A Python backend can take over the telemetry; until it does, the built-in simulation flies the whole thing.
 
 DO-DATA-HACKATHON 2026 · Morpheus Logistik · Challenge 02: OFF-GRID AIR
 
-**Live** · <https://soulnassim.github.io/dortmund-air-shield/>
+**Live GitHub Pages** · <https://soulnassim.github.io/Dortmund-OFF-grid-air/> · **Repository** · <https://github.com/SoulNassim/Dortmund-OFF-grid-air>
 
 ---
 
@@ -52,13 +52,15 @@ flowchart TD
   pipe --> seen3["QoS bars, policy label"]
 ```
 
-| | Protected | Unprotected |
+| | Protected (`FSOC + DECT NR+`) | Unprotected (`Standard 2.4 GHz Funk`) |
 |---|---|---|
-| Line of sight | A blocked laser becomes a DECT NR+ hop through the building | The laser stops on the facade. Nothing replaces it |
-| Jamming | The node leaves FSOC and stays on the DECT mesh | The node keeps asking for a beam that is gone |
-| Position | GNSS is rejected once it disagrees with INS by 60 m. The airframe stays on the real track | The autopilot flies the fake fix |
-| Routing | A broken route is rebuilt. A group cut off from HQ gets a DECT bridge | The drone waits for the original hop to come back |
-| Traffic | C2, then telemetry, then inter-drone, then video. C2 is sent three times. Video is shed under attack | Every class shares the pipe. Video competes with C2 |
+| Line of sight | A blocked 1550 nm laser (confirmed via 3 s hysteresis) switches to a 1.9 GHz DECT NR+ hop through the building | Standard 2.4 GHz Funk drops behind 3D concrete buildings (`LoS Blocked · Funk Lost`) |
+| Jamming (LoS clear) | **FSOC 1550 nm laser is 100% immune (`0%` loss)** to RF jamming as long as 3D LoS is clear | 2.4 GHz Funk collapses (`Funk Jammed · RIP`) |
+| Jamming + NLOS (`>150 m` Outer Zone) | DECT NR+ survives via FHSS/DSSS ($1/r^2$ inverse-square law), triggers **`QoS EMERGENCY MODE`**: Video `0%`, `+40 ms` latency, **`12 kbps` C2 locked** (`ONLINE · Degraded`) | Total link loss |
+| Jamming Core (`<150 m`) + NLOS Shadow | **Honest Double-Fail → `ISOLATED • AUTONOMOUS POP-UP (INS/VIO)`**: after `1.5 s`, the drone climbs vertically (`50 m → 125 m` in `~3.2 s`) until it clears the `95 m` roof and locks FSOC Laser onto High-Altitude Relays (`DR-01` / `DR-02` at `120 m`) | Total link loss; drone remains stranded |
+| Position | GNSS is rejected once it disagrees with INS/VIO by 60 m. The airframe stays on the real track | The autopilot flies the fake fix |
+| Routing | Broken routes are rebuilt via Dijkstra or High-Altitude Relays (`120 m`). Cut-off groups outside the `<150 m` core get a DECT bridge | The drone waits for the static direct link to return |
+| Traffic | Strict priority: C2 (`12 kbps`, 3× ARQ), telemetry, inter-drone, then video | Best-effort shared pipe; video competes with C2 |
 
 ---
 
@@ -350,17 +352,17 @@ AirShield.getState();
 
 | Constant | Value |
 |---|---|
-| Fleet | DR-01 … DR-10, plus HQ at the Reinoldikirche, 51.5136° N, 7.4653° E, 65 m |
+| Fleet | `DR-01 … DR-10` (`DR-01` & `DR-02` High-Altitude Relays at `120 m`; `DR-03` & `DR-07` urban canyon nodes at `50–52 m`; others cruise at `85–105 m`), plus HQ at Reinoldikirche (`65 m`) |
 | Mesh addresses | `10.41.0.1` … `10.41.0.10` |
 | Camera | zoom 14.35, pitch 60°, bearing −18°, Dortmund center |
-| Occluders | U-Tower 155 m, Hbf tower, Sparkasse, Ellipson, RWE, Stadthaus, Westfalentower, Ostwall |
-| Jam zone | 51.5132° N, 7.4545° E, radius 620 m, Sector West · U-Tower |
-| Jam fringe | full strength to the radius, zero at 1.35× |
-| GNSS lost | jam strength above 0.55 |
+| Occluders | Realistic Dortmund heights: RWE Tower (`100 m`), Dortmunder U-Tower (`95 m`), Westfalentower (`86 m`), Sparkasse (`78 m`), Ellipson (`76 m`), Hbf Tower (`74 m`), plus typical urban blocks (`22–28 m`) |
+| 3D LoS Hysteresis | `3000 ms` (`3 s` debounce on building edges) |
+| Jam zone ($1/r^2$) | `51.5132° N, 7.4545° E`, outer radius `620 m` (DECT NR+ FHSS/DSSS `QoS EMERGENCY MODE` `>150 m`), inner core `<150 m` (total RF blackout) |
+| Autonomous Pop-Up | Triggered after `1.5 s` in `ISOLATED` (`<150 m` jam core + NLOS shadow): `INS/VIO` vertical climb `50 m → 125 m` (`>95 m` roof clearance in `~3.2 s`) |
+| GNSS lost | jam strength above 0.55 (`INS/VIO` dead-reckoning with zero RF/GPS) |
 | Spoof radius | 1.5× the jam zone, drift ~7 m/s |
 | GNSS rejected | offset greater than 60 m against INS |
-| FSOC | 2.8 km, up to 1 Gbps, requires a clear 3D ray |
-| DECT NR+ | 4.5 km, 4.8 Mbps, opened when the ray hits a building, the jam is above 0.5, or a group has lost HQ |
-| Rebuild wait | 450 ms + 220 ms/hop + 900 ms if the new path is DECT |
+| FSOC (1550 nm) | `2.8 km`, up to `1 Gbps`, `0%` RF jammer loss, requires a clear 3D ray |
+| DECT NR+ (1.9 GHz) | `4.5 km`, `4.8 Mbps`, NLOS building penetration, `+40 ms` latency & `12 kbps` C2 lock under outer jamming |
 | Failed node | back after 20 s |
 | Network tick | every 200 ms |
