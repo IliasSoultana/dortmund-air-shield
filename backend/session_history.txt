@@ -1,0 +1,6 @@
+# Dortmund Air Shield — Backend Engineering Session History
+- Initialized deterministic 2 Hz simulation engine (TICK = 0.5 s, 10 drones, 3D building LoS + DECT NR+ fallback).
+- Added 9 deterministic scenarios in backend/engine/scenarios.py (including ramp_jam, slow_spoof, coordinated, carrier_blackout).
+- Implemented RuleBasedDetector (backend/engine/anomaly.py) with fixed thresholds + rolling baseline.
+- Implemented ContrastiveDetector (backend/engine/contrastive.py) with per-drone nominal prototypes, axis-aligned Mahalanobis z-scores, cosine similarity attribution, UNEXPLAINED fallback, and operator-confirmed learn_threat().
+- Built reproducible evaluation harness (backend/engine/threat_eval.py) generating threat_eval.json (0.0 s vs 9.5 s on ramp_jam; 0 false flags on nominal; Pass 1 UNEXPLAINED -> Pass 2 100% attributed).
