@@ -133,6 +133,49 @@ class TestEngineSuite(unittest.TestCase):
         self.assertEqual(h["pass_1_novel_unexplained_count"], 2)
         self.assertEqual(h["pass_2_novel_attributed_count"], 2)
 
+    def test_14_live_engine_ramp_jam_contrastive_before_rule_based(self) -> None:
+        eng = Engine(seed=DEFAULT_SEED)
+        sc = SCENARIOS["ramp_jam"]
+        first_c: float | None = None
+        first_rb: float | None = None
+        steps = int(round(30.0 / TICK))
+        for step in range(steps):
+            t_s = round(step * TICK, 4)
+            sc.step_hook(eng, t_s)
+            st = eng.tick(TICK)
+            if t_s >= 10.0:
+                c_status = st["contrastive"]["status"]
+                if first_c is None and any(lbl != "NOMINAL" for lbl in c_status.values()):
+                    first_c = round(t_s - 10.0, 2)
+                if first_rb is None and any(v["label"] != "NOMINAL" for v in st["rule_based"].values()):
+                    first_rb = round(t_s - 10.0, 2)
+        self.assertEqual(first_c, 0.0)
+        self.assertIsNotNone(first_rb)
+        assert first_rb is not None
+        self.assertGreater(first_rb, first_c)
+
+    def test_15_live_engine_confirm_threat_attributes_subsequent_attack(self) -> None:
+        eng = Engine(seed=DEFAULT_SEED)
+        eng.set_jamming(True, power_db=20.0, ramp_dbps=0.4)
+        eng.set_spoofing(True, drift_mps=3.5, initial_offset_m=11.5)
+        st1 = eng.tick(TICK)
+        self.assertEqual(st1["contrastive"]["status"]["DR-01"], "UNEXPLAINED")
+
+        res = eng.confirm_threat("coordinated_rf_gnss", device="DR-01")
+        self.assertEqual(res["label"], "coordinated_rf_gnss")
+        self.assertIn("coordinated_rf_gnss", eng.contrastive.threat_prototypes)
+        self.assertEqual(eng.contrastive_verdicts["DR-01"]["label"], "coordinated_rf_gnss")
+
+        # Turn off and re-trigger attack -> immediately attributed as coordinated_rf_gnss
+        eng.set_jamming(False)
+        eng.set_spoofing(False)
+        eng.tick(TICK)
+        eng.set_jamming(True, power_db=20.0, ramp_dbps=0.4)
+        eng.set_spoofing(True, drift_mps=3.5, initial_offset_m=11.5)
+        st2 = eng.tick(TICK)
+        self.assertEqual(st2["contrastive"]["status"]["DR-01"], "coordinated_rf_gnss")
+        self.assertTrue(st2["contrastive"]["verdicts"]["DR-01"]["attributed"])
+
 
 if __name__ == "__main__":
     unittest.main()

@@ -1,6 +1,7 @@
 """Deterministic seeded drone-mesh simulation engine for Dortmund Air Shield."""
 from __future__ import annotations
 
+from collections import deque
 import math
 import random
 from dataclasses import dataclass, field
@@ -8,6 +9,7 @@ from typing import Any
 
 from .anomaly import RuleBasedDetector
 from .config import CFG, DEFAULT_SEED, FLEET_DEFS, TICK
+from .contrastive import ContrastiveDetector
 from .geo import OBSTACLE_BOXES, check_los_3d, dist3, to_latlon, to_xy
 from .link_budget import (
     clamp,
@@ -79,9 +81,10 @@ class DroneState:
 class Engine:
     """Deterministic 2 Hz simulation engine for the 10-drone Dortmund mesh."""
 
-    def __init__(self, seed: int = DEFAULT_SEED) -> None:
+    def __init__(self, seed: int = DEFAULT_SEED, _warmup_contrastive: bool = True) -> None:
         self.seed = seed
         self.rng = random.Random(seed)
+        self.contrastive_rng = random.Random(seed + 777)
         self.t: float = 0.0
         self.tick_count: int = 0
         self.protection: bool = True
@@ -127,6 +130,7 @@ class Engine:
         self.links: list[dict[str, Any]] = []
         self.recoveries: list[float] = []
         self.events: list[dict[str, Any]] = []
+        self.contrastive_events: list[dict[str, Any]] = []
         self.logs: list[dict[str, str]] = []
 
         self.security = SecurityMonitor()
@@ -134,8 +138,81 @@ class Engine:
         self.rule_detector = RuleBasedDetector()
         self.rule_verdicts: dict[str, dict[str, Any]] = {}
 
+        self.contrastive = ContrastiveDetector()
+        self.contrastive_verdicts: dict[str, dict[str, Any]] = {}
+        self.contrastive_recent: deque[dict[str, Any]] = deque(maxlen=30)
+        self.unexplained_windows: dict[str, deque[tuple[float, float, float, float]]] = {}
+        self.evidence_windows: dict[str, deque[tuple[float, float, float, float]]] = {}
+
         self._init_fleet()
         self._update_mesh_and_telemetry(dt=0.0)
+
+        if _warmup_contrastive:
+            self._bootstrap_contrastive()
+
+    def _bootstrap_contrastive(self, warmup_ticks: int = 80) -> None:
+        """Learn per-drone NOMINAL prototypes on a clean scratch run and seed classic threats.
+
+        Uses isolated scratch engines so self.rng and live simulation state remain untouched.
+        Only single-threat canonical runs are used to seed 'jamming' and 'spoofing' so
+        co-active evidence never poisons prototypes.
+        """
+        nom_eng = Engine(seed=self.seed, _warmup_contrastive=False)
+        samples_by_drone: dict[str, list[tuple[float, float, float, float]]] = {
+            d.id: [] for d in nom_eng.drones
+        }
+        for _ in range(warmup_ticks):
+            nom_eng.tick(TICK)
+            for d in nom_eng.drones:
+                if d.status == "ONLINE" and d.route_state == "OK":
+                    samples_by_drone[d.id].append(nom_eng.anomaly_features(d))
+        for dev_id, samples in samples_by_drone.items():
+            if samples:
+                self.contrastive.learn_nominal(dev_id, samples)
+
+        # Classic threat prototype 1: single-threat jamming
+        jam_eng = Engine(seed=self.seed + 101, _warmup_contrastive=False)
+        for _ in range(10):
+            jam_eng.tick(TICK)
+        jam_eng.set_jamming(True, power_db=38.0, ramp_dbps=0.0)
+        jam_samples: list[dict[str, Any]] = []
+        for _ in range(12):
+            jam_eng.tick(TICK)
+            for d in jam_eng.drones:
+                if d.jam_spatial >= 0.8:
+                    jam_samples.append({"device": d.id, "evidence": jam_eng.anomaly_features(d)})
+        self.contrastive.learn_threat("jamming", jam_samples)
+
+        # Classic threat prototype 2: single-threat spoofing
+        spoof_eng = Engine(seed=self.seed + 202, _warmup_contrastive=False)
+        for _ in range(10):
+            spoof_eng.tick(TICK)
+        spoof_eng.set_spoofing(True, drift_mps=7.0, initial_offset_m=30.0)
+        spoof_samples: list[dict[str, Any]] = []
+        for _ in range(12):
+            spoof_eng.tick(TICK)
+            for d in spoof_eng.drones:
+                if d.spoof_spatial > 0.0:
+                    spoof_samples.append({"device": d.id, "evidence": spoof_eng.anomaly_features(d)})
+        self.contrastive.learn_threat("spoofing", spoof_samples)
+
+        for d in self.drones:
+            feats = self.anomaly_features(d)
+            cv = self.contrastive.detect(d.id, feats)
+            self.contrastive_verdicts[d.id] = self._format_contrastive_verdict(cv)
+
+    @staticmethod
+    def _format_contrastive_verdict(cv: Any) -> dict[str, Any]:
+        return {
+            "device": cv.device,
+            "label": cv.label,
+            "similarity": round(cv.similarity, 4),
+            "z_score": round(cv.z_score, 3),
+            "dims": {k: round(v, 3) for k, v in cv.dims.items()},
+            "evidence": [round(x, 4) for x in cv.evidence],
+            "attributed": bool(cv.attributed),
+            "message": cv.message,
+        }
 
     def _init_fleet(self) -> None:
         self.drones.clear()
@@ -163,10 +240,11 @@ class Engine:
             self.drones.append(ds)
             self.drone_map[ds.id] = ds
 
-    def reset(self, seed: int | None = None) -> None:
+    def reset(self, seed: int | None = None, preserve_learned_threats: bool = False) -> None:
         if seed is not None:
             self.seed = seed
         self.rng = random.Random(self.seed)
+        self.contrastive_rng = random.Random(self.seed + 777)
         self.t = 0.0
         self.tick_count = 0
         self.rth = False
@@ -175,12 +253,24 @@ class Engine:
         self.carrier_blackout = False
         self.recoveries.clear()
         self.events.clear()
+        self.contrastive_events.clear()
         self.logs.clear()
         self.rule_detector.reset()
         self.rule_verdicts.clear()
+        self.contrastive_verdicts.clear()
+        self.contrastive_recent.clear()
+        self.unexplained_windows.clear()
+        self.evidence_windows.clear()
         self.policy = PolicyEngine()
+        saved_threats = dict(self.contrastive.threat_prototypes) if preserve_learned_threats else None
         self._init_fleet()
         self._update_mesh_and_telemetry(dt=0.0)
+        if self.contrastive.nominal:
+            if saved_threats is not None:
+                self.contrastive.threat_prototypes = saved_threats
+            for d in self.drones:
+                cv = self.contrastive.detect(d.id, self.anomaly_features(d))
+                self.contrastive_verdicts[d.id] = self._format_contrastive_verdict(cv)
 
     def log(self, level: str, msg: str) -> None:
         self.logs.append({"level": level.upper(), "msg": msg, "t": f"{self.t:.1f}s"})
@@ -298,6 +388,76 @@ class Engine:
             self.events.append({"type": "NODE_FAILURE", "ids": failed_ids, "active": True})
             self.log("CRIT", f"Node failure on {', '.join(failed_ids)}")
         return failed_ids
+
+    def confirm_threat(
+        self,
+        label: str,
+        device: str | None = None,
+        samples: list[Any] | None = None,
+    ) -> dict[str, Any]:
+        """Operator-in-the-loop confirmation of an UNEXPLAINED threat profile.
+
+        Learns the threat prototype from recent UNEXPLAINED evidence (or explicit samples),
+        updates active contrastive verdicts across the fleet, and logs the confirmation.
+        """
+        clean_label = str(label or "novel_threat").strip()
+        if not clean_label:
+            clean_label = "novel_threat"
+
+        collected: list[Any] = []
+        if samples:
+            collected = list(samples)
+        elif device and device in self.unexplained_windows and self.unexplained_windows[device]:
+            collected = [
+                {"device": device, "evidence": list(ev)}
+                for ev in self.unexplained_windows[device]
+            ]
+        else:
+            for dev_id, win in self.unexplained_windows.items():
+                for ev in win:
+                    collected.append({"device": dev_id, "evidence": list(ev)})
+            if not collected and device and device in self.drone_map:
+                d = self.drone_map[device]
+                collected.append({"device": d.id, "evidence": list(self.anomaly_features(d))})
+            elif not collected:
+                for d in self.drones:
+                    if d.status == "ONLINE":
+                        cv = self.contrastive_verdicts.get(d.id, {})
+                        if cv.get("label") != "NOMINAL":
+                            collected.append({"device": d.id, "evidence": list(self.anomaly_features(d))})
+
+        if not collected:
+            d0 = self.drones[0]
+            collected = [{"device": d0.id, "evidence": list(self.anomaly_features(d0))}]
+
+        proto = self.contrastive.learn_threat(clean_label, collected, device_id=device)
+        self.log(
+            "OK",
+            f"Operator confirmed threat profile '{clean_label}' from {len(collected)} sample(s)",
+        )
+
+        # Re-evaluate current contrastive verdicts so UI immediately reflects attribution
+        updated_verdicts: list[dict[str, Any]] = []
+        for d in self.drones:
+            if d.status != "ONLINE" or d.route_state != "OK":
+                continue
+            feats = self.anomaly_features(d)
+            cv = self.contrastive.detect(d.id, feats)
+            vdict = self._format_contrastive_verdict(cv)
+            self.contrastive_verdicts[d.id] = vdict
+            self.policy.ingest_verdict(vdict)
+            if vdict["label"] != "NOMINAL":
+                self.contrastive_events.append(vdict)
+                self.contrastive_recent.appendleft({**vdict, "t": self.t})
+                updated_verdicts.append(vdict)
+
+        return {
+            "label": clean_label,
+            "device": device,
+            "sample_count": len(collected),
+            "prototype": [round(x, 4) for x in proto],
+            "updated_verdicts": updated_verdicts,
+        }
 
     def anomaly_features(self, d: DroneState) -> tuple[float, float, float, float]:
         """Return clean 4-dim telemetry evidence vector: (rssi, snr, loss, gnss_offset_m)."""
@@ -480,6 +640,26 @@ class Engine:
             self.rule_verdicts[d.id] = rv.to_dict()
             self.policy.ingest_verdict(self.rule_verdicts[d.id])
 
+            if self.contrastive.nominal:
+                c_feats = self.anomaly_features_noisy(d, rng=self.contrastive_rng)
+                ev_win = self.evidence_windows.setdefault(d.id, deque(maxlen=16))
+                ev_win.append(c_feats)
+
+                prev_label = self.contrastive_verdicts.get(d.id, {}).get("label", "NOMINAL")
+                cv = self.contrastive.detect(d.id, c_feats)
+                vdict = self._format_contrastive_verdict(cv)
+                self.contrastive_verdicts[d.id] = vdict
+                self.policy.ingest_verdict(vdict)
+
+                if cv.label == "UNEXPLAINED":
+                    u_win = self.unexplained_windows.setdefault(d.id, deque(maxlen=16))
+                    u_win.append(c_feats)
+
+                if cv.label != "NOMINAL" or prev_label != "NOMINAL":
+                    self.contrastive_events.append(vdict)
+                    if cv.label != prev_label or cv.label == "UNEXPLAINED":
+                        self.contrastive_recent.appendleft({**vdict, "t": self.t})
+
         return self.state()
 
     def metrics(self) -> dict[str, float]:
@@ -537,4 +717,13 @@ class Engine:
             ],
             "links": list(self.links),
             "rule_based": dict(self.rule_verdicts),
+            "contrastive": {
+                "status": {
+                    d.id: self.contrastive_verdicts.get(d.id, {}).get("label", "NOMINAL")
+                    for d in self.drones
+                },
+                "verdicts": dict(self.contrastive_verdicts),
+                "recent": list(self.contrastive_recent),
+                "prototypes": list(self.contrastive.threat_prototypes.keys()),
+            },
         }

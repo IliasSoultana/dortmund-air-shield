@@ -23,7 +23,7 @@ def warmup_and_seed_contrastive(
 ) -> ContrastiveDetector:
     """Learn per-drone NOMINAL prototypes from clean operation and seed classic threats."""
     detector = ContrastiveDetector()
-    eng = Engine(seed=seed)
+    eng = Engine(seed=seed, _warmup_contrastive=False)
     samples_by_drone: dict[str, list[tuple[float, float, float, float]]] = {
         d.id: [] for d in eng.drones
     }
@@ -38,7 +38,7 @@ def warmup_and_seed_contrastive(
             detector.learn_nominal(dev_id, samples)
 
     # Seed canonical single-threat prototype 1: classic jamming
-    jam_eng = Engine(seed=seed + 101)
+    jam_eng = Engine(seed=seed + 101, _warmup_contrastive=False)
     for _ in range(10):
         jam_eng.tick(TICK)
     jam_eng.set_jamming(True, power_db=38.0, ramp_dbps=0.0)
@@ -51,7 +51,7 @@ def warmup_and_seed_contrastive(
     detector.learn_threat("jamming", jam_samples)
 
     # Seed canonical single-threat prototype 2: classic spoofing
-    spoof_eng = Engine(seed=seed + 202)
+    spoof_eng = Engine(seed=seed + 202, _warmup_contrastive=False)
     for _ in range(10):
         spoof_eng.tick(TICK)
     spoof_eng.set_spoofing(True, drift_mps=7.0, initial_offset_m=30.0)
@@ -72,7 +72,7 @@ def _evaluate_scenario(
     seed: int = DEFAULT_SEED,
 ) -> dict[str, Any]:
     spec = SCENARIOS[scenario_name]
-    eng = Engine(seed=seed)
+    eng = Engine(seed=seed, _warmup_contrastive=False)
     rule = RuleBasedDetector()
     eval_rng = random.Random(seed + 999)
 
