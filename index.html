@@ -374,8 +374,8 @@ button,input{font-family:inherit}
 
     <div class="fleet-summary-bar">
       <div class="fleet-counts">
-        <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10B981"></i><b id="fcOnline">10</b> FSOC LoS</span>
-        <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F59E0B"></i><b id="fcFallback">0</b> NLOS DECT</span>
+        <span><i id="fcDot1" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#10B981"></i><b id="fcOnline">10</b> <span id="fcLabel1">FSOC LoS</span></span>
+        <span><i id="fcDot2" style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#F59E0B"></i><b id="fcFallback">0</b> <span id="fcLabel2">NLOS DECT</span></span>
         <span><i style="display:inline-block;width:6px;height:6px;border-radius:50%;background:#71717A"></i><b id="fcOffline">0</b> Off</span>
       </div>
     </div>
@@ -557,11 +557,13 @@ const Geo = {
   dist3: (a, b) => Math.hypot(a.x - b.x, a.y - b.y, (a.alt || 0) - (b.alt || 0)),
 };
 const linkKey = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
-const bandLabel = b => (b === 'FSOC' ? 'FSOC Laser (LoS)' : b === 'DECT' ? 'NLOS - DECT Fallback' : 'NO LINK');
+const bandLabel = b => (b === 'FSOC' ? 'FSOC Laser (LoS)' : b === 'DECT' ? 'NLOS - DECT Fallback' : b === 'FUNK' ? '2.4 GHz Funk' : 'NO LINK');
 const normBand = b => {
   const s = String(b).toUpperCase();
   return s.includes('DECT') || s.includes('LORA') || s.includes('NLOS') || s.includes('868') || s.includes('SUB')
     ? 'DECT'
+    : s.includes('FUNK') || s.includes('2.4') || s.includes('WIFI')
+    ? 'FUNK'
     : s.includes('NONE')
     ? 'NONE'
     : 'FSOC';
@@ -782,8 +784,13 @@ class MeshNetwork {
     if (band === 'FSOC') {
       // High-speed Free-Space Optical Laser: ultra-low latency (<8ms), gigabit capacity, requires clear LoS
       latency = 1.5 + 8 * Math.pow(1 - q, 1.5) + (env.jamming ? 3 : 0);
-      loss = 0.0005 + 0.02 * (1 - q) ** 2 + jam * 0.08;
+      loss = 0.0005 + 0.02 * (1 - q) ** 2 + jam * 0.04;
       cap = CFG.FSOC_CAP_KBPS * q;
+    } else if (band === 'FUNK') {
+      // Standard 2.4 GHz Funk (unprotected baseline RF): vulnerable to RF jamming & urban multipath
+      latency = 14 + 55 * (1 - q) + 180 * jam;
+      loss = 0.015 + 0.14 * (1 - q) + 0.85 * jam;
+      cap = 22000 * q * Math.max(0.05, 1 - 0.92 * jam);
     } else {
       // DECT NR+ (1.9 GHz non-line-of-sight RF mesh): penetrates/diffracts through 3D city blocks
       latency = 18 + 38 * (1 - q) + 28 * jam;
@@ -811,7 +818,30 @@ class MeshNetwork {
       }
       for (const d of online) {
         const mine = links.filter(l => l.a === d.id || l.b === d.id);
-        bandNext.set(d.id, mine.some(l => l.band === 'FSOC') ? 'FSOC' : mine.length ? 'DECT' : 'NONE');
+        bandNext.set(d.id, mine.some(l => l.band === 'FSOC') ? 'FSOC' : mine.some(l => l.band === 'FUNK') ? 'FUNK' : mine.length ? 'DECT' : 'NONE');
+      }
+    } else if (!sim.protection) {
+      // UNPROTECTED BASELINE: Standard 2.4 GHz Funk (Direct RF to HQ · No FSOC Laser · No DECT NR+ Mesh · Vulnerable to RF Jamming & 3D Buildings)
+      for (const d of online) {
+        const dist = Geo.dist3(d, sim.hq);
+        const jam = d.jam;
+        const hit = checkLineOfSight3D(d, sim.hq);
+        if (hit) {
+          blocked.push({ a: d.id, b: 'HQ', hit });
+          nlosReasonMap.set(d.id, hit.obstacle.name);
+          // 3D urban canyon blocks 2.4 GHz Funk (severe multipath + building shadow -> connection drops!)
+          bandNext.set(d.id, 'NONE');
+          continue;
+        }
+        if (jam > 0.35 || dist > 2300) {
+          // 2.4 GHz Funk gets completely wiped out by broadband RF jamming!
+          nlosReasonMap.set(d.id, jam > 0.35 ? '2.4 GHz Funk Jammed' : 'Out of 2.4G Range');
+          bandNext.set(d.id, 'NONE');
+          continue;
+        }
+        const q = clamp((1 - Math.pow(dist / 2450, 2.0)) * (1 - 1.6 * jam), 0.08, 1);
+        links.push(this.makeLink(d, sim.hq, 'FUNK', q, jam));
+        bandNext.set(d.id, 'FUNK');
       }
     } else {
       const jamOf = n => (n.id === 'HQ' ? 0 : n.jam);
@@ -827,6 +857,7 @@ class MeshNetwork {
         const jam = Math.max(jamOf(a), jamOf(b));
 
         // 3D Raycast against Dortmund 3D building extrusions (U-Tower, Hbf, Sparkasse, etc.)
+        // FSOC is an optical laser: it ONLY breaks on physical 3D Line-of-Sight occlusion (not RF jamming!)
         const hit = checkLineOfSight3D(a, b);
         if (hit) {
           // LoS is blocked by a 3D building! Record the broken laser raycast & switch link to DECT NR+ RF mesh
@@ -837,36 +868,33 @@ class MeshNetwork {
           if (b.id !== 'HQ') nlosReasonMap.set(b.id, hit.obstacle.name);
           if (sim.protection) {
             const k = linkKey(a.id, b.id);
-            if (!dectAdded.has(k) && d < CFG.DECT_RANGE) {
+            if (!dectAdded.has(k) && d < CFG.DECT_RANGE && jam <= 0.88) {
               dectAdded.add(k);
-              const qDect = (1 - Math.pow(d / CFG.DECT_RANGE, 1.8)) * (1 - 0.35 * jam);
-              links.push(this.makeLink(a, b, 'DECT', clamp(qDect, 0.15, 1), jam, hit));
+              // DECT NR+ is a 1.9 GHz RF link, so RF jamming degrades its SNR
+              const qDect = (1 - Math.pow(d / CFG.DECT_RANGE, 1.8)) * (1 - 0.65 * jam);
+              links.push(this.makeLink(a, b, 'DECT', clamp(qDect, 0.08, 1), jam, hit));
             }
           }
           continue;
         }
 
-        if (jam > 0.55) continue;
+        // Clear 3D Line-of-Sight: FSOC optical laser is completely immune to RF jamming!
         let q = 1 - Math.pow(d / CFG.FSOC_RANGE, 2.6);
-        if (q <= 0) continue;
-        q *= (1 - jam * 0.85) * (env.jamming ? 0.92 : 1);
         if (q < 0.12) continue;
-        links.push(this.makeLink(a, b, 'FSOC', q, jam));
+        links.push(this.makeLink(a, b, 'FSOC', q, 0));
         fsocDeg.set(a.id, (fsocDeg.get(a.id) || 0) + 1);
-        fsocDeg.set(b.id, (fsocDeg.get(b.id) || 0) + 1);
+        fsocDeg.set(b.id, (b.id, (fsocDeg.get(b.id) || 0) + 1));
       }
 
       for (const d of online) {
-        // Also check direct sightline to HQ for NLOS status attribution
+        // Check if this drone has any clear-LoS FSOC laser neighbor
         const hqHit = checkLineOfSight3D(d, sim.hq);
         if (hqHit) nlosReasonMap.set(d.id, hqHit.obstacle.name);
 
-        if (!sim.protection && forced(d) !== 'DECT') {
-          bandNext.set(d.id, fsocDeg.get(d.id) && !hqHit ? 'FSOC' : fsocDeg.get(d.id) ? 'FSOC' : 'NONE');
-          continue;
-        }
-        const needDect = forced(d) === 'DECT' || d.jam > 0.5 || !fsocDeg.get(d.id) || !!hqHit;
+        // Only open extra DECT NR+ links if forced or if all FSOC sightlines are blocked by 3D buildings
+        const needDect = forced(d) === 'DECT' || !fsocDeg.get(d.id);
         if (!needDect) { bandNext.set(d.id, 'FSOC'); continue; }
+        if (d.jam > 0.88) { bandNext.set(d.id, 'NONE'); continue; }
         const cands = nodes.filter(n => n !== d).map(n => ({ n, dd: Geo.dist3(d, n) }))
           .filter(c => c.dd < CFG.DECT_RANGE).sort((p, q) => p.dd - q.dd).slice(0, 3);
         bandNext.set(d.id, cands.length ? 'DECT' : 'NONE');
@@ -874,9 +902,9 @@ class MeshNetwork {
           const k = linkKey(d.id, c.n.id);
           if (dectAdded.has(k)) continue;
           dectAdded.add(k);
-          const q = (1 - Math.pow(c.dd / CFG.DECT_RANGE, 1.6)) * (1 - 0.3 * d.jam);
+          const q = (1 - Math.pow(c.dd / CFG.DECT_RANGE, 1.6)) * (1 - 0.65 * d.jam);
           const hit = checkLineOfSight3D(d, c.n);
-          links.push(this.makeLink(d, c.n, 'DECT', clamp(q, 0.12, 1), d.jam, hit));
+          links.push(this.makeLink(d, c.n, 'DECT', clamp(q, 0.08, 1), d.jam, hit));
         }
       }
       if (sim.protection) this.bridgePartitions(nodes, links, bandNext, dectAdded);
@@ -897,14 +925,19 @@ class MeshNetwork {
     this.updateRoutes(online, prev);
     this.computePathStats(online);
 
-    // Finalize each drone's active band based on whether its active route uses a DECT NR+ hop or direct LoS is occluded
+    // Finalize each drone's active band
     for (const d of online) {
       let nb = bandNext.get(d.id) || 'NONE';
-      if (d.route && d.route.length > 1) {
-        const usesDect = d.route.some((id, idx) => idx < d.route.length - 1 && this.linkMap.get(linkKey(id, d.route[idx + 1]))?.band === 'DECT');
-        if (usesDect) nb = 'DECT';
+      if (!sim.protection) {
+        nb = d.route && d.route.length > 1 ? 'FUNK' : 'NONE';
+        d.nlosReason = nlosReasonMap.get(d.id) || null;
+      } else {
+        if (d.route && d.route.length > 1) {
+          const dectHop = d.route.find((id, idx) => idx < d.route.length - 1 && this.linkMap.get(linkKey(id, d.route[idx + 1]))?.band === 'DECT');
+          nb = dectHop ? 'DECT' : 'FSOC';
+        }
+        d.nlosReason = nb === 'DECT' ? (nlosReasonMap.get(d.id) || '3D Building LoS Occlusion') : null;
       }
-      d.nlosReason = nb === 'DECT' ? (nlosReasonMap.get(d.id) || (d.jam > 0.5 ? 'RF Jamming Zone' : '3D Building LoS Occlusion')) : null;
       if (nb !== d.band) sim.onBandChange(d, d.band, nb);
       d.band = nb;
     }
@@ -938,7 +971,11 @@ class MeshNetwork {
     }
   }
 
-  edgeCost(l) { return l.latency + l.loss * 400 + (l.band === 'DECT' ? 42 : 0); }
+  edgeCost(l) {
+    const isDirectHQ = l.a === 'HQ' || l.b === 'HQ';
+    // Prefer direct 1-hop routes to HQ (either FSOC Laser if clear LoS, or DECT NR+ through building if occluded)
+    return l.latency + l.loss * 180 + (l.band === 'DECT' ? 8 : 0) + (isDirectHQ ? 0 : 35);
+  }
 
   dijkstra(nodes) {
     const dist = new Map(nodes.map(n => [n.id, Infinity])), prev = new Map(), done = new Set();
@@ -1186,10 +1223,15 @@ class Simulation extends Emitter {
       const why = d.nlosReason ? `LoS blocked by ${d.nlosReason}` : 'FSOC optical beam attenuated';
       L.warn(`${d.id} FSOC Laser link interrupted (${why})`);
       L.net(`${d.id} NLOS - DECT Fallback engaged (DECT NR+ 1.9 GHz RF mesh through building)`);
-    } else if (to === 'FSOC' && from === 'DECT') {
-      L.ok(`${d.id} clear Line-of-Sight restored – locked onto FSOC Laser (10 Gbps)`);
+    } else if (to === 'FSOC' && (from === 'DECT' || from === 'FUNK' || from === 'NONE')) {
+      L.ok(`${d.id} locked onto FSOC Laser (10 Gbps optical LoS)`);
+    } else if (to === 'FUNK' && from !== 'FUNK') {
+      L.warn(`${d.id} operating on Standard 2.4 GHz Funk (unprotected baseline RF)`);
     } else if (to === 'NONE') {
-      L.crit(`${d.id} all optical & DECT NR+ links lost`);
+      const why = d.nlosReason ? ` (${d.nlosReason})` : '';
+      L.crit(this.protection
+        ? `${d.id} all optical & DECT NR+ links lost${why}`
+        : `${d.id} 2.4 GHz Funk connection LOST${why} – NO FALLBACK · DRONE ISOLATED`);
     }
   }
 
@@ -1199,8 +1241,8 @@ class Simulation extends Emitter {
   setJamming(on, origin = 'ui') {
     if (this.env.jamming === on) return;
     this.env.jamming = on; this.env.since.jamming = this.now;
-    if (on) this.logger.crit(`RF JAMMING DETECTED – ${this.env.zone.sector} · 2.4 GHz / 5.8 GHz / GNSS L1 noise floor +38 dB`);
-    else this.logger.ok('Jamming ceased – spectrum nominal, noise floor −101 dBm');
+    if (on) this.logger.crit(`RF JAMMING DETECTED – ${this.env.zone.sector} · RF + GNSS L1 jammed (FSOC optical lasers unaffected)`);
+    else this.logger.ok('RF jamming ceased – GNSS & RF spectrum nominal');
     this.command('SET_JAMMING', on, origin); this.emit('env');
   }
   setSpoofing(on, origin = 'ui') {
@@ -1241,9 +1283,21 @@ class Simulation extends Emitter {
   setProtection(on, origin = 'ui') {
     if (this.protection === on) return;
     this.protection = on;
-    if (on) this.logger.ok('PROTECTION ON – DECT NR+ NLOS fallback · GNSS plausibility check · mesh self-healing · C2-first QoS');
-    else this.logger.crit('PROTECTION OFF – FSOC LoS only (no DECT NR+ fallback), GNSS trusted blindly, static routes');
-    this.command('SET_PROTECTION', on, origin); this.emit('env');
+    for (const d of this.drones) {
+      if (d.status !== 'OFFLINE') {
+        d.lastRoute = [d.id, 'HQ'];
+        if (!on && d.route && d.route.length > 2) {
+          d.route = null;
+          d.routeState = 'REROUTING';
+          d.lossStart = this.now;
+          d.convergeAt = this.now + 400;
+        }
+      }
+    }
+    if (on) this.logger.ok('AIR SHIELD PROTECTED ON – Hybrid FSOC Laser + DECT NR+ NLOS Mesh · INS Spoof Shield · C2-First QoS');
+    else this.logger.crit('UNPROTECTED BASELINE – Standard 2.4 GHz Funk only (vulnerable to RF jamming & 3D buildings · no DECT mesh · GNSS trusted blindly)');
+    this.net.compute(); this.traffic.compute(); this.metrics.compute();
+    this.command('SET_PROTECTION', on, origin); this.emit('env'); this.emit('net');
   }
   setRTH(on, origin = 'ui') {
     if (this.rth === on) return;
@@ -1577,7 +1631,7 @@ class MapRenderer extends Emitter {
     for (const d of sim.drones) {
       if (d.status !== 'ONLINE' || d.routeState !== 'OK' || !d.route) continue;
       if (Math.random() < 0.45) {
-        const col = d.band === 'DECT' ? '#F59E0B' : '#10B981';
+        const col = d.band === 'DECT' ? '#F59E0B' : d.band === 'FUNK' ? '#38BDF8' : '#10B981';
         this.addParticle(d.route, col);
       }
     }
@@ -1738,26 +1792,38 @@ class MapRenderer extends Emitter {
       ctx.stroke();
     }
 
-    // 2) Draw active mesh links: Primary FSOC Laser (Green solid beam) vs. Fallback DECT NR+ (Amber dashed routing through buildings)
+    // 2) Draw active mesh links: Primary FSOC Laser (Green solid beam) vs. Fallback DECT NR+ (Amber dashed routing through buildings) vs. Unprotected 2.4 GHz Funk
     for (const l of net.links) {
       const a = this.sim.node(l.a), b = this.sim.node(l.b); if (!a || !b) continue;
+      const used = net.routeEdges.has(l.key);
+      const isSelectedEdge = this.selected && (l.a === this.selected || l.b === this.selected);
+      // Only draw DECT NR+ fallback links when they are actively carrying a route (or belong to the selected drone)
+      if (l.band === 'DECT' && !used && !isSelectedEdge) continue;
+
       const [ax, ay] = this.w2s(a.x, a.y, a.alt || 65);
       const [bx, by] = this.w2s(b.x, b.y, b.alt || 65);
-      const used = net.routeEdges.has(l.key);
 
       if (l.band === 'DECT') {
         // Fallback Link: DECT NR+ (Amber/Orange dashed line routing right through 3D buildings)
         ctx.shadowColor = '#F59E0B';
         ctx.shadowBlur = used ? 10 : 5;
-        ctx.strokeStyle = rgba('#F59E0B', used ? 0.92 : 0.48);
-        ctx.lineWidth = used ? 2.2 : 1.4;
+        ctx.strokeStyle = rgba('#F59E0B', used ? 0.92 : 0.45);
+        ctx.lineWidth = used ? 2.3 : 1.4;
         ctx.setLineDash([6, 5]);
         ctx.lineDashOffset = -t * 0.022;
+      } else if (l.band === 'FUNK') {
+        // Unprotected Baseline: Standard 2.4 GHz Funk (Cyan dashed RF wave to HQ, degrades in interference)
+        ctx.shadowColor = '#38BDF8';
+        ctx.shadowBlur = used ? 7 : 3;
+        ctx.strokeStyle = rgba('#38BDF8', used ? 0.78 : 0.35);
+        ctx.lineWidth = used ? 1.8 : 1.2;
+        ctx.setLineDash([4, 4]);
+        ctx.lineDashOffset = -t * 0.015;
       } else {
         // Primary Link: FSOC Laser (Crisp emerald/green optical beam with clear Line-of-Sight)
         ctx.shadowColor = '#10B981';
         ctx.shadowBlur = used ? 9 : 3;
-        ctx.strokeStyle = rgba('#10B981', used ? 0.85 : 0.30);
+        ctx.strokeStyle = rgba('#10B981', used ? 0.85 : 0.28);
         ctx.lineWidth = used ? 2.0 : 1.15;
         ctx.setLineDash([]);
       }
@@ -1937,17 +2003,26 @@ class MapRenderer extends Emitter {
         ctx.restore();
       }
 
-      // Drone label + altitude + live NLOS badge right on map
+      // Drone label + altitude + live NLOS / Funk / Isolated badge right on map
       const shortNum = d.id.replace(/^DR-/, '');
+      const subBadge = off
+        ? null
+        : d.routeState === 'ISOLATED' || (d.routeState === 'REROUTING' && !this.sim.protection)
+        ? { txt: !this.sim.protection ? '2.4G FUNK LOST · RIP' : 'ISOLATED', col: '#F87171' }
+        : d.band === 'DECT'
+        ? { txt: 'NLOS · DECT NR+', col: '#FBBF24' }
+        : d.band === 'FUNK'
+        ? { txt: '2.4 GHz FUNK', col: '#38BDF8' }
+        : null;
       ctx.font = '700 10.5px Inter, -apple-system, sans-serif';
       ctx.fillStyle = off ? 'rgba(161,161,170,0.4)' : isSel ? '#FAFAFA' : 'rgba(250,250,250,0.88)';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'middle';
-      ctx.fillText(`${shortNum} · ${d.alt.toFixed(0)}m`, x + 13, y - (d.band === 'DECT' ? 4 : 0));
-      if (!off && d.band === 'DECT') {
+      ctx.fillText(`${shortNum} · ${d.alt.toFixed(0)}m`, x + 13, y - (subBadge ? 4 : 0));
+      if (subBadge) {
         ctx.font = '700 8.5px Inter, -apple-system, sans-serif';
-        ctx.fillStyle = '#FBBF24';
-        ctx.fillText('NLOS · DECT NR+', x + 13, y + 7);
+        ctx.fillStyle = subBadge.col;
+        ctx.fillText(subBadge.txt, x + 13, y + 7);
       }
     }
     ctx.restore();
@@ -1963,16 +2038,21 @@ class MapRenderer extends Emitter {
     const badgeCls = distress === 'crit' ? 'crit' : distress === 'warn' ? 'warn' : '';
     const badgeTxt = d.status === 'OFFLINE'
       ? 'OFFLINE'
+      : d.routeState === 'ISOLATED' || (d.routeState === 'REROUTING' && !this.sim.protection)
+      ? (!this.sim.protection ? '2.4G FUNK LOST · RIP' : 'ISOLATED')
       : d.gnss === 'LOST'
       ? 'GNSS LOST'
       : d.gnss === 'SPOOFED'
       ? 'SPOOFED'
       : d.band === 'DECT'
       ? 'NLOS - DECT Fallback'
+      : d.band === 'FUNK'
+      ? '2.4 GHz Funk (Baseline)'
       : 'FSOC Laser (LoS)';
     const ip = `10.41.0.${d.index + 1}`;
     const route = d.route ? d.route.join(' → ') : d.routeState;
     const losInfo = d.nlosReason ? `Blocked: ${d.nlosReason}` : 'Clear 3D Line-of-Sight';
+    const linkName = d.band === 'DECT' ? 'DECT NR+' : d.band === 'FUNK' ? '2.4 GHz Funk' : d.band === 'FSOC' ? 'FSOC 10G' : 'NO LINK';
     el.innerHTML = `
       <div class="nc-top">
         <span class="nc-id">${d.id} <span style="color:var(--mut);font-weight:400;font-size:10px">(${ip})</span></span>
@@ -1981,7 +2061,7 @@ class MapRenderer extends Emitter {
       <div class="nc-grid">
         <div><span>Altitude</span><b>${d.alt.toFixed(0)} m AGL</b></div>
         <div><span>Speed</span><b>${(d.speed * 3.6).toFixed(0)} km/h</b></div>
-        <div><span>Link / LoS</span><b>${d.band === 'DECT' ? 'DECT NR+' : 'FSOC 10G'}</b></div>
+        <div><span>Link / LoS</span><b>${linkName}</b></div>
         <div><span>Latency / Hops</span><b>${d.routeState === 'OK' ? `${d.latency.toFixed(0)} ms · ${d.hops}H` : '—'}</b></div>
       </div>
       <div class="nc-route">${losInfo} · ${route}</div>`;
@@ -2305,7 +2385,14 @@ class UI {
     this.$('btnFail').classList.toggle('active-red', down > 0);
     this.$('btnRth').classList.toggle('active-amber', s.rth);
     this.$('btnProt').className = `ctrl-btn ${s.protection ? 'prot-on' : 'prot-off'}`;
-    this.$('protLabel').textContent = s.protection ? 'Protected' : 'Unprotected';
+    this.$('protLabel').textContent = s.protection ? 'Protected · FSOC+DECT' : 'Unprotected · 2.4G Funk';
+    this.$('fleetCount').textContent = s.protection
+      ? `${s.drones.length} Nodes · Hybrid FSOC / DECT NR+`
+      : `${s.drones.length} Nodes · Standard 2.4 GHz Funk (Baseline)`;
+    this.$('fcDot1').style.background = s.protection ? '#10B981' : '#38BDF8';
+    this.$('fcLabel1').textContent = s.protection ? 'FSOC LoS' : '2.4G Funk';
+    this.$('fcDot2').style.background = s.protection ? '#F59E0B' : '#EF4444';
+    this.$('fcLabel2').textContent = s.protection ? 'NLOS DECT' : 'Cut Off';
   }
 
   updateSource(state) {
@@ -2324,20 +2411,29 @@ class UI {
       if (!c) continue;
       const off = d.status === 'OFFLINE';
       if (off) offline++;
-      else if (d.band === 'DECT') fallback++;
-      else online++;
+      else if (s.protection) {
+        if (d.band === 'DECT') fallback++;
+        else online++;
+      } else {
+        if (d.routeState === 'OK' && d.band === 'FUNK') online++;
+        else fallback++; // in Unprotected mode, fallback counts cut-off / isolated drones
+      }
 
-      let dotCls = 'st-dot', bandCls = 'drow-band', bandTxt = 'FSOC Laser', chipTxt = 'FSOC LoS';
+      let dotCls = 'st-dot', bandCls = 'drow-band';
+      let bandTxt = s.protection ? 'FSOC Laser' : '2.4 GHz Funk';
+      let chipTxt = s.protection ? 'FSOC LoS' : '2.4G Funk';
       if (off) {
         dotCls += ' off'; bandTxt = 'Offline'; chipTxt = 'Offline';
-      } else if (d.routeState === 'ISOLATED' || d.band === 'NONE' || d.gnss === 'LOST') {
+      } else if (d.routeState === 'ISOLATED' || d.band === 'NONE' || (!s.protection && d.routeState === 'REROUTING')) {
         dotCls += ' crit'; bandCls += ' crit';
-        bandTxt = d.gnss === 'LOST' ? 'GNSS Lost' : 'LoS Blocked · Isolated';
-        chipTxt = d.gnss === 'LOST' ? 'GNSS Lost' : 'Isolated';
-      } else if (d.band === 'DECT' || d.routeState === 'REROUTING' || d.gnss === 'SPOOFED') {
+        bandTxt = !s.protection
+          ? (d.jam > 0.35 ? 'Funk Jammed · RIP' : 'LoS Blocked · Funk Lost')
+          : (d.gnss === 'LOST' ? 'GNSS Lost' : 'LoS Blocked · Isolated');
+        chipTxt = !s.protection ? 'Funk Lost · RIP' : 'Isolated';
+      } else if (d.band === 'DECT' || d.routeState === 'REROUTING' || d.gnss === 'SPOOFED' || d.gnss === 'LOST') {
         dotCls += ' warn'; bandCls += ' warn';
-        bandTxt = d.band === 'DECT' ? 'NLOS - DECT Fallback' : d.gnss === 'SPOOFED' ? 'Spoofed' : 'Rerouting';
-        chipTxt = d.band === 'DECT' ? 'NLOS - DECT Fallback' : d.gnss === 'SPOOFED' ? 'Spoofed' : 'Rerouting';
+        bandTxt = d.band === 'DECT' ? 'NLOS - DECT Fallback' : d.gnss === 'SPOOFED' ? 'Spoofed' : d.gnss === 'LOST' ? 'GNSS Lost (INS)' : 'Rerouting';
+        chipTxt = d.band === 'DECT' ? 'NLOS - DECT Fallback' : d.gnss === 'SPOOFED' ? 'Spoofed' : d.gnss === 'LOST' ? 'INS Nav' : 'Rerouting';
       }
 
       c.dot.className = dotCls;
@@ -2348,8 +2444,8 @@ class UI {
       if (ch) {
         ch.dot.className = dotCls;
         ch.band.textContent = chipTxt;
-        ch.el.classList.toggle('warn', !off && d.band === 'DECT');
-        ch.el.classList.toggle('crit', off || d.routeState === 'ISOLATED' || d.band === 'NONE');
+        ch.el.classList.toggle('warn', !off && (d.band === 'DECT' || d.gnss === 'SPOOFED'));
+        ch.el.classList.toggle('crit', off || d.routeState === 'ISOLATED' || d.band === 'NONE' || (!s.protection && d.routeState === 'REROUTING'));
       }
 
       c.alt.textContent = `${d.alt.toFixed(0)} m`;
@@ -2357,7 +2453,7 @@ class UI {
       c.bat.textContent = `${d.battery.toFixed(0)}%`;
       c.hops.textContent = !off && d.routeState === 'OK' ? `${d.hops} (${d.route[1] || 'HQ'})` : '—';
       c.los.textContent = d.nlosReason ? `Blocked (${d.nlosReason})` : 'Clear 3D LoS';
-      c.gnss.textContent = d.gnss === 'OK' ? '3D Fix' : d.gnss === 'LOST' ? 'INS Fallback' : 'Spoofed';
+      c.gnss.textContent = d.gnss === 'OK' ? '3D Fix' : d.gnss === 'LOST' ? (s.protection ? 'INS Fallback' : 'GNSS Dead') : 'Spoofed';
     }
     this.$('fcOnline').textContent = online;
     this.$('fcFallback').textContent = fallback;
@@ -2372,9 +2468,9 @@ class UI {
     const act = s.drones.filter(d => d.status === 'ONLINE' && d.routeState !== 'JOINING');
     this.gauges.reach.extra.textContent = `${act.filter(d => d.routeState === 'OK').length}/${act.length}`;
     this.gauges.latency.extra.textContent = `${s.net.links.length} links`;
-    this.gauges.loss.extra.textContent = `${fallback} DECT NLOS`;
-    this.gauges.recovery.extra.textContent = m.healing ? 'Healing…' : m.recoveries.length ? `Avg ${m.avgRecovery.toFixed(1)}s` : 'Nominal';
-    this.$('metricSrc').textContent = (m.isOverridden ? 'BACKEND' : this.bridge.state === 'LIVE' ? 'WS LIVE' : 'LIVE SIM') + (s.protection ? '' : ' · UNPROTECTED');
+    this.gauges.loss.extra.textContent = s.protection ? `${fallback} DECT NLOS` : `${fallback} Cut Off`;
+    this.gauges.recovery.extra.textContent = !s.protection ? 'No Self-Healing' : m.healing ? 'Healing…' : m.recoveries.length ? `Avg ${m.avgRecovery.toFixed(1)}s` : 'Nominal';
+    this.$('metricSrc').textContent = (m.isOverridden ? 'BACKEND' : this.bridge.state === 'LIVE' ? 'WS LIVE' : 'LIVE SIM') + (s.protection ? '' : ' · 2.4G FUNK');
 
     for (const c of QOS_ROWS) {
       const st = s.traffic.stats[c.key]; if (!st) continue;
@@ -2474,7 +2570,8 @@ setInterval(() => {
   const ok = sim.drones.filter(d => d.status === 'ONLINE' && d.routeState === 'OK');
   if (!ok.length) return;
   const d = pick(ok);
-  L.debug(`RX ${d.id} · ${d.band === 'DECT' ? 'NLOS DECT NR+' : 'FSOC Laser LoS'} · ${d.hops}H · ${d.latency.toFixed(0)} ms`);
+  const bTxt = d.band === 'DECT' ? 'NLOS DECT NR+' : d.band === 'FUNK' ? '2.4 GHz Funk' : 'FSOC Laser LoS';
+  L.debug(`RX ${d.id} · ${bTxt} · ${d.hops}H · ${d.latency.toFixed(0)} ms`);
 }, 3500);
 
 let last = performance.now(), uiAcc = 1, sampleAcc = 0;
