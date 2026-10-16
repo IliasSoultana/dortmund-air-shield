@@ -3,763 +3,557 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>DORTMUND OFF-GRID AIR · 5-Minute Hackathon Pitch Deck</title>
+<title>Dortmund OFF-Grid Air · Pitch</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #090A0F;
-    --card: rgba(18, 20, 28, 0.82);
-    --card-hi: rgba(26, 29, 42, 0.92);
-    --bdr: rgba(255, 255, 255, 0.09);
-    --bdr-hi: rgba(255, 255, 255, 0.18);
-    --txt: #FAFAFA;
-    --sub: #A1A1AA;
-    --mut: #71717A;
-    --ok: #10B981;
-    --warn: #F59E0B;
+    --bg: #07080B;
+    --ink: #F5F5F7;
+    --sub: #9A9AA3;
+    --mut: #5C5C66;
+    --line: rgba(255,255,255,0.08);
+    --fsoc: #10B981;
+    --dect: #F59E0B;
     --crit: #EF4444;
-    --pop: #C084FC;
-    --cyan: #38BDF8;
-    --font: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    --mono: 'JetBrains Mono', monospace;
+    --pop: #A78BFA;
+    --sky: #38BDF8;
+    --sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    --mono: 'JetBrains Mono', ui-monospace, monospace;
   }
-
   * { box-sizing: border-box; margin: 0; padding: 0; }
-  html, body {
-    width: 100%; height: 100%;
-    background: var(--bg);
-    color: var(--txt);
-    font-family: var(--font);
-    overflow: hidden;
-    user-select: none;
-    -webkit-font-smoothing: antialiased;
-  }
+  html, body { width: 100%; height: 100%; background: #000; overflow: hidden; }
+  body { font-family: var(--sans); color: var(--ink); -webkit-font-smoothing: antialiased; }
 
-  /* Subtle tactical grid backdrop */
-  .bg-grid {
-    position: fixed; inset: 0; z-index: 0; pointer-events: none;
-    background-image:
-      radial-gradient(circle at 18% 22%, rgba(16, 185, 129, 0.09), transparent 42%),
-      radial-gradient(circle at 82% 76%, rgba(192, 132, 252, 0.08), transparent 45%),
-      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
-    background-size: 100% 100%, 100% 100%, 48px 48px, 48px 48px;
-  }
-
-  /* Top Chrome */
-  .deck-top {
-    position: fixed; top: 0; left: 0; right: 0; height: 54px; z-index: 20;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 32px;
-    background: rgba(9, 10, 15, 0.78);
-    backdrop-filter: blur(14px);
-    border-bottom: 1px solid var(--bdr);
-  }
-  .brand {
-    display: flex; align-items: center; gap: 12px;
-    font-weight: 700; font-size: 13px; letter-spacing: 0.08em; text-transform: uppercase;
-  }
-  .brand-dot {
-    width: 9px; height: 9px; border-radius: 50%;
-    background: var(--ok);
-    box-shadow: 0 0 12px var(--ok);
-  }
-  .brand-tag {
-    font-family: var(--mono); font-size: 11px; color: var(--sub);
-    padding: 3px 8px; border-radius: 999px;
-    background: rgba(255,255,255,0.05); border: 1px solid var(--bdr);
-  }
-  .top-right {
-    display: flex; align-items: center; gap: 12px;
-  }
-  .timer-pill {
-    display: flex; align-items: center; gap: 8px;
-    font-family: var(--mono); font-size: 12px; font-weight: 600;
-    padding: 5px 12px; border-radius: 999px;
-    background: rgba(255,255,255,0.05); border: 1px solid var(--bdr);
-    cursor: pointer; color: var(--txt);
-  }
-  .timer-pill:hover { border-color: var(--bdr-hi); }
-  .btn-demo-top {
-    text-decoration: none;
-    font-size: 12px; font-weight: 700; letter-spacing: 0.04em;
-    color: #042f2e; background: var(--ok);
-    padding: 6px 14px; border-radius: 999px;
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
-    box-shadow: 0 0 20px rgba(16, 185, 129, 0.35);
-  }
-  .btn-demo-top:hover { transform: translateY(-1px); box-shadow: 0 0 26px rgba(16, 185, 129, 0.55); }
-
-  /* Slide Stage */
-  .stage {
-    position: fixed; top: 54px; bottom: 56px; left: 0; right: 0; z-index: 10;
-    display: flex; align-items: center; justify-content: center;
-    padding: 28px 48px;
+  /* ---------- 16:9 stage, scaled to fit ---------- */
+  .deck { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; }
+  .canvas {
+    width: 1920px; height: 1080px; flex-shrink: 0; position: relative;
+    background: var(--bg); overflow: hidden; transform-origin: center center;
   }
   .slide {
-    display: none;
-    width: 100%; max-width: 1320px; height: 100%; max-height: 760px;
-    flex-direction: column; justify-content: space-between;
-    animation: slideIn 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+    position: absolute; inset: 0; padding: 120px 140px 140px;
+    opacity: 0; visibility: hidden; transform: scale(1.012);
+    transition: opacity .55s ease, transform .55s cubic-bezier(.2,.7,.2,1), visibility 0s linear .55s;
+    display: flex; flex-direction: column;
   }
-  .slide.active { display: flex; }
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateY(10px) scale(0.992); }
-    to   { opacity: 1; transform: translateY(0) scale(1); }
-  }
-
-  /* Typography & Badges */
-  .kicker {
-    display: inline-flex; align-items: center; gap: 8px;
-    font-family: var(--mono); font-size: 11.5px; font-weight: 600;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    color: var(--ok);
-    margin-bottom: 10px;
-  }
-  .kicker .time-budget {
-    color: var(--sub); background: rgba(255,255,255,0.06);
-    padding: 2px 8px; border-radius: 6px; border: 1px solid var(--bdr);
-  }
-  h1 {
-    font-size: clamp(34px, 4.2vw, 56px);
-    font-weight: 800; line-height: 1.07; letter-spacing: -0.03em;
-  }
-  h2 {
-    font-size: clamp(26px, 3vw, 40px);
-    font-weight: 800; line-height: 1.12; letter-spacing: -0.025em;
-  }
-  .lead {
-    font-size: clamp(15px, 1.4vw, 19px);
-    color: var(--sub); line-height: 1.5; max-width: 920px; margin-top: 8px;
-  }
-  .accent-ok { color: var(--ok); }
-  .accent-warn { color: var(--warn); }
-  .accent-crit { color: var(--crit); }
-  .accent-pop { color: var(--pop); }
-  .accent-cyan { color: var(--cyan); }
-
-  /* Grid Layouts */
-  .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; flex: 1; margin-top: 20px; align-items: stretch; }
-  .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 18px; flex: 1; margin-top: 20px; align-items: stretch; }
-  .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 18px; }
-
-  .card {
-    background: var(--card);
-    border: 1px solid var(--bdr);
-    border-radius: 16px;
-    padding: 22px 24px;
-    display: flex; flex-direction: column; justify-content: space-between;
-    box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
-  }
-  .card.ok   { border-color: rgba(16, 185, 129, 0.35); background: linear-gradient(160deg, rgba(16,185,129,0.09), rgba(18,20,28,0.88)); }
-  .card.warn { border-color: rgba(245, 158, 11, 0.35); background: linear-gradient(160deg, rgba(245,158,11,0.09), rgba(18,20,28,0.88)); }
-  .card.crit { border-color: rgba(239, 68, 68, 0.35);  background: linear-gradient(160deg, rgba(239,68,68,0.09), rgba(18,20,28,0.88)); }
-  .card.pop  { border-color: rgba(192, 132, 252, 0.45); background: linear-gradient(160deg, rgba(192,132,252,0.12), rgba(18,20,28,0.88)); }
-  .card.cyan { border-color: rgba(56, 189, 248, 0.35); background: linear-gradient(160deg, rgba(56,189,248,0.09), rgba(18,20,28,0.88)); }
-
-  .card-num {
-    font-family: var(--mono); font-size: 11px; font-weight: 700;
-    letter-spacing: 0.08em; text-transform: uppercase;
-    padding: 3px 9px; border-radius: 999px; width: fit-content;
-    background: rgba(255,255,255,0.06); border: 1px solid var(--bdr);
-    margin-bottom: 10px;
-  }
-  .card h3 { font-size: 19px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.01em; }
-  .card p  { font-size: 14px; color: var(--sub); line-height: 1.52; }
-  .card ul { list-style: none; margin-top: 10px; display: flex; flex-direction: column; gap: 7px; }
-  .card li { font-size: 13.5px; color: #D4D4D8; line-height: 1.45; display: flex; align-items: flex-start; gap: 8px; }
-  .card li::before { content: "▸"; color: var(--ok); font-weight: 700; }
-  .card.warn li::before { color: var(--warn); }
-  .card.crit li::before { color: var(--crit); }
-  .card.pop  li::before { color: var(--pop); }
-  .card.cyan li::before { color: var(--cyan); }
-
-  .stat-big {
-    font-family: var(--mono); font-size: clamp(28px, 3vw, 42px);
-    font-weight: 800; letter-spacing: -0.03em; line-height: 1;
-    margin: 6px 0 4px;
-  }
-  .stat-lbl { font-size: 12px; color: var(--sub); text-transform: uppercase; letter-spacing: 0.06em; font-weight: 600; }
-
-  /* Comparison Table */
-  .cmp-table {
-    width: 100%; border-collapse: collapse; margin-top: 14px;
-    font-size: 13.5px; background: var(--card); border-radius: 14px; overflow: hidden;
-    border: 1px solid var(--bdr);
-  }
-  .cmp-table th, .cmp-table td {
-    padding: 12px 16px; text-align: left; border-bottom: 1px solid var(--bdr);
-  }
-  .cmp-table th {
-    font-family: var(--mono); font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.07em;
-    color: var(--sub); background: rgba(255,255,255,0.03);
-  }
-  .cmp-table tr:last-child td { border-bottom: none; }
-  .pill {
-    display: inline-block; font-family: var(--mono); font-size: 11px; font-weight: 700;
-    padding: 2px 8px; border-radius: 6px;
-  }
-  .pill.ok   { background: rgba(16,185,129,0.16); color: #34D399; border: 1px solid rgba(16,185,129,0.4); }
-  .pill.warn { background: rgba(245,158,11,0.16); color: #FBBF24; border: 1px solid rgba(245,158,11,0.4); }
-  .pill.crit { background: rgba(239,68,68,0.16);  color: #F87171; border: 1px solid rgba(239,68,68,0.4); }
-  .pill.pop  { background: rgba(192,132,252,0.18); color: #E9D5FF; border: 1px solid rgba(192,132,252,0.5); }
-  .pill.cyan { background: rgba(56,189,248,0.16); color: #7DD3FC; border: 1px solid rgba(56,189,248,0.4); }
-
-  /* Step Timeline for Pop-Up */
-  .timeline {
-    display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-top: 16px;
-  }
-  .t-step {
-    background: var(--card); border: 1px solid var(--bdr); border-radius: 14px;
-    padding: 16px 18px; position: relative;
-  }
-  .t-step .t-time {
-    font-family: var(--mono); font-size: 12px; font-weight: 700;
-    color: var(--pop); margin-bottom: 6px;
-  }
-  .t-step h4 { font-size: 15px; font-weight: 700; margin-bottom: 6px; }
-  .t-step p  { font-size: 12.8px; color: var(--sub); line-height: 1.45; }
-
-  /* Speaker Script Box inside Slide */
-  .speaker-box {
-    margin-top: 16px;
-    padding: 13px 18px;
-    border-radius: 12px;
-    background: rgba(255, 255, 255, 0.035);
-    border-left: 3px solid var(--ok);
-    font-size: 13.5px; color: #E4E4E7; line-height: 1.48;
-  }
-  .speaker-box b {
-    font-family: var(--mono); font-size: 11px; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--ok); margin-right: 8px;
-  }
-  body.hide-notes .speaker-box { display: none; }
-
-  /* Screenshot showcase */
-  .hero-img-wrap {
-    position: relative; border-radius: 16px; overflow: hidden;
-    border: 1px solid var(--bdr-hi); background: #050608;
-    display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 22px 55px rgba(0, 0, 0, 0.65);
-  }
-  .hero-img-wrap img {
-    width: 100%; height: 100%; object-fit: cover; display: block;
+  .slide.active { opacity: 1; visibility: visible; transform: none; transition-delay: 0s; }
+  .slide::before {
+    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: -1;
+    background: radial-gradient(1200px 700px at 85% 10%, var(--glow, rgba(16,185,129,0.07)), transparent 70%);
   }
 
-  /* Bottom Navigation Bar */
-  .deck-bot {
-    position: fixed; bottom: 0; left: 0; right: 0; height: 56px; z-index: 20;
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 0 32px;
-    background: rgba(9, 10, 15, 0.82);
-    backdrop-filter: blur(14px);
-    border-top: 1px solid var(--bdr);
+  /* ---------- chrome inside each slide ---------- */
+  .foot {
+    position: absolute; left: 140px; right: 140px; bottom: 56px;
+    display: flex; justify-content: space-between; align-items: center;
+    font-family: var(--mono); font-size: 18px; color: var(--mut); letter-spacing: .04em;
   }
-  .dots { display: flex; align-items: center; gap: 8px; }
-  .dot {
-    width: 28px; height: 6px; border-radius: 999px;
-    background: rgba(255,255,255,0.14); cursor: pointer;
-    transition: all 0.2s ease;
-  }
-  .dot.active { width: 48px; background: var(--ok); box-shadow: 0 0 10px var(--ok); }
-  .nav-btns { display: flex; align-items: center; gap: 10px; }
-  .nav-btn {
-    background: rgba(255,255,255,0.06); color: var(--txt);
-    border: 1px solid var(--bdr); border-radius: 8px;
-    padding: 6px 13px; font-size: 12px; font-weight: 600; cursor: pointer;
-    font-family: var(--font);
-  }
-  .nav-btn:hover { border-color: var(--bdr-hi); background: rgba(255,255,255,0.1); }
-  .slide-counter { font-family: var(--mono); font-size: 12px; color: var(--sub); min-width: 70px; text-align: center; }
+  .foot .brand { display: flex; align-items: center; gap: 14px; }
+  .foot .brand i { width: 10px; height: 10px; border-radius: 50%; background: var(--fsoc); display: inline-block; }
 
-  .launch-cta {
-    display: inline-flex; align-items: center; gap: 12px;
-    text-decoration: none;
-    background: linear-gradient(135deg, #10B981, #059669);
-    color: #031f17; font-weight: 800; font-size: 18px;
-    padding: 16px 30px; border-radius: 14px;
-    box-shadow: 0 0 35px rgba(16, 185, 129, 0.45);
-    transition: transform 0.15s ease, box-shadow 0.15s ease;
+  /* ---------- type ---------- */
+  .eyebrow {
+    font-family: var(--mono); font-size: 22px; font-weight: 500;
+    letter-spacing: .2em; text-transform: uppercase; color: var(--fsoc);
+    margin-bottom: 36px;
   }
-  .launch-cta:hover { transform: translateY(-2px) scale(1.01); box-shadow: 0 0 48px rgba(16, 185, 129, 0.7); }
+  .title { font-size: 92px; font-weight: 700; line-height: 1.04; letter-spacing: -0.035em; max-width: 1500px; }
+  .title .dim { color: var(--mut); }
+  .lede { font-size: 34px; line-height: 1.45; color: var(--sub); font-weight: 400; max-width: 1300px; margin-top: 36px; }
+  .c-fsoc { color: var(--fsoc); } .c-dect { color: var(--dect); } .c-crit { color: var(--crit); }
+  .c-pop { color: var(--pop); } .c-sky { color: var(--sky); } .c-sub { color: var(--sub); }
+
+  /* ---------- builds (click-to-reveal) ---------- */
+  .b { opacity: 0; transform: translateY(18px); transition: opacity .5s ease, transform .5s cubic-bezier(.2,.7,.2,1); }
+  .b.in { opacity: 1; transform: none; }
+
+  /* ---------- title slide ---------- */
+  .s-title { justify-content: center; }
+  .s-title .hero {
+    position: absolute; right: -120px; top: 0; bottom: 0; width: 1150px; z-index: -1;
+    background: url('docs/img/desktop-3d-los.png') center / cover no-repeat;
+    -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
+            mask-image: linear-gradient(90deg, transparent 0%, #000 45%);
+    opacity: .55;
+  }
+  .s-title .big { font-size: 168px; font-weight: 800; letter-spacing: -0.05em; line-height: .95; }
+  .s-title .tag { font-size: 38px; color: var(--sub); line-height: 1.4; margin-top: 44px; max-width: 980px; }
+  .s-title .meta { margin-top: 80px; display: flex; gap: 56px; font-family: var(--mono); font-size: 20px; color: var(--mut); letter-spacing: .08em; text-transform: uppercase; }
+  .s-title .meta b { display: block; color: var(--ink); font-weight: 500; margin-top: 8px; letter-spacing: .02em; text-transform: none; font-family: var(--sans); font-size: 26px; }
+
+  /* ---------- three-up columns ---------- */
+  .cols { display: grid; gap: 72px; margin-top: auto; margin-bottom: 30px; }
+  .cols.c3 { grid-template-columns: repeat(3, 1fr); }
+  .cols.c2 { grid-template-columns: 1fr 1fr; }
+  .col { border-top: 2px solid var(--line); padding-top: 36px; }
+  .col .n { font-family: var(--mono); font-size: 22px; color: var(--mut); letter-spacing: .1em; }
+  .col h3 { font-size: 46px; font-weight: 700; letter-spacing: -0.02em; margin: 18px 0 18px; }
+  .col p { font-size: 27px; line-height: 1.5; color: var(--sub); }
+  .col.accent-crit { border-top-color: var(--crit); }
+  .col.accent-dect { border-top-color: var(--dect); }
+  .col.accent-sky  { border-top-color: var(--sky); }
+
+  /* ---------- split layout ---------- */
+  .split { display: grid; grid-template-columns: 1.15fr 1fr; gap: 100px; flex: 1; align-items: center; margin-top: 30px; }
+  .split.rev { grid-template-columns: 1fr 1.15fr; }
+  .figure svg { width: 100%; height: auto; display: block; overflow: visible; }
+
+  .facts { display: flex; flex-direction: column; gap: 46px; }
+  .fact .k { font-size: 72px; font-weight: 700; letter-spacing: -0.03em; line-height: 1; }
+  .fact .v { font-size: 26px; color: var(--sub); margin-top: 12px; line-height: 1.4; }
+
+  /* ---------- link comparison ---------- */
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 0; flex: 1; margin-top: 40px; border-top: 1px solid var(--line); }
+  .duo > div { padding: 56px 72px 0 0; }
+  .duo > div + div { padding-left: 72px; border-left: 1px solid var(--line); }
+  .duo .band { font-family: var(--mono); font-size: 22px; letter-spacing: .14em; text-transform: uppercase; }
+  .duo h3 { font-size: 64px; font-weight: 700; letter-spacing: -0.03em; margin: 18px 0 40px; }
+  .spec { display: grid; grid-template-columns: 260px 1fr; row-gap: 26px; font-size: 28px; }
+  .spec dt { color: var(--mut); }
+  .spec dd { color: var(--ink); }
+  .motto { font-size: 40px; font-weight: 600; letter-spacing: -0.02em; text-align: center; color: var(--sub); margin-top: 20px; }
+  .motto b { color: var(--ink); font-weight: 700; }
+
+  /* ---------- regime rows ---------- */
+  .rows { display: flex; flex-direction: column; gap: 40px; }
+  .row { display: grid; grid-template-columns: 14px 1fr; gap: 32px; align-items: stretch; }
+  .row .bar { border-radius: 7px; }
+  .row h4 { font-size: 34px; font-weight: 700; letter-spacing: -0.015em; }
+  .row .when { font-family: var(--mono); font-size: 20px; color: var(--mut); letter-spacing: .06em; text-transform: uppercase; margin-bottom: 10px; }
+  .row p { font-size: 25px; color: var(--sub); margin-top: 8px; line-height: 1.45; }
+
+  /* ---------- timeline ---------- */
+  .tl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; margin-top: 30px; }
+  .tl .step { border-top: 3px solid var(--line); padding-top: 26px; }
+  .tl .t { font-family: var(--mono); font-size: 34px; font-weight: 600; }
+  .tl h4 { font-size: 30px; font-weight: 700; margin: 12px 0 8px; }
+  .tl p { font-size: 23px; color: var(--sub); line-height: 1.45; }
+
+  /* ---------- versus numbers ---------- */
+  .versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: end; gap: 80px; margin-top: 60px; }
+  .versus .who { font-family: var(--mono); font-size: 24px; letter-spacing: .12em; text-transform: uppercase; color: var(--mut); }
+  .versus .num { font-size: 260px; font-weight: 800; letter-spacing: -0.06em; line-height: .9; margin-top: 14px; }
+  .versus .num small { font-size: 90px; font-weight: 600; letter-spacing: -0.03em; margin-left: 8px; }
+  .versus .vs { font-size: 40px; color: var(--mut); padding-bottom: 60px; }
+  .minor { display: grid; grid-template-columns: repeat(3, 1fr); gap: 72px; margin-top: auto; margin-bottom: 30px; }
+  .minor div { border-top: 1px solid var(--line); padding-top: 26px; font-size: 25px; color: var(--sub); line-height: 1.45; }
+  .minor b { display: block; color: var(--ink); font-size: 40px; font-weight: 700; margin-bottom: 8px; letter-spacing: -0.02em; }
+
+  /* ---------- pipeline ---------- */
+  .pipe { display: grid; grid-template-columns: 1fr 70px 1.1fr 70px 1fr 70px 1.2fr; align-items: center; margin-top: 90px; }
+  .node {
+    border: 1px solid var(--line); border-radius: 22px; padding: 34px 30px; background: rgba(255,255,255,0.02);
+    min-height: 250px; display: flex; flex-direction: column; justify-content: center;
+  }
+  .node .lbl { font-family: var(--mono); font-size: 18px; letter-spacing: .12em; text-transform: uppercase; color: var(--mut); margin-bottom: 14px; }
+  .node h4 { font-size: 32px; font-weight: 700; letter-spacing: -0.015em; line-height: 1.2; }
+  .node p { font-size: 22px; color: var(--sub); margin-top: 12px; line-height: 1.45; }
+  .node.hl { border-color: rgba(16,185,129,0.5); background: rgba(16,185,129,0.06); }
+  .node.llm { border-color: rgba(167,139,250,0.5); background: rgba(167,139,250,0.06); }
+  .arrow { text-align: center; font-size: 40px; color: var(--mut); }
+  .divider { height: 2px; background: linear-gradient(90deg, transparent, var(--line), transparent); margin: 70px 0 0; position: relative; }
+  .divider span {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    background: var(--bg); padding: 0 30px; font-family: var(--mono); font-size: 20px; letter-spacing: .14em; color: var(--mut); text-transform: uppercase;
+  }
+
+  /* ---------- KPI grid ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: auto; margin-bottom: 40px; border-top: 1px solid var(--line); }
+  .kpi { padding: 60px 40px 0 0; }
+  .kpi + .kpi { padding-left: 40px; border-left: 1px solid var(--line); }
+  .kpi .k { font-size: 128px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
+  .kpi .k small { font-size: 54px; font-weight: 600; letter-spacing: -0.02em; }
+  .kpi .v { font-size: 27px; color: var(--ink); margin-top: 22px; font-weight: 600; }
+  .kpi .d { font-size: 22px; color: var(--sub); margin-top: 8px; line-height: 1.45; }
+
+  /* ---------- demo slide ---------- */
+  .s-demo { --glow: rgba(16,185,129,0.12); }
+  .steps { display: grid; grid-template-columns: repeat(4, 1fr); gap: 48px; margin-top: auto; margin-bottom: 70px; }
+  .steps .st { border-top: 3px solid var(--line); padding-top: 28px; }
+  .steps .st .n { font-family: var(--mono); font-size: 22px; color: var(--mut); }
+  .steps .st h4 { font-size: 34px; font-weight: 700; margin: 14px 0 12px; letter-spacing: -0.015em; }
+  .steps .st p { font-size: 23px; color: var(--sub); line-height: 1.45; }
+  .steps .key { display: inline-block; font-family: var(--mono); font-size: 19px; border: 1px solid var(--line); border-radius: 8px; padding: 2px 10px; color: var(--ink); margin-right: 6px; }
+  .launch {
+    display: inline-flex; align-items: center; gap: 22px; margin-top: 56px; width: fit-content;
+    font-size: 34px; font-weight: 700; letter-spacing: -0.01em; color: #04110C; text-decoration: none;
+    background: var(--fsoc); padding: 26px 48px; border-radius: 999px;
+    box-shadow: 0 0 0 0 rgba(16,185,129,.5); animation: ring 2.4s infinite;
+  }
+  .launch span { font-family: var(--mono); font-size: 22px; font-weight: 500; opacity: .75; }
+  @keyframes ring { 0% { box-shadow: 0 0 0 0 rgba(16,185,129,.45); } 70% { box-shadow: 0 0 0 26px rgba(16,185,129,0); } 100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); } }
+
+  /* ---------- presenter overlays (outside the slide canvas) ---------- */
+  .progress { position: fixed; left: 0; bottom: 0; height: 3px; background: var(--fsoc); transition: width .4s ease; z-index: 30; }
+  .notes {
+    position: fixed; left: 50%; bottom: 18px; transform: translate(-50%, 140%); z-index: 40;
+    width: min(1100px, 92vw); background: rgba(16,17,22,0.96); border: 1px solid rgba(255,255,255,0.12);
+    border-radius: 16px; padding: 18px 24px; backdrop-filter: blur(12px);
+    font-size: 16px; line-height: 1.55; color: #D4D4D8; transition: transform .35s cubic-bezier(.2,.7,.2,1);
+  }
+  .notes.open { transform: translate(-50%, 0); }
+  .notes .hd { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mut); margin-bottom: 8px; }
+  .notes .hd b { color: var(--fsoc); font-weight: 600; }
+  .hint {
+    position: fixed; right: 18px; top: 14px; z-index: 30; font-family: var(--mono); font-size: 12px; color: #52525B;
+    transition: opacity .6s ease;
+  }
 </style>
 </head>
 <body>
 
-<div class="bg-grid"></div>
+<div class="deck"><div class="canvas" id="canvas">
 
-<!-- Top Bar -->
-<header class="deck-top">
-  <div class="brand">
-    <span class="brand-dot"></span>
-    <span>DORTMUND OFF-GRID AIR</span>
-    <span class="brand-tag">DO-DATA-HACKATHON 2026 · CHALLENGE 02</span>
-  </div>
-  <div class="top-right">
-    <div class="timer-pill" id="pitchTimer" title="Click to Start / Reset 5:00 Pitch Timer">
-      <span>⏱ PITCH TIMER</span>
-      <span id="timerVal" style="color:var(--ok)">00:00 / 05:00</span>
-    </div>
-    <button class="nav-btn" id="btnNotes" title="Toggle speaker cues (N)">Speaker Cues: ON</button>
-    <a class="btn-demo-top" href="index.html" target="_blank">Open Live Terminal ↗</a>
-  </div>
-</header>
-
-<!-- Main Slide Stage -->
-<main class="stage">
-
-  <!-- =================================================================
-       SLIDE 1: TITLE & HOOK (0:00 - 0:35)
-       ================================================================= -->
-  <section class="slide active">
-    <div>
-      <div class="kicker">
-        <span>MORPHEUS LOGISTIK · OFF-GRID AIR</span>
-        <span class="time-budget">⏱ 0:00 – 0:35</span>
-      </div>
-      <h1>Dortmund <span class="accent-ok">OFF-Grid Air</span></h1>
-      <p class="lead">
-        A resilient 10-drone hybrid <b style="color:#FAFAFA">1550 nm FSOC Laser + 1.9 GHz DECT NR+</b> mesh over 3D Dortmund — powered by <b style="color:#FAFAFA">real-world aerospace & RF physics</b>, <b style="color:#FAFAFA">Autonomous INS/VIO Vertical Pop-Up</b>, and <b style="color:#FAFAFA">Contrastive Threat Intelligence</b>.
-      </p>
-    </div>
-
-    <div class="grid-2" style="grid-template-columns: 1.15fr 1fr;">
-      <div class="hero-img-wrap">
-        <img src="docs/img/desktop-3d-los.png" alt="Dortmund OFF-Grid Air 3D Mission Control" />
-      </div>
-      <div style="display:flex; flex-direction:column; gap:14px; justify-content:space-between;">
-        <div class="card ok" style="padding:18px 20px;">
-          <span class="card-num">1 · PHYSICAL LAYER</span>
-          <h3>Hybrid FSOC Laser + 1.9 GHz DECT NR+</h3>
-          <p>True 3D Dortmund building raycasting (`22–100 m`), 3 s hysteresis, `120 m` High-Altitude Relay drones (`DR-01`, `DR-02`), and $1/r^2$ Shannon-Hartley RF jamming physics.</p>
-        </div>
-        <div class="card pop" style="padding:18px 20px;">
-          <span class="card-num">2 · AUTONOMOUS GNC RECOVERY</span>
-          <h3>Honest Double-Fail → Vertical Pop-Up (`INS/VIO`)</h3>
-          <p>When trapped inside the `<150 m` Jammer Core behind the `95 m` U-Tower, the drone climbs `50 m → 125 m` on onboard INS/VIO to clear the roof in `3.2 s`.</p>
-        </div>
-        <div class="card cyan" style="padding:18px 20px;">
-          <span class="card-num">3 · AI LAYER</span>
-          <h3>Contrastive Prototypes + LLM Analyst CoPilot</h3>
-          <p>Detects slow-ramping attacks in `0.0 s` (vs `9.5 s` rule-based), flags novel attacks as `UNEXPLAINED` for 1-click online learning, and explains downstream via LLM.</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="speaker-box">
-      <b>SAY (0:00–0:35):</b> "Ten autonomous drones are flying over Dortmund Innenstadt, coordinated from the Reinoldikirche. Most drone demos draw green lines on a flat 2D map and fake the radio. We built <i>Dortmund OFF-Grid Air</i> with 100% honest 3D aerospace and RF physics, an autonomous vertical pop-up maneuver when all radios fail, and a zero-false-alarm Contrastive + LLM Security Analyst pipeline."
+  <!-- 1 · TITLE -->
+  <section class="slide s-title" data-notes="Ten drones, one control center at the Reinoldikirche, and a city that keeps getting in the way. This is Dortmund OFF-Grid Air: a drone mesh that keeps talking when the buildings, the jammer and the GPS all turn against it. (~15 s)">
+    <div class="hero"></div>
+    <div class="eyebrow">DO-DATA-Hackathon 2026 · Challenge 02</div>
+    <div class="big">Dortmund<br><span class="c-fsoc">OFF-Grid</span> Air</div>
+    <div class="tag">A drone mesh that keeps talking when the city, the jammer and the GPS all turn against it.</div>
+    <div class="meta">
+      <div>Challenge<b>Morpheus Logistik · OFF-Grid Air</b></div>
+      <div>Fleet<b>10 drones over Dortmund Innenstadt</b></div>
+      <div>Control<b>HQ Reinoldikirche</b></div>
     </div>
   </section>
 
-  <!-- =================================================================
-       SLIDE 2: THE 3-WAY URBAN FAILURE PROBLEM (0:35 - 1:15)
-       ================================================================= -->
-  <section class="slide">
-    <div>
-      <div class="kicker">
-        <span>THE PROBLEM · WHY URBAN DRONE MESHES COLLAPSE</span>
-        <span class="time-budget">⏱ 0:35 – 1:15</span>
+  <!-- 2 · PROBLEM -->
+  <section class="slide" style="--glow: rgba(239,68,68,0.07)" data-notes="Over a European city, a drone goes dark in three ways, and they stack. Concrete blocks the laser. The radio that gets around the building is exactly what a jammer kills. And slow attacks fool threshold alarms for about nine seconds. Most demos draw lines on a flat map and pretend none of this exists. (~25 s)">
+    <div class="eyebrow">The problem</div>
+    <div class="title">Over a city, a drone goes dark in three ways. <span class="dim">They stack.</span></div>
+    <div class="cols c3">
+      <div class="col accent-dect b">
+        <div class="n">01 · GEOMETRY</div>
+        <h3>Concrete</h3>
+        <p>The 95 m U-Tower and 100 m RWE Tower stand in the flight level. A laser stops at the first facade.</p>
       </div>
-      <h2>In a City Under Attack, Drones Go Dark in <span class="accent-crit">Three Ways That Stack</span></h2>
-      <p class="lead">
-        A single-band 2.4 GHz fleet or a flat-map mesh fails the moment concrete, broadband RF jamming, and stealth spoofing combine.
-      </p>
-    </div>
-
-    <div class="grid-3">
-      <div class="card warn">
-        <div>
-          <span class="card-num">FAILURE MODE 01 · GEOMETRY</span>
-          <h3>Concrete Eats the Laser</h3>
-          <p>Free-Space Optical (FSOC 1550 nm) gives gigabit speed and total RF jammer immunity—but stops dead at the first solid facade.</p>
-          <ul>
-            <li>Dortmund urban blocks are <b>22–28 m</b>, while key towers reach <b>74–100 m</b> (RWE Tower <b>100 m</b>, Dortmunder U-Tower <b>95 m</b>, Ellipson <b>76 m</b>).</li>
-            <li>When a drone drops to <b>50 m</b> in an urban canyon, its optical Line-of-Sight to HQ hits concrete.</li>
-          </ul>
-        </div>
-        <div style="margin-top:12px;"><span class="pill warn">3D Raycast Occlusion</span></div>
+      <div class="col accent-crit b">
+        <div class="n">02 · SPECTRUM</div>
+        <h3>Jamming</h3>
+        <p>The radio that passes through walls is exactly the one a jammer is built to kill. GNSS goes with it.</p>
       </div>
-
-      <div class="card crit">
-        <div>
-          <span class="card-num">FAILURE MODE 02 · SPECTRUM</span>
-          <h3>Jammers Eat the Radio</h3>
-          <p>The RF link that penetrates walls is the exact link an electronic warfare jammer is built to destroy.</p>
-          <ul>
-            <li>Broadband jammers in Sector West flood <b>2.4 GHz Funk</b> and <b>GNSS L1</b> satellites.</li>
-            <li>Inside the <b>&lt;150 m Jammer Core</b> behind a tall building, both optical LoS and RF fallback are simultaneously severed.</li>
-          </ul>
-        </div>
-        <div style="margin-top:12px;"><span class="pill crit">1/r² Inverse-Square Jamming</span></div>
+      <div class="col accent-sky b">
+        <div class="n">03 · DECEPTION</div>
+        <h3>Slow attacks</h3>
+        <p>Ramping jammers and drifting GPS spoofers hide inside rolling baselines. Threshold alarms stay blind for ~9 s.</p>
       </div>
-
-      <div class="card cyan">
-        <div>
-          <span class="card-num">FAILURE MODE 03 · BLIND ALARMS</span>
-          <h3>Slow Ramps Boil Rule Detectors</h3>
-          <p>Spoofers nudge GPS at 1.5–7 m/s while ramping jammers climb at +1.55 dB/s.</p>
-          <ul>
-            <li>Rolling-window rule detectors absorb slow ramps into their moving baseline—staying blind for <b>9.0 to 9.5 seconds</b>.</li>
-            <li>Hardcoded rules misclassify novel multi-vector attacks instead of admitting uncertainty.</li>
-          </ul>
-        </div>
-        <div style="margin-top:12px;"><span class="pill cyan">Need Contrastive Baseline</span></div>
-      </div>
-    </div>
-
-    <div class="speaker-box">
-      <b>SAY (0:35–1:15):</b> "In Dortmund Innenstadt, three failures stack at once: first, tall landmarks like the 95-meter U-Tower block optical lasers when a drone descends into a street canyon. Second, RF jammers crush standard 2.4 GHz Funk and GPS L1. Third, rolling-average threshold detectors get boiled like a frog by slow-ramping jammers and spoofers."
     </div>
   </section>
 
-  <!-- =================================================================
-       SLIDE 3: LAYER 1 — REAL-WORLD 3D & RF PHYSICS (1:15 - 1:55)
-       ================================================================= -->
-  <section class="slide">
-    <div>
-      <div class="kicker">
-        <span>LAYER 1 · REAL-WORLD AEROSPACE & SHANNON-HARTLEY RF PHYSICS</span>
-        <span class="time-budget">⏱ 1:15 – 1:55</span>
+  <!-- 3 · THE CITY IS THE OBSTACLE -->
+  <section class="slide" data-notes="We don't draw lines on a flat map. Every 200 ms, every candidate link is raycast in 3D against real Dortmund building heights. Most blocks are 22 to 28 meters, landmarks 74 to 100. A drone at 50 meters behind the U-Tower loses its laser to HQ at the facade — the red X. Two relay drones orbit at 120 meters, above every roof. A 3-second hysteresis stops links flickering on building edges. (~25 s)">
+    <div class="eyebrow">Layer 1 · 3D line of sight</div>
+    <div class="title">The city is the obstacle.</div>
+    <div class="split">
+      <div class="figure">
+        <svg viewBox="0 0 900 600" font-family="Inter, sans-serif">
+          <defs>
+            <linearGradient id="bld" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1F2937"/><stop offset="1" stop-color="#111827"/></linearGradient>
+          </defs>
+          <line x1="0" y1="540" x2="900" y2="540" stroke="#27272A" stroke-width="2"/>
+          <!-- 95 m roof reference -->
+          <line x1="40" y1="217" x2="880" y2="217" stroke="#3F3F46" stroke-dasharray="4 8"/>
+          <text x="880" y="207" fill="#71717A" font-size="17" text-anchor="end" font-family="JetBrains Mono">95 m</text>
+          <line x1="40" y1="132" x2="880" y2="132" stroke="#3F3F46" stroke-dasharray="4 8"/>
+          <text x="880" y="122" fill="#71717A" font-size="17" text-anchor="end" font-family="JetBrains Mono">120 m</text>
+          <!-- blocks -->
+          <rect x="180" y="455" width="90" height="85" fill="url(#bld)" stroke="#374151"/>
+          <text x="225" y="445" fill="#71717A" font-size="16" text-anchor="middle">Block 25 m</text>
+          <rect x="430" y="217" width="100" height="323" fill="url(#bld)" stroke="#F59E0B" stroke-opacity=".7" stroke-width="2"/>
+          <text x="480" y="300" fill="#FBBF24" font-size="20" font-weight="700" text-anchor="middle">U-Tower</text>
+          <text x="480" y="326" fill="#FBBF24" font-size="18" text-anchor="middle" opacity=".8">95 m</text>
+          <rect x="640" y="460" width="70" height="80" fill="url(#bld)" stroke="#374151"/>
+          <!-- HQ mast -->
+          <line x1="80" y1="540" x2="80" y2="319" stroke="#10B981" stroke-width="2" stroke-dasharray="3 5"/>
+          <circle cx="80" cy="319" r="11" fill="#07080B" stroke="#10B981" stroke-width="3"/>
+          <text x="80" y="290" fill="#F5F5F7" font-size="19" font-weight="600" text-anchor="middle">HQ · 65 m</text>
+          <!-- blocked laser -->
+          <line x1="80" y1="319" x2="430" y2="353" stroke="#10B981" stroke-width="4"/>
+          <line x1="430" y1="353" x2="600" y2="370" stroke="#10B981" stroke-width="2" stroke-dasharray="4 7" opacity=".35"/>
+          <g stroke="#EF4444" stroke-width="4" stroke-linecap="round"><line x1="420" y1="343" x2="440" y2="363"/><line x1="440" y1="343" x2="420" y2="363"/></g>
+          <!-- canyon drone -->
+          <circle cx="600" cy="370" r="10" fill="#F5F5F7"/><circle cx="600" cy="370" r="20" fill="none" stroke="#F59E0B" stroke-width="2"/>
+          <text x="628" y="376" fill="#F5F5F7" font-size="19" font-weight="600">DR-03 · 50 m</text>
+          <!-- relay -->
+          <circle cx="780" cy="132" r="10" fill="#F5F5F7"/><circle cx="780" cy="132" r="20" fill="none" stroke="#10B981" stroke-width="2"/>
+          <text x="780" y="95" fill="#34D399" font-size="19" font-weight="600" text-anchor="middle">Relay DR-01 · 120 m</text>
+          <line x1="80" y1="319" x2="780" y2="132" stroke="#10B981" stroke-width="2.5" opacity=".55"/>
+        </svg>
       </div>
-      <h2>Two-Tier 3D Airspace & <span class="accent-ok">Distance-Based Jamming Physics</span></h2>
-      <p class="lead">
-        Every 200 ms, the simulation computes 3D raycasts with a <b>3-second hysteresis timer</b> and applies inverse-square ($1/r^2$) jammer attenuation.
-      </p>
-    </div>
-
-    <table class="cmp-table">
-      <thead>
-        <tr>
-          <th>Physical Condition</th>
-          <th>3D Geometry & Distance</th>
-          <th>Protected (`FSOC + DECT NR+`)</th>
-          <th>Unprotected (`2.4 GHz Funk`)</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td><b>1. Clear 3D Line-of-Sight</b><br><span style="color:var(--sub);font-size:12px">Even inside active RF Jamming</span></td>
-          <td>Cruise `85–105 m` & High-Alt Relays `DR-01`/`DR-02` at <b>`120 m`</b></td>
-          <td><span class="pill ok">FSOC 1550nm LASER</span> <b>0% packet loss & 100% RF jammer immunity</b> (optical photons ignore RF noise)</td>
-          <td><span class="pill crit">FUNK JAMMED · RIP</span> 2.4 GHz collapses inside jammer radius</td>
-        </tr>
-        <tr>
-          <td><b>2. NLOS Building Shadow + Outer Jam Zone</b><br><span style="color:var(--sub);font-size:12px">e.g. `DR-07` at `52 m` behind Ellipson (`76 m`)</span></td>
-          <td><b>`> 150 m`</b> from jammer center ($1/r^2$ attenuation)</td>
-          <td><span class="pill warn">QoS EMERGENCY MODE</span> DECT NR+ (1.9 GHz) survives via FHSS/DSSS: <b>Video shed to `0%`</b>, `+40 ms` latency, <b>`12 kbps` C2 locked</b> (`ONLINE · Degraded`)</td>
-          <td><span class="pill crit">CUT OFF</span> Blocked by concrete + jammed; video starves C2</td>
-        </tr>
-        <tr>
-          <td><b>3. NLOS Building Shadow + Inner Jam Core</b><br><span style="color:var(--sub);font-size:12px">e.g. `DR-03` at `50 m` behind U-Tower (`95 m`)</span></td>
-          <td><b>`&lt; 150 m`</b> from jammer center + roof &gt; drone Z</td>
-          <td><span class="pill pop">ISOLATED → POP-UP (INS/VIO)</span> Honest double-fail! Switches to onboard INS/VIO and climbs vertically to `125 m` to clear roof</td>
-          <td><span class="pill crit">TOTAL LOSS</span> Stranded behind building with zero recovery</td>
-        </tr>
-        <tr>
-          <td><b>4. GNSS L1 Spoofing Drift</b><br><span style="color:var(--sub);font-size:12px">Counterfeit satellite fix (`~7 m/s` pull)</span></td>
-          <td>1.5× Sector West radius</td>
-          <td><span class="pill ok">INS PLAUSIBILITY GATE</span> Rejects fake GNSS fix once offset exceeds `60 m`; airframe holds true orbit</td>
-          <td><span class="pill crit">HIJACKED</span> Autopilot follows counterfeit ghost coordinates</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="speaker-box">
-      <b>SAY (1:15–1:55):</b> "Look at how our physics engine separates three regimes without cheating: first, whenever 3D Line-of-Sight is clear, 1550 nm FSOC lasers have 0% loss even inside the jammer. Second, when `DR-07` is behind the 76 m Ellipson in the outer jammer zone (`>150 m`), 1.9 GHz DECT NR+ survives via frequency hopping and triggers QoS Emergency Mode—dropping Video to 0% to lock a 12 kbps C2 link. Third, inside the `<150 m` jammer core behind a tall building, we let both links genuinely fail."
+      <div class="facts">
+        <div class="fact b"><div class="k">22–28 m</div><div class="v">Typical Dortmund blocks. Landmarks reach 74–100 m.</div></div>
+        <div class="fact b"><div class="k c-fsoc">120 m</div><div class="v">Two high-altitude relay drones orbit above every roof.</div></div>
+        <div class="fact b"><div class="k">3 s</div><div class="v">Hysteresis before a link is declared blocked. No flicker on edges.</div></div>
+      </div>
     </div>
   </section>
 
-  <!-- =================================================================
-       SLIDE 4: HONEST WORST-CASE — AUTONOMOUS VERTICAL POP-UP (1:55 - 2:30)
-       ================================================================= -->
-  <section class="slide">
-    <div>
-      <div class="kicker">
-        <span>MECHANIC 3 · THE HONEST WORST-CASE RECOVERY</span>
-        <span class="time-budget">⏱ 1:55 – 2:30</span>
-      </div>
-      <h2>Double-Fail &amp; <span class="accent-pop">Autonomous Vertical Pop-Up (`INS/VIO`)</span></h2>
-      <p class="lead">
-        When `DR-03` (`50 m`) is behind the `95 m` Dortmunder U-Tower <b>and</b> inside the `&lt;150 m` Jammer Core, no radio can physically pass. So the drone uses <b>geometry</b> to heal the network.
-      </p>
-    </div>
-
-    <div class="timeline">
-      <div class="t-step" style="border-color:rgba(239,68,68,0.45);">
-        <div class="t-time" style="color:var(--crit);">T = 0.0 s · DOUBLE-FAIL</div>
-        <h4>Laser Blocked + DECT Jammed</h4>
-        <p>`DR-03` is at `50 m` AGL, `53 m` from the jammer core behind the `95 m` U-Tower. Both 1550 nm laser and 1.9 GHz DECT NR+ fail. Status turns pulsing purple/red: <b>`ISOLATED`</b>.</p>
-      </div>
-
-      <div class="t-step" style="border-color:rgba(192,132,252,0.5);">
-        <div class="t-time">T = 1.5 s · INS/VIO LOCK</div>
-        <h4>Zero-RF / Zero-GPS Autonomy</h4>
-        <p>After `1.5 s` isolated, `DR-03` switches navigation to onboard <b>Inertial / Visual Odometry (`INS/VIO`)</b> and initiates an automatic vertical climb (`22.5 m/s`).</p>
-      </div>
-
-      <div class="t-step" style="border-color:rgba(245,158,11,0.45);">
-        <div class="t-time" style="color:var(--warn);">T = 1.5 s → 3.2 s · CLIMBING</div>
-        <h4>`↑ CLIMBING TO CLEAR LOS`</h4>
-        <p>Altitude climbs live in telemetry from <b>`50 m → 96 m → 125 m`</b>. At `96 m`, the drone physically rises above the `95 m` U-Tower roofline.</p>
-      </div>
-
-      <div class="t-step" style="border-color:rgba(16,185,129,0.5);">
-        <div class="t-time" style="color:var(--ok);">T = 3.22 s · LASER SNAPS BACK</div>
-        <h4>High-Altitude Relay Lock (`120 m`)</h4>
-        <p>3D Line-of-Sight to High-Altitude Relay <b>`DR-01` (`120 m`)</b> is unobstructed! The green <b>FSOC 1550 nm laser</b> locks back on with 0% RF loss.</p>
-      </div>
-    </div>
-
-    <div class="grid-3" style="margin-top:16px;">
-      <div class="card pop" style="padding:16px 20px;">
-        <span class="stat-lbl"> Urban Canyon Start Altitude</span>
-        <div class="stat-big accent-pop">50 m <span style="font-size:16px;color:var(--sub)">AGL</span></div>
-        <p>Occluded by 95 m Dortmunder U-Tower &amp; inside &lt;150 m jammer core.</p>
-      </div>
-      <div class="card ok" style="padding:16px 20px;">
-        <span class="stat-lbl">Roof Clearance → Relay Lock</span>
-        <div class="stat-big accent-ok">&gt; 95 m → 120 m</div>
-        <p>Clears U-Tower roof and links via optical relay `DR-01` / `DR-02` (`120 m`).</p>
-      </div>
-      <div class="card cyan" style="padding:16px 20px;">
-        <span class="stat-lbl">Measured Pop-Up Recovery Time</span>
-        <div class="stat-big accent-cyan">3.22 s</div>
-        <p>Exact physical climb duration recorded live in the Resilience Scorecard.</p>
-      </div>
-    </div>
-
-    <div class="speaker-box">
-      <b>SAY (1:55–2:30):</b> "What if a drone is trapped inside the 150-meter jammer core AND behind the 95-meter U-Tower? We don't fake a radio through 150 meters of jammer core. We let `DR-03` go genuinely `ISOLATED`. After 1.5 seconds, it locks onto onboard INS/VIO and executes an Autonomous Vertical Pop-Up—climbing from 50 m past the 95 m roofline to 125 m, where its green FSOC laser snaps onto our 120 m High-Altitude Relay in 3.22 seconds!"
-    </div>
-  </section>
-
-  <!-- =================================================================
-       SLIDE 5: LAYER 2 — CONTRASTIVE + LLM COPILOT (2:30 - 3:05)
-       ================================================================= -->
-  <section class="slide">
-    <div>
-      <div class="kicker">
-        <span>LAYER 2 · CONTRASTIVE PROTOTYPE DETECTOR + LLM SECURITY ANALYST</span>
-        <span class="time-budget">⏱ 2:30 – 3:05</span>
-      </div>
-      <h2>Deterministic Math Detects in <span class="accent-ok">0.0 s</span> · The LLM Explains &amp; Acts</h2>
-      <p class="lead">
-        Per-drone 4D nominal prototypes `(RSSI, SNR, Loss, GNSS-INS Offset)` catch slow ramps instantly, refuse to guess on novel signatures (`UNEXPLAINED`), and learn online in one click.
-      </p>
-    </div>
-
-    <div class="grid-2">
-      <div class="card cyan">
-        <div>
-          <span class="card-num">REPRODUCIBLE BENCHMARK (`seed=20260416`)</span>
-          <h3>Contrastive Prototype vs. Rule-Based Detector</h3>
-          <table class="cmp-table" style="margin-top:10px;">
-            <thead>
-              <tr>
-                <th>Metric / Scenario</th>
-                <th>Rule-Based</th>
-                <th>Contrastive (Ours)</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><b>Nominal Flight False Flags</b></td>
-                <td>0</td>
-                <td><span class="pill ok">0 False Flags</span></td>
-              </tr>
-              <tr>
-                <td><b>Ramping Jammer (+1.55 dB/s)</b></td>
-                <td><span class="pill crit">9.5 s delay</span></td>
-                <td><span class="pill ok">0.0 s (Instant)</span></td>
-              </tr>
-              <tr>
-                <td><b>Slow GNSS Spoof Drift</b></td>
-                <td><span class="pill crit">9.0 s delay</span></td>
-                <td><span class="pill ok">0.0 s (Instant)</span></td>
-              </tr>
-              <tr>
-                <td><b>Novel Attack (Pass 1 → Pass 2)</b></td>
-                <td>Misclassified</td>
-                <td><span class="pill warn">UNEXPLAINED</span> → <span class="pill ok">100% @ 0.0s</span></td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p style="font-family:var(--mono);font-size:11.5px;color:var(--sub);margin-top:10px;">
-          Run: <code style="color:#FAFAFA">python3 -m backend.engine.threat_eval --json threat_eval.json</code> (19/19 unit tests pass)
-        </p>
-      </div>
-
-      <div class="card ok">
-        <div>
-          <span class="card-num">STRICT SEPARATION OF CONCERNS</span>
-          <h3>Downstream LLM Security Analyst CoPilot</h3>
-          <ul>
-            <li><b>The LLM never detects:</b> All anomaly gating (`z ≥ 3.8`) and prototype attribution (`cos ≥ 0.84`) happen in deterministic, sub-millisecond Python/JS math.</li>
-            <li><b>1-Click Online Prototype Learning:</b> When a novel multi-vector attack (`coordinated_rf_gnss`) appears, the operator clicks <b>`Confirm Threat`</b> (`learn_threat()`), storing its 4D unit direction vector immediately.</li>
-            <li><b>Actionable German CoPilot Output:</b> Consumes the structured verdict + 4D evidence window and outputs a German situational briefing, `LOW/MED/CRIT` operator issue, and 1-click engine command buttons (`SET_PROTECTION`, `SAFE_RETURN_HOME`).</li>
-          </ul>
-        </div>
-        <div style="margin-top:10px;">
-          <span class="pill ok">Offline Deterministic Mock</span>
-          <span class="pill cyan" style="margin-left:6px;">Uni KI-Connect (`gpt-6-studierende`) Ready</span>
-        </div>
-      </div>
-    </div>
-
-    <div class="speaker-box">
-      <b>SAY (2:30–3:05):</b> "On the intelligence side, our Contrastive Prototype Detector scores 4D telemetry against learned per-drone nominal baselines—catching a slow-ramping jammer in 0.0 seconds versus 9.5 seconds for rule-based thresholds. When a novel coordinated RF+GNSS attack hits, it honestly flags `UNEXPLAINED` until the operator confirms it with one click. And our LLM never detects—it sits strictly downstream as a German Security Analyst CoPilot."
-    </div>
-  </section>
-
-  <!-- =================================================================
-       SLIDE 6: TRANSITION TO 2-MINUTE LIVE DEMO (3:05 - 5:00)
-       ================================================================= -->
-  <section class="slide">
-    <div>
-      <div class="kicker">
-        <span>LIVE DEMO CHOREOGRAPHY · 4 CLICKS IN 110 SECONDS</span>
-        <span class="time-budget">⏱ 3:05 – 5:00</span>
-      </div>
-      <h2>Let’s Break the Network <span class="accent-ok">Live Over 3D Dortmund</span></h2>
-      <p class="lead">
-        We will now switch to the live terminal and execute these four exact steps in real time.
-      </p>
-    </div>
-
-    <div class="grid-4">
-      <div class="card crit">
-        <div>
-          <span class="card-num">STEP 1 · 3:05–3:30</span>
-          <h3>Unprotected 2.4G Collapse</h3>
-          <p>Toggle <b>`Unprotected · 2.4G Funk`</b> (`P`) + <b>`Jamming`</b> (`J`). Watch cyan links collapse (`Funk Jammed · RIP`) and Reachability plummet.</p>
-        </div>
-        <span class="pill crit">Baseline Comparison</span>
-      </div>
-
-      <div class="card warn">
-        <div>
-          <span class="card-num">STEP 2 · 3:30–3:55</span>
-          <h3>`DR-07` QoS Emergency Mode</h3>
-          <p>Switch to <b>`Protected`</b>. Behind Ellipson (`>150 m` jam zone), `DR-07` holds DECT NR+ FHSS, drops <b>Video to `0%`</b>, and locks <b>`12 kbps` C2</b>.</p>
-        </div>
-        <span class="pill warn">1/r² Shannon-Hartley</span>
-      </div>
-
-      <div class="card pop">
-        <div>
-          <span class="card-num">STEP 3 · 3:55–4:25</span>
-          <h3>`DR-03` Vertical Pop-Up</h3>
-          <p>Inside the `<150 m` Jammer Core behind the `95 m` U-Tower, `DR-03` goes `ISOLATED`, climbs <b>`50 m → 125 m`</b> on INS/VIO, and locks FSOC onto `DR-01` (`120 m`) in <b>`3.2 s`</b>!</p>
-        </div>
-        <span class="pill pop">↑ Climbing To Clear LoS</span>
-      </div>
-
-      <div class="card cyan">
-        <div>
-          <span class="card-num">STEP 4 · 4:25–4:55</span>
-          <h3>Contrastive Learn + LLM</h3>
-          <p>Click <b>`🎯 Coordinated RF+GNSS`</b> → see `⚠ UNEXPLAINED` → click <b>`+ Confirm Threat`</b> → instant `0.98` attribution + German LLM CoPilot actions.</p>
-        </div>
-        <span class="pill cyan">1-Click Online Learning</span>
-      </div>
-    </div>
-
-    <div class="card ok" style="margin-top:18px; flex-direction:row; align-items:center; justify-content:space-between; padding:22px 28px;">
+  <!-- 4 · TWO LINKS -->
+  <section class="slide" data-notes="So every drone carries two links. A 1550 nm laser: gigabit, a few milliseconds, and completely immune to RF jamming — but it needs line of sight. And DECT NR+ at 1.9 GHz: slower, but it goes through buildings and survives jamming by frequency hopping. Laser when it can see, radio when it can't. (~20 s)">
+    <div class="eyebrow">Hybrid mesh</div>
+    <div class="title">Two links per drone.</div>
+    <div class="duo">
       <div>
-        <div style="font-family:var(--mono);font-size:12px;color:var(--ok);font-weight:700;letter-spacing:0.08em;">READY FOR LIVE DEMONSTRATION</div>
-        <div style="font-size:22px;font-weight:800;margin-top:4px;">Launch Dortmund OFF-Grid Air Mission Control</div>
-        <div style="font-size:13.5px;color:var(--sub);margin-top:2px;">
-          GitHub Pages: <span style="font-family:var(--mono);color:#FAFAFA;">https://soulnassim.github.io/Dortmund-OFF-grid-air/</span>
+        <div class="band c-fsoc">Primary · Optical</div>
+        <h3>FSOC Laser <span class="c-sub" style="font-weight:400">1550 nm</span></h3>
+        <dl class="spec">
+          <dt>Throughput</dt><dd>up to 1 Gbps</dd>
+          <dt>Latency</dt><dd>a few milliseconds</dd>
+          <dt>RF jamming</dt><dd class="c-fsoc">immune · 0 % loss</dd>
+          <dt>Needs</dt><dd>clear 3D line of sight</dd>
+        </dl>
+      </div>
+      <div>
+        <div class="band c-dect">Fallback · Radio</div>
+        <h3>DECT NR+ <span class="c-sub" style="font-weight:400">1.9 GHz</span></h3>
+        <dl class="spec">
+          <dt>Throughput</dt><dd>4.8 Mbps</dd>
+          <dt>Latency</dt><dd>tens of milliseconds</dd>
+          <dt>RF jamming</dt><dd class="c-dect">survives by frequency hopping</dd>
+          <dt>Needs</dt><dd>nothing — passes through buildings</dd>
+        </dl>
+      </div>
+    </div>
+    <div class="motto">Laser when it can see. <b>Radio when it can't.</b></div>
+  </section>
+
+  <!-- 5 · JAMMING PHYSICS -->
+  <section class="slide" style="--glow: rgba(239,68,68,0.08)" data-notes="Jamming follows the inverse-square law, so distance matters. With line of sight, the laser doesn't care about RF at all. Behind a building but more than 150 m from the jammer, DECT survives — but capacity drops, so we go into QoS emergency mode: video off, command-and-control locked at 12 kbps. That's DR-07 behind the Ellipson. Inside the 150 m core and behind a building, nothing gets through. We don't fake it. (~30 s)">
+    <div class="eyebrow">Layer 1 · Jamming physics</div>
+    <div class="title">Distance decides. <span class="dim">We don't cheat it.</span></div>
+    <div class="split">
+      <div class="figure">
+        <svg viewBox="0 0 760 640" font-family="Inter, sans-serif">
+          <defs>
+            <radialGradient id="jam" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#EF4444" stop-opacity=".38"/>
+              <stop offset=".35" stop-color="#EF4444" stop-opacity=".14"/>
+              <stop offset="1" stop-color="#EF4444" stop-opacity=".02"/>
+            </radialGradient>
+          </defs>
+          <circle cx="380" cy="320" r="290" fill="url(#jam)" stroke="#EF4444" stroke-opacity=".55" stroke-width="2"/>
+          <circle cx="380" cy="320" r="72" fill="rgba(167,139,250,0.16)" stroke="#A78BFA" stroke-width="2.5" stroke-dasharray="7 6"/>
+          <circle cx="380" cy="320" r="7" fill="#EF4444"/>
+          <text x="380" y="18" fill="#FCA5A5" font-size="20" font-weight="600" text-anchor="middle" font-family="JetBrains Mono">OUTER ZONE · 620 m</text>
+          <text x="380" y="418" fill="#C4B5FD" font-size="18" font-weight="600" text-anchor="middle" font-family="JetBrains Mono">CORE &lt;150 m</text>
+          <text x="380" y="356" fill="#FCA5A5" font-size="16" text-anchor="middle">jammer</text>
+          <!-- DR-03 in core -->
+          <circle cx="404" cy="296" r="9" fill="#F5F5F7"/><circle cx="404" cy="296" r="17" fill="none" stroke="#A78BFA" stroke-width="2.5"/>
+          <text x="430" y="290" fill="#F5F5F7" font-size="19" font-weight="600">DR-03 · 53 m</text>
+          <!-- DR-07 outer -->
+          <circle cx="170" cy="190" r="9" fill="#F5F5F7"/><circle cx="170" cy="190" r="17" fill="none" stroke="#F59E0B" stroke-width="2.5"/>
+          <text x="170" y="160" fill="#F5F5F7" font-size="19" font-weight="600" text-anchor="middle">DR-07 · 455 m</text>
+          <!-- clear LoS drone -->
+          <circle cx="560" cy="500" r="9" fill="#F5F5F7"/><circle cx="560" cy="500" r="17" fill="none" stroke="#10B981" stroke-width="2.5"/>
+          <text x="586" y="506" fill="#F5F5F7" font-size="19" font-weight="600">clear LoS</text>
+          <text x="380" y="636" fill="#71717A" font-size="18" text-anchor="middle" font-family="JetBrains Mono">jam power ∝ 1 / r²</text>
+        </svg>
+      </div>
+      <div class="rows">
+        <div class="row b">
+          <div class="bar" style="background:var(--fsoc)"></div>
+          <div><div class="when">Clear line of sight · anywhere</div><h4>Laser holds. 0 % loss.</h4><p>Photons ignore RF noise.</p></div>
+        </div>
+        <div class="row b">
+          <div class="bar" style="background:var(--dect)"></div>
+          <div><div class="when">Behind a building · &gt;150 m</div><h4>DECT survives. QoS emergency.</h4><p>Video 0 %, +40 ms, command-and-control locked at 12 kbps.</p></div>
+        </div>
+        <div class="row b">
+          <div class="bar" style="background:var(--pop)"></div>
+          <div><div class="when">Behind a building · &lt;150 m</div><h4>Both links fail. Honestly.</h4><p>No radio passes the core. The drone has to solve it physically.</p></div>
         </div>
       </div>
-      <a class="launch-cta" href="index.html">
-        <span>🚀 LAUNCH LIVE DEMO</span>
-      </a>
-    </div>
-
-    <div class="speaker-box">
-      <b>SAY (3:05–3:15):</b> "Let's jump straight into the live mission control terminal and trigger these attacks over Dortmund right now." <i>(Click '🚀 LAUNCH LIVE DEMO' button)</i>
     </div>
   </section>
 
-</main>
+  <!-- 6 · POP-UP -->
+  <section class="slide" style="--glow: rgba(167,139,250,0.10)" data-notes="So what does a drone do when every radio is gone? It climbs. After 1.5 seconds isolated, DR-03 switches to onboard inertial and visual odometry — no GPS, no RF needed — and climbs straight up. The moment it clears the 95 m roof, it has line of sight to the relay at 120 m, and the laser snaps back. 3.2 seconds, measured live. (~30 s)">
+    <div class="eyebrow" style="color:var(--pop)">Autonomous recovery</div>
+    <div class="title">When every radio fails, <span class="c-pop">climb.</span></div>
+    <div class="figure" style="margin-top:20px">
+      <svg viewBox="0 0 1640 470" font-family="Inter, sans-serif">
+        <defs>
+          <linearGradient id="bld2" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1F2937"/><stop offset="1" stop-color="#111827"/></linearGradient>
+          <marker id="ah" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" fill="#A78BFA"/></marker>
+        </defs>
+        <line x1="0" y1="450" x2="1640" y2="450" stroke="#27272A" stroke-width="2"/>
+        <line x1="60" y1="165" x2="1600" y2="165" stroke="#3F3F46" stroke-dasharray="4 8"/>
+        <text x="1600" y="155" fill="#71717A" font-size="18" text-anchor="end" font-family="JetBrains Mono">95 m roof</text>
+        <!-- tower -->
+        <rect x="560" y="165" width="150" height="285" fill="url(#bld2)" stroke="#F59E0B" stroke-opacity=".7" stroke-width="2"/>
+        <text x="635" y="240" fill="#FBBF24" font-size="22" font-weight="700" text-anchor="middle">U-Tower</text>
+        <!-- HQ -->
+        <circle cx="120" cy="245" r="11" fill="#07080B" stroke="#10B981" stroke-width="3"/>
+        <text x="120" y="215" fill="#F5F5F7" font-size="19" font-weight="600" text-anchor="middle">HQ</text>
+        <!-- blocked line -->
+        <line x1="120" y1="245" x2="560" y2="285" stroke="#10B981" stroke-width="3" opacity=".7"/>
+        <g stroke="#EF4444" stroke-width="4" stroke-linecap="round"><line x1="550" y1="275" x2="570" y2="295"/><line x1="570" y1="275" x2="550" y2="295"/></g>
+        <!-- climb -->
+        <line x1="830" y1="305" x2="830" y2="78" stroke="#A78BFA" stroke-width="3" stroke-dasharray="8 8" marker-end="url(#ah)"/>
+        <circle cx="830" cy="310" r="10" fill="#F5F5F7" opacity=".45"/>
+        <text x="860" y="316" fill="#9A9AA3" font-size="19">50 m · isolated</text>
+        <circle cx="830" cy="60" r="11" fill="#F5F5F7"/><circle cx="830" cy="60" r="22" fill="none" stroke="#A78BFA" stroke-width="2.5"/>
+        <text x="860" y="52" fill="#F5F5F7" font-size="19" font-weight="600">125 m</text>
+        <text x="860" y="76" fill="#C4B5FD" font-size="16" font-family="JetBrains Mono">INS/VIO · no GPS · no RF</text>
+        <!-- relay link -->
+        <circle cx="1450" cy="88" r="11" fill="#F5F5F7"/><circle cx="1450" cy="88" r="22" fill="none" stroke="#10B981" stroke-width="2.5"/>
+        <text x="1450" y="138" fill="#34D399" font-size="19" font-weight="600" text-anchor="middle">Relay DR-01 · 120 m</text>
+        <line x1="852" y1="62" x2="1428" y2="87" stroke="#10B981" stroke-width="4"/>
+        <text x="1140" y="56" fill="#34D399" font-size="18" text-anchor="middle" font-family="JetBrains Mono">FSOC LASER RESTORED</text>
+      </svg>
+    </div>
+    <div class="tl">
+      <div class="step b" style="border-top-color:var(--crit)"><div class="t c-crit">0.0 s</div><h4>Isolated</h4><p>Laser blocked by the tower, DECT drowned by the jammer core.</p></div>
+      <div class="step b" style="border-top-color:var(--pop)"><div class="t c-pop">1.5 s</div><h4>INS/VIO takes over</h4><p>Onboard inertial and visual odometry. Vertical climb begins.</p></div>
+      <div class="step b" style="border-top-color:var(--dect)"><div class="t c-dect">&gt;95 m</div><h4>Clears the roof</h4><p>Line of sight to the 120 m relay opens up.</p></div>
+      <div class="step b" style="border-top-color:var(--fsoc)"><div class="t c-fsoc">3.2 s</div><h4>Laser back online</h4><p>Recovery time recorded live in the scorecard.</p></div>
+    </div>
+  </section>
 
-<!-- Bottom Navigation Bar -->
-<footer class="deck-bot">
-  <div style="font-family:var(--mono);font-size:11.5px;color:var(--mut);">
-    Keys: <b style="color:var(--sub)">← / → / Space</b> Navigate · <b style="color:var(--sub)">N</b> Speaker Cues · <b style="color:var(--sub)">F</b> Fullscreen
-  </div>
-  <div class="dots" id="dots"></div>
-  <div class="nav-btns">
-    <button class="nav-btn" id="prevBtn">← Prev</button>
-    <span class="slide-counter" id="counter">1 / 6</span>
-    <button class="nav-btn" id="nextBtn">Next →</button>
-  </div>
-</footer>
+  <!-- 7 · DETECTION -->
+  <section class="slide" style="--glow: rgba(56,189,248,0.08)" data-notes="Physics keeps the link. Detection tells the operator what is happening. A threshold detector on a slow-ramping jammer stays blind for 9.5 seconds because the rolling baseline absorbs the ramp. Our contrastive detector compares against a learned per-drone nominal prototype and flags at onset. Zero false flags in nominal flight. And when it sees something new, it says 'unexplained' instead of guessing — one operator click teaches it. (~25 s)">
+    <div class="eyebrow" style="color:var(--sky)">Layer 2 · Threat detection</div>
+    <div class="title">Catch the slow attack <span class="c-sky">at onset.</span></div>
+    <div class="versus">
+      <div class="b"><div class="who">Threshold rules</div><div class="num c-sub">9.5<small>s</small></div></div>
+      <div class="vs b">vs</div>
+      <div class="b"><div class="who" style="color:var(--sky)">Contrastive prototypes</div><div class="num c-sky">0.0<small>s</small></div></div>
+    </div>
+    <div class="c-sub b" style="font-size:24px;margin-top:20px;font-family:var(--mono)">Ramping jammer, +1.55 dB/s · reproducible, seed 20260416</div>
+    <div class="minor">
+      <div class="b"><b>0.0 s vs 9.0 s</b>Slow GNSS spoofing drift.</div>
+      <div class="b"><b>0 false flags</b>Across nominal flight, both detectors.</div>
+      <div class="b"><b>Unexplained → learned</b>Novel attacks are flagged, not guessed. One click stores the new prototype.</div>
+    </div>
+  </section>
+
+  <!-- 8 · LLM -->
+  <section class="slide" style="--glow: rgba(167,139,250,0.08)" data-notes="And the LLM? It never detects. Detection is deterministic math. The LLM sits strictly downstream: it reads the verdict and the evidence, writes a German situation briefing, files a prioritized issue, and offers one-click countermeasures. The demo runs a deterministic offline analyst; the university LLM is one environment variable away, with automatic fallback. (~20 s)">
+    <div class="eyebrow" style="color:var(--pop)">Layer 3 · LLM co-pilot</div>
+    <div class="title">The LLM never detects. <span class="c-pop">It explains.</span></div>
+    <div class="pipe">
+      <div class="node b"><div class="lbl">Input</div><h4>4D telemetry</h4><p>RSSI · SNR · packet loss · GNSS–INS offset</p></div>
+      <div class="arrow b">→</div>
+      <div class="node hl b"><div class="lbl">Deterministic</div><h4>Rules + contrastive detector</h4><p>z-score gate, cosine match to known threats</p></div>
+      <div class="arrow b">→</div>
+      <div class="node b"><div class="lbl">Output</div><h4>Verdict</h4><p>jamming · spoofing · unexplained</p></div>
+      <div class="arrow b">→</div>
+      <div class="node llm b"><div class="lbl">LLM analyst</div><h4>Briefing, issue, actions</h4><p>German summary · LOW / MED / CRIT ticket · one-click commands</p></div>
+    </div>
+    <div class="divider b"><span>Offline deterministic by default · university LLM via one env variable</span></div>
+  </section>
+
+  <!-- 9 · RESULTS -->
+  <section class="slide" data-notes="So, in numbers: the whole fleet stays reachable under jamming, the worst-case drone recovers itself in 3.2 seconds, slow attacks are caught at onset, and the backend is covered by 19 passing tests. Now let's break it live. (~15 s)">
+    <div class="eyebrow">Results</div>
+    <div class="title">What it adds up to.</div>
+    <div class="kpis">
+      <div class="kpi b"><div class="k c-fsoc">10<small>/10</small></div><div class="v">Drones reachable</div><div class="d">Under active jamming, with protection on.</div></div>
+      <div class="kpi b"><div class="k c-pop">3.2<small>s</small></div><div class="v">Worst-case recovery</div><div class="d">Double-fail healed by the vertical pop-up.</div></div>
+      <div class="kpi b"><div class="k c-sky">0.0<small>s</small></div><div class="v">Slow-attack detection</div><div class="d">vs 9.5 s for threshold rules.</div></div>
+      <div class="kpi b"><div class="k">19<small>/19</small></div><div class="v">Backend tests passing</div><div class="d">Raycast, link budget, HMAC, contrastive, LLM.</div></div>
+    </div>
+  </section>
+
+  <!-- 10 · LIVE DEMO -->
+  <section class="slide s-demo" data-notes="Four steps. One: unprotected baseline under jamming — watch reachability fall. Two: protection on — DR-07 drops video and keeps 12 kbps command-and-control. Three: DR-03 goes isolated, climbs, laser snaps back in 3.2 s. Four: coordinated attack — flagged unexplained, one click to learn it, the LLM explains. (~2 min)">
+    <div class="eyebrow">Live demo</div>
+    <div class="title" style="font-size:120px">Let's break it. <span class="c-fsoc">Live.</span></div>
+    <a class="launch" href="index.html">Open mission control <span>→ index.html</span></a>
+    <div class="steps">
+      <div class="st"><div class="n">01</div><h4>Unprotected baseline</h4><p><span class="key">P</span><span class="key">J</span> 2.4 GHz only, jammer on. Reachability falls.</p></div>
+      <div class="st"><div class="n">02</div><h4>QoS emergency</h4><p><span class="key">↺</span><span class="key">J</span> DR-07 sheds video, holds 12 kbps C2.</p></div>
+      <div class="st"><div class="n">03</div><h4>Vertical pop-up</h4><p>DR-03 isolated → climbs 50 → 125 m → laser back in 3.2 s.</p></div>
+      <div class="st"><div class="n">04</div><h4>Learn a new attack</h4><p>Coordinated RF+GNSS → unexplained → confirm → LLM briefing.</p></div>
+    </div>
+  </section>
+
+</div></div>
+
+<div class="progress" id="progress"></div>
+<div class="hint" id="hint">→ next · ← back · N notes · T timer · F fullscreen</div>
+<div class="notes" id="notes"><div class="hd"><span id="notesIdx">Slide 1</span><b id="timer">00:00</b></div><div id="notesTxt"></div></div>
 
 <script>
 (() => {
-  const slides = Array.from(document.querySelectorAll('.slide'));
-  const dotsHost = document.getElementById('dots');
-  const counter = document.getElementById('counter');
-  let idx = 0;
+  const canvas = document.getElementById('canvas');
+  const slides = [...document.querySelectorAll('.slide')];
+  const total = slides.length;
+  let cur = 0, step = 0;
 
-  slides.forEach((_, i) => {
-    const d = document.createElement('div');
-    d.className = 'dot' + (i === 0 ? ' active' : '');
-    d.onclick = () => show(i);
-    dotsHost.appendChild(d);
+  const fit = () => {
+    const s = Math.min(innerWidth / 1920, innerHeight / 1080);
+    canvas.style.transform = `scale(${s})`;
+  };
+  addEventListener('resize', fit); fit();
+
+  slides.forEach((s, i) => {
+    const f = document.createElement('div');
+    f.className = 'foot';
+    f.innerHTML = `<span class="brand"><i></i>Dortmund OFF-Grid Air</span><span>${String(i + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}</span>`;
+    s.appendChild(f);
   });
 
-  function show(n) {
-    idx = (n + slides.length) % slides.length;
-    slides.forEach((s, i) => s.classList.toggle('active', i === idx));
-    Array.from(dotsHost.children).forEach((d, i) => d.classList.toggle('active', i === idx));
-    counter.textContent = `${idx + 1} / ${slides.length}`;
+  const builds = i => [...slides[i].querySelectorAll('.b')];
+
+  function render() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === cur));
+    builds(cur).forEach((el, j) => el.classList.toggle('in', j < step));
+    document.getElementById('progress').style.width = `${((cur + 1) / total) * 100}%`;
+    document.getElementById('notesIdx').textContent = `Slide ${cur + 1} / ${total}`;
+    document.getElementById('notesTxt').textContent = slides[cur].dataset.notes || '';
+    history.replaceState(null, '', `#${cur + 1}`);
+  }
+  function go(i, atEnd) {
+    cur = Math.max(0, Math.min(total - 1, i));
+    step = atEnd ? builds(cur).length : 0;
+    render();
+  }
+  function next() {
+    if (step < builds(cur).length) { step++; render(); }
+    else if (cur < total - 1) go(cur + 1);
+  }
+  function prev() {
+    if (step > 0) { step--; render(); }
+    else if (cur > 0) go(cur - 1, true);
   }
 
-  document.getElementById('prevBtn').onclick = () => show(idx - 1);
-  document.getElementById('nextBtn').onclick = () => show(idx + 1);
+  const timerEl = document.getElementById('timer');
+  let t0 = null, tIv = null;
+  function toggleTimer() {
+    if (tIv) { clearInterval(tIv); tIv = null; timerEl.textContent = '00:00'; timerEl.style.color = ''; return; }
+    t0 = Date.now();
+    tIv = setInterval(() => {
+      const s = Math.floor((Date.now() - t0) / 1000);
+      timerEl.textContent = `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`;
+      timerEl.style.color = s >= 300 ? '#EF4444' : s >= 180 ? '#F59E0B' : '';
+    }, 250);
+  }
 
-  const btnNotes = document.getElementById('btnNotes');
-  btnNotes.onclick = () => {
-    const hidden = document.body.classList.toggle('hide-notes');
-    btnNotes.textContent = `Speaker Cues: ${hidden ? 'OFF' : 'ON'}`;
-  };
-
-  window.addEventListener('keydown', e => {
-    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); show(idx + 1); }
-    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); show(idx - 1); }
-    else if (e.key.toLowerCase() === 'n') btnNotes.click();
-    else if (e.key.toLowerCase() === 'f') {
+  addEventListener('keydown', e => {
+    const k = e.key;
+    if (['ArrowRight', 'ArrowDown', ' ', 'PageDown', 'Enter'].includes(k)) { e.preventDefault(); next(); }
+    else if (['ArrowLeft', 'ArrowUp', 'PageUp', 'Backspace'].includes(k)) { e.preventDefault(); prev(); }
+    else if (k === 'Home') go(0);
+    else if (k === 'End') go(total - 1, true);
+    else if (k.toLowerCase() === 'n') document.getElementById('notes').classList.toggle('open');
+    else if (k.toLowerCase() === 't') toggleTimer();
+    else if (k.toLowerCase() === 'f') {
       if (!document.fullscreenElement) document.documentElement.requestFullscreen().catch(() => {});
       else document.exitFullscreen().catch(() => {});
     }
   });
+  canvas.addEventListener('click', e => {
+    if (e.target.closest('a')) return;
+    (e.clientX < innerWidth * 0.25 ? prev : next)();
+  });
 
-  // 5-Minute Pitch Timer
-  let tStart = null, tIv = null;
-  const timerPill = document.getElementById('pitchTimer');
-  const timerVal = document.getElementById('timerVal');
-  timerPill.onclick = () => {
-    if (tIv) {
-      clearInterval(tIv); tIv = null; tStart = null;
-      timerVal.textContent = '00:00 / 05:00';
-      timerVal.style.color = 'var(--ok)';
-      return;
-    }
-    tStart = Date.now();
-    tIv = setInterval(() => {
-      const sec = Math.floor((Date.now() - tStart) / 1000);
-      const mm = String(Math.floor(sec / 60)).padStart(2, '0');
-      const ss = String(sec % 60).padStart(2, '0');
-      timerVal.textContent = `${mm}:${ss} / 05:00`;
-      timerVal.style.color = sec >= 300 ? 'var(--crit)' : sec >= 185 ? 'var(--warn)' : 'var(--ok)';
-    }, 250);
-  };
+  setTimeout(() => { document.getElementById('hint').style.opacity = 0; }, 4000);
+
+  const h = parseInt(location.hash.slice(1), 10);
+  go(Number.isFinite(h) ? h - 1 : 0);
 })();
 </script>
 </body>
