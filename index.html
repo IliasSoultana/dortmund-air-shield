@@ -189,6 +189,11 @@ button,input{font-family:inherit}
   background:rgba(245,158,11,0.16);border-color:rgba(245,158,11,0.55);color:#FDE68A;
   box-shadow:0 0 24px rgba(245,158,11,0.28);
 }
+.dock-pill.prot-on{background:rgba(52,211,153,0.10);border-color:rgba(52,211,153,0.40);color:#6EE7B7}
+.dock-pill.prot-off{
+  background:rgba(239,68,68,0.18);border-color:rgba(239,68,68,0.65);color:#FCA5A5;
+  box-shadow:0 0 24px rgba(239,68,68,0.35);
+}
 .dock-div{width:1px;height:20px;background:var(--border);margin:0 2px}
 .dock-icon-btn{
   width:36px;height:36px;border-radius:50%;display:grid;place-items:center;
@@ -321,6 +326,11 @@ button,input{font-family:inherit}
 
   <!-- ================= BOTTOM FLOATING DOCK: TESLA QUICK CONTROLS ================= -->
   <nav class="glass bottom-dock">
+    <button class="dock-pill prot-on" id="btnProt" title="Toggle all automatic defenses to compare · Shortcut: P">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3Z"/></svg>
+      <span id="protLabel">Protected</span>
+    </button>
+    <div class="dock-div"></div>
     <button class="dock-pill" id="btnJam" title="Shortcut: J">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h3l2-6 3 12 3-9 2 5 2-2h5"/></svg>
       <span>Jamming</span>
@@ -483,6 +493,8 @@ class Drone {
     this.jam = 0;
     this.band = 'WIFI';               // WIFI | LORA | NONE
     this.route = null;                // [self, ..., 'HQ']
+    this.lastRoute = null;            // route held before a break (unprotected mode only waits for it)
+    this.offCourseWarned = false;
     this.routeState = 'JOINING';      // OK | REROUTING | ISOLATED | JOINING | DOWN
     this.lossStart = nowMs(); this.convergeAt = nowMs() + 600 + this.index * 80; this.routeChangedAt = -1e9;
     this.latency = 0; this.delivery = 0; this.pathCap = 0; this.hops = 0; this.linkQ = 0;
@@ -514,6 +526,8 @@ class Drone {
       const rr = 260 + this.index * 55, a = this.orbit.phase + t * 0.03 * this.orbit.dir;
       target = { x: sim.hq.x + rr * Math.cos(a), y: sim.hq.y + rr * Math.sin(a) };
     } else target = this.orbitTarget(t);
+    // Without the plausibility check the autopilot trusts the spoofed fix, so it steers the real airframe off by the spoof offset.
+    if (!ext && !sim.protection && this.gnss === 'SPOOFED') target = { x: target.x - this.spoofOffset.x, y: target.y - this.spoofOffset.y };
 
     const dx = target.x - this.x, dy = target.y - this.y, d = Math.hypot(dx, dy), maxStep = vmax * dt;
     const nx = d <= maxStep ? target.x : this.x + (dx / d) * maxStep;
@@ -545,13 +559,16 @@ class Drone {
     if (g === 'SPOOFED') {
       o.x += env.spoofVec.x * dt; o.y += env.spoofVec.y * dt;
       const m = Math.hypot(o.x, o.y);
-      if (!this.spoofDetected && m > 60) {
+      if (sim.protection && !this.spoofDetected && m > 60) {
         this.spoofDetected = true;
         sim.logger.warn(`${this.id} GNSS plausibility FAILED (Δ=${m.toFixed(0)} m vs. INS/VIO) → GNSS rejected, INS navigation`);
+      } else if (!sim.protection && !this.offCourseWarned && m > 60) {
+        this.offCourseWarned = true;
+        sim.logger.crit(`${this.id} following spoofed GNSS – no plausibility check, airframe ${m.toFixed(0)} m off course`);
       }
     } else {
       const k = Math.exp(-dt / 25); o.x *= k; o.y *= k;
-      if (Math.hypot(o.x, o.y) < 5) { o.x = o.y = 0; this.spoofDetected = false; }
+      if (Math.hypot(o.x, o.y) < 5) { o.x = o.y = 0; this.spoofDetected = false; this.offCourseWarned = false; }
     }
   }
 }
@@ -647,6 +664,7 @@ class MeshNetwork {
       }
       const loraAdded = new Set();
       for (const d of online) {
+        if (!sim.protection && forced(d) !== 'LORA') { bandNext.set(d.id, wifiDeg.get(d.id) ? 'WIFI' : 'NONE'); continue; }
         const needLora = forced(d) === 'LORA' || d.jam > 0.5 || !wifiDeg.get(d.id);
         if (!needLora) { bandNext.set(d.id, 'WIFI'); continue; }
         const cands = nodes.filter(n => n !== d).map(n => ({ n, dd: Geo.dist3(d, n) }))
@@ -660,6 +678,7 @@ class MeshNetwork {
           links.push(this.makeLink(d, c.n, 'LORA', clamp(q, 0.05, 1), d.jam));
         }
       }
+      if (sim.protection) this.bridgePartitions(nodes, links, bandNext, loraAdded);
     }
 
     for (const d of online) {
@@ -681,6 +700,34 @@ class MeshNetwork {
     const prev = this.dijkstra(nodes);
     this.updateRoutes(online, prev);
     this.computePathStats(online);
+  }
+
+  // Islands that still mesh locally but lost every path to HQ: the member
+  // closest to the reachable network opens an 868 MHz uplink for the group.
+  bridgePartitions(nodes, links, bandNext, loraAdded) {
+    for (let guard = 0; guard < nodes.length; guard++) {
+      const adj = new Map(nodes.map(n => [n.id, []]));
+      for (const l of links) { adj.get(l.a).push(l.b); adj.get(l.b).push(l.a); }
+      const reach = new Set(['HQ']), queue = ['HQ'];
+      while (queue.length) for (const nb of adj.get(queue.shift())) if (!reach.has(nb)) { reach.add(nb); queue.push(nb); }
+      const inside = nodes.filter(n => reach.has(n.id)), outside = nodes.filter(n => !reach.has(n.id));
+      let gw = null, gwDist = CFG.LORA_RANGE;
+      for (const u of outside) for (const r of inside) {
+        const dd = Geo.dist3(u, r);
+        if (dd < gwDist) { gwDist = dd; gw = u; }
+      }
+      if (!gw) return;
+      const cands = inside.map(n => ({ n, dd: Geo.dist3(gw, n) })).filter(c => c.dd < CFG.LORA_RANGE)
+        .sort((p, q) => p.dd - q.dd).slice(0, 3);
+      bandNext.set(gw.id, 'LORA');
+      for (const c of cands) {
+        const k = linkKey(gw.id, c.n.id);
+        if (loraAdded.has(k)) continue;
+        loraAdded.add(k);
+        const q = (1 - Math.pow(c.dd / CFG.LORA_RANGE, 1.6)) * (1 - 0.3 * gw.jam);
+        links.push(this.makeLink(gw, c.n, 'LORA', clamp(q, 0.05, 1), gw.jam));
+      }
+    }
   }
 
   edgeCost(l) { return l.latency + l.loss * 400 + (l.band === 'LORA' ? 120 : 0); }
@@ -724,19 +771,22 @@ class MeshNetwork {
   updateRoutes(online, prev) {
     const sim = this.sim, now = sim.now, log = sim.logger;
     for (const d of online) {
-      const best = this.pathFrom(prev, d.id);
+      let best = this.pathFrom(prev, d.id);
       if (d.routeState === 'OK') {
         const curCost = this.pathCost(d.route);
         if (curCost < Infinity) {
-          if (best && best.join() !== d.route.join() && this.pathCost(best) < curCost * 0.72) {
+          if (sim.protection && best && best.join() !== d.route.join() && this.pathCost(best) < curCost * 0.72) {
             d.route = best; d.routeChangedAt = now;
           }
           continue;
         }
-        log.warn(`${d.id} route lost (link ${this.brokenHop(d.route)} down) – mesh re-convergence started`);
-        d.routeState = 'REROUTING'; d.route = null; d.lossStart = now; d.convergeAt = now + this.convergenceDelay(best);
+        log.warn(sim.protection
+          ? `${d.id} route lost (link ${this.brokenHop(d.route)} down) – mesh re-convergence started`
+          : `${d.id} route lost (link ${this.brokenHop(d.route)} down) – no self-healing, waiting for the static route`);
+        d.routeState = 'REROUTING'; d.lastRoute = d.route; d.route = null; d.lossStart = now; d.convergeAt = now + this.convergenceDelay(best);
       }
       if (d.routeState === 'DOWN') { d.routeState = 'JOINING'; d.lossStart = now; d.convergeAt = now + this.convergenceDelay(best); }
+      if (!sim.protection && d.routeState !== 'JOINING') best = d.lastRoute && this.pathCost(d.lastRoute) < Infinity ? d.lastRoute : null;
       if (!best) {
         if (d.routeState === 'REROUTING' && now >= d.convergeAt) {
           d.routeState = 'ISOLATED';
@@ -803,6 +853,16 @@ class TrafficEngine {
     for (const d of sim.drones) {
       if (d.status !== 'ONLINE' || d.routeState === 'JOINING') continue;
       let avail = d.routeState === 'OK' ? d.pathCap : 0;
+      if (!sim.protection) {
+        // Best effort: every class asks for its full rate and the path is shared proportionally.
+        const total = TRAFFIC_CLASSES.reduce((s, c) => s + CFG.DEMAND_KBPS[c.key], 0), share = Math.min(1, avail / total);
+        for (const c of TRAFFIC_CLASSES) {
+          const nominal = CFG.DEMAND_KBPS[c.key];
+          agg[c.key].demand += nominal;
+          agg[c.key].delivered += nominal * share * d.delivery;
+        }
+        continue;
+      }
       for (const c of TRAFFIC_CLASSES) {
         const nominal = CFG.DEMAND_KBPS[c.key];
         let want = nominal;
@@ -819,10 +879,10 @@ class TrafficEngine {
     for (const c of TRAFFIC_CLASSES) {
       const a = agg[c.key], ratio = a.demand ? a.delivered / a.demand : 0;
       let status = ratio >= 0.95 ? 'NOMINAL' : ratio >= 0.6 ? 'DEGRADED' : ratio > 0.02 ? 'THROTTLED' : 'OFFLINE';
-      if (c.key === 'video' && (env.jamming || sim.rth) && status !== 'OFFLINE') status = 'THROTTLED';
+      if (sim.protection && c.key === 'video' && (env.jamming || sim.rth) && status !== 'OFFLINE') status = 'THROTTLED';
       this.stats[c.key] = { ratio, status, kbps: a.delivered, demand: a.demand };
     }
-    this.policy = sim.rth ? 'EMERGENCY · C2 FIRST' : env.jamming ? 'ANTI-JAM · VIDEO SHED' : 'NOMINAL';
+    this.policy = !sim.protection ? 'UNPROTECTED · BEST EFFORT' : sim.rth ? 'EMERGENCY · C2 FIRST' : env.jamming ? 'ANTI-JAM · VIDEO SHED' : 'NOMINAL';
   }
 }
 
@@ -883,7 +943,7 @@ class Simulation extends Emitter {
     this.traffic = new TrafficEngine(this);
     this.metrics = new MetricsEngine(this);
     this.simTime = 0; this.speed = 6; this.now = nowMs(); this.lastNet = 0;
-    this.rth = false; this.booted = false;
+    this.rth = false; this.booted = false; this.protection = true;
   }
   node(id) { return id === 'HQ' ? this.hq : this.droneMap.get(id); }
 
@@ -966,6 +1026,13 @@ class Simulation extends Emitter {
     this.logger.info(`${d.id} watchdog reboot complete – radio stack up, joining mesh`);
     this.emit('drone', d); this.emit('env');
   }
+  setProtection(on, origin = 'ui') {
+    if (this.protection === on) return;
+    this.protection = on;
+    if (on) this.logger.ok('PROTECTION ON – LoRa fallback · GNSS plausibility check · mesh self-healing · C2-first QoS');
+    else this.logger.crit('PROTECTION OFF – no LoRa fallback, GNSS trusted blindly, static routes, best-effort traffic');
+    this.command('SET_PROTECTION', on, origin); this.emit('env');
+  }
   setRTH(on, origin = 'ui') {
     if (this.rth === on) return;
     this.rth = on;
@@ -1024,6 +1091,7 @@ class Simulation extends Emitter {
       case 'NODE_FAILURE': this.failNodes(e.ids || e.count || 2, 'backend'); break;
       case 'NODE_RESTORE': (e.ids ? e.ids.map(id => this.droneMap.get(id)) : this.drones).filter(Boolean).forEach(d => this.rebootDrone(d)); break;
       case 'RTH': case 'SAFE_RETURN_HOME': this.setRTH(on, 'backend'); break;
+      case 'PROTECTION': this.setProtection(on, 'backend'); break;
       case 'RESET': this.reset('backend'); break;
       case 'ZONE': this.emit('env'); break;
       default: this.logger.warn(`Unknown backend event: ${t || JSON.stringify(e)}`);
@@ -1032,7 +1100,7 @@ class Simulation extends Emitter {
   getState() {
     return {
       ts: Date.now(), simTime: this.simTime,
-      env: { jamming: this.env.jamming, spoofing: this.env.spoofing, rth: this.rth, zone: { ...Geo.toLatLon(this.env.zone.x, this.env.zone.y), radius_m: this.env.zone.radius } },
+      env: { jamming: this.env.jamming, spoofing: this.env.spoofing, rth: this.rth, protection: this.protection, zone: { ...Geo.toLatLon(this.env.zone.x, this.env.zone.y), radius_m: this.env.zone.radius } },
       metrics: { reachability: this.metrics.v.reach, latency_ms: this.metrics.v.latency, packet_loss: this.metrics.v.loss, recovery_s: this.metrics.v.recovery },
       traffic: this.traffic.stats,
       drones: this.drones.map(d => ({ id: d.id, lat: d.lat, lon: d.lon, alt: d.alt, speed: d.speed, battery: d.battery, status: d.status, mode: d.mode, band: d.band, gnss: d.gnss, route: d.route, routeState: d.routeState, latency_ms: d.latency })),
@@ -1647,6 +1715,7 @@ class UI {
     this.$('btnSpoof').onclick = () => s.setSpoofing(!s.env.spoofing);
     this.$('btnFail').onclick = () => s.failNodes(2);
     this.$('btnRth').onclick = () => s.setRTH(!s.rth);
+    this.$('btnProt').onclick = () => s.setProtection(!s.protection);
     this.$('btnReset').onclick = () => { this.stopDemo(); s.reset(); };
     this.$('btnDemo').onclick = () => (this.demoTimers.length ? this.stopDemo(true) : this.runDemo());
     this.$('srcBox').onclick = () => this.$('wsBar').classList.toggle('hidden');
@@ -1674,6 +1743,7 @@ class UI {
       const k = e.key.toLowerCase();
       if (k === 'j') this.$('btnJam').click(); else if (k === 'g') this.$('btnSpoof').click();
       else if (k === 'f') this.$('btnFail').click(); else if (k === 'r') this.$('btnRth').click();
+      else if (k === 'p') this.$('btnProt').click();
       else if (k === 'escape') this.map.select(null);
     });
   }
@@ -1706,6 +1776,8 @@ class UI {
     this.$('btnSpoof').classList.toggle('active-amber', s.env.spoofing);
     this.$('btnFail').classList.toggle('active-red', down > 0);
     this.$('btnRth').classList.toggle('active-amber', s.rth);
+    this.$('btnProt').className = `dock-pill ${s.protection ? 'prot-on' : 'prot-off'}`;
+    this.$('protLabel').textContent = s.protection ? 'Protected' : 'Unprotected';
   }
 
   updateSource(state) {
@@ -1760,7 +1832,7 @@ class UI {
     this.gauges.latency.extra.textContent = `${s.net.links.length} links`;
     this.gauges.loss.extra.textContent = `${fallback} LoRa`;
     this.gauges.recovery.extra.textContent = m.healing ? 'Healing…' : m.recoveries.length ? `Avg ${m.avgRecovery.toFixed(1)}s` : 'Nominal';
-    this.$('metricSrc').textContent = m.isOverridden ? 'BACKEND' : this.bridge.state === 'LIVE' ? 'WS LIVE' : 'LIVE SIM';
+    this.$('metricSrc').textContent = (m.isOverridden ? 'BACKEND' : this.bridge.state === 'LIVE' ? 'WS LIVE' : 'LIVE SIM') + (s.protection ? '' : ' · UNPROTECTED');
 
     for (const c of QOS_ROWS) {
       const st = s.traffic.stats[c.key]; if (!st) continue;
@@ -1854,6 +1926,7 @@ L.debug('Backend hooks ready: window.AirShield.*, window.updateDroneData(), WebS
 const params = new URLSearchParams(location.search);
 if (params.get('ws')) { document.getElementById('wsUrl').value = params.get('ws'); bridge.connect(params.get('ws')); }
 if (params.get('poll')) bridge.poll(params.get('poll'), +params.get('interval') || 1000);
+if (params.get('protect') === '0') sim.setProtection(false);
 if (params.get('demo') === '1') setTimeout(() => ui.runDemo(), 1500);
 
 setInterval(() => {
