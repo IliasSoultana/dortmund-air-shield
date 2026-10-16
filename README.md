@@ -6,7 +6,9 @@ A single self-contained file (`index.html`, no build step, no dependencies) that
 
 ## Run
 
-Open `index.html` in a browser, or serve it:
+Live demo: <https://soulnassim.github.io/dortmund-air-shield/> (append `?demo=1` for the scripted scenario).
+
+Locally, open `index.html` in a browser, or serve it:
 
 ```bash
 python3 -m http.server 8000   # → http://localhost:8000
