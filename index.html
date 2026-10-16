@@ -1,0 +1,1925 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DORTMUND AIR SHIELD · Off-Grid Air Mission Control</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg0:#0A0E14;--bg1:#0D1117;--bg2:#121923;--bg3:#18212e;
+  --line:rgba(148,163,184,.10);--line2:rgba(148,163,184,.18);
+  --txt:#E6EDF3;--txt2:#9AA7B6;--mut:#5B6878;
+  --green:#10B981;--red:#EF4444;--cyan:#06B6D4;--orange:#F59E0B;
+  --g:16,185,129;--r:239,68,68;--c:6,182,212;--o:245,158,11;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --mono:'JetBrains Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+html,body{height:100%;background:var(--bg0);color:var(--txt);font-family:var(--font);overflow:hidden;-webkit-font-smoothing:antialiased}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:radial-gradient(1200px 600px at 50% -10%,rgba(6,182,212,.08),transparent 60%),
+             radial-gradient(800px 500px at 100% 100%,rgba(16,185,129,.05),transparent 60%),
+             radial-gradient(700px 500px at 0% 100%,rgba(239,68,68,.035),transparent 60%)}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:50;opacity:.035;
+  background:repeating-linear-gradient(0deg,#fff 0 1px,transparent 1px 3px)}
+button{font-family:inherit}
+.scroll{overflow-y:auto;scrollbar-width:thin;scrollbar-color:rgba(148,163,184,.2) transparent}
+.scroll::-webkit-scrollbar{width:6px}.scroll::-webkit-scrollbar-thumb{background:rgba(148,163,184,.18);border-radius:6px}
+
+#app{position:relative;z-index:1;display:grid;grid-template-columns:340px minmax(0,1fr) 384px;grid-template-rows:62px minmax(0,1fr);gap:10px;padding:10px;height:100vh}
+
+/* ---------- Cards ---------- */
+.card{background:linear-gradient(180deg,rgba(20,28,40,.78),rgba(13,17,23,.88));border:1px solid var(--line);border-radius:14px;padding:12px;position:relative;min-height:0}
+.card::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:linear-gradient(180deg,rgba(255,255,255,.035),transparent 30%)}
+.card-title{font:600 10px/1 var(--mono);letter-spacing:.18em;color:var(--txt2);text-transform:uppercase;display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.card-title>span:first-child{display:flex;align-items:center;gap:8px}
+.dot{width:6px;height:6px;border-radius:50%;display:inline-block;background:var(--cyan);box-shadow:0 0 8px var(--cyan)}
+.dot.green{background:var(--green);box-shadow:0 0 8px var(--green)}
+.dot.red{background:var(--red);box-shadow:0 0 8px var(--red)}
+.dot.orange{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+.panel{display:flex;flex-direction:column;gap:10px;min-height:0}
+.link-btn{background:none;border:1px solid var(--line2);color:var(--txt2);font:600 9px var(--mono);letter-spacing:.12em;padding:4px 8px;border-radius:6px;cursor:pointer}
+.link-btn:hover{color:var(--txt);border-color:rgba(var(--c),.6)}
+
+/* ---------- Header ---------- */
+header{grid-column:1/-1;display:flex;align-items:center;gap:18px;padding:0 16px;background:linear-gradient(180deg,rgba(18,25,35,.9),rgba(13,17,23,.9));border:1px solid var(--line);border-radius:14px}
+.brand{display:flex;align-items:center;gap:12px;min-width:0}
+.logo{width:36px;height:36px;border-radius:10px;display:grid;place-items:center;background:radial-gradient(circle at 30% 30%,rgba(6,182,212,.35),rgba(6,182,212,.05));border:1px solid rgba(6,182,212,.45);box-shadow:0 0 18px -4px rgba(6,182,212,.7);flex:none}
+.brand-title{font:800 15px/1 var(--font);letter-spacing:.16em}
+.brand-title b{color:var(--cyan);text-shadow:0 0 14px rgba(6,182,212,.6)}
+.brand-sub{font:500 9.5px/1 var(--mono);color:var(--mut);letter-spacing:.12em;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hdr-stats{display:flex;gap:8px;margin-left:auto}
+.hstat{padding:6px 12px;border-left:1px solid var(--line2);display:flex;flex-direction:column;gap:4px;min-width:92px}
+.hstat span{font:600 8.5px/1 var(--mono);letter-spacing:.16em;color:var(--mut)}
+.hstat b{font:700 13px/1 var(--mono);letter-spacing:.04em}
+.lvl-nominal{color:var(--green);text-shadow:0 0 10px rgba(var(--g),.6)}
+.lvl-elevated{color:var(--orange);text-shadow:0 0 10px rgba(var(--o),.6)}
+.lvl-critical{color:var(--red);text-shadow:0 0 12px rgba(var(--r),.8);animation:blink 1s steps(2) infinite}
+.hdr-right{display:flex;align-items:center;gap:8px}
+.seg{display:flex;border:1px solid var(--line2);border-radius:8px;overflow:hidden}
+.seg button{background:none;border:0;color:var(--txt2);font:600 10px var(--mono);padding:7px 9px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:rgba(var(--c),.15);color:var(--cyan)}
+.src{display:flex;align-items:center;gap:7px;font:700 10px var(--mono);letter-spacing:.12em;padding:7px 10px;border-radius:8px;border:1px solid var(--line2);white-space:nowrap}
+.src .dot{animation:pulse 1.6s infinite}
+.src.mock{color:var(--orange)}.src.mock .dot{background:var(--orange);box-shadow:0 0 8px var(--orange)}
+.src.live{color:var(--green);border-color:rgba(var(--g),.45)}.src.live .dot{background:var(--green);box-shadow:0 0 8px var(--green)}
+.src.wait{color:var(--cyan)}
+#wsUrl{width:160px;background:rgba(0,0,0,.35);border:1px solid var(--line2);border-radius:8px;color:var(--txt);font:500 10.5px var(--mono);padding:7px 9px;outline:none}
+#wsUrl:focus{border-color:rgba(var(--c),.6)}
+.btn-sm{background:rgba(var(--c),.12);border:1px solid rgba(var(--c),.5);color:var(--cyan);font:700 10px var(--mono);letter-spacing:.1em;padding:7px 10px;border-radius:8px;cursor:pointer}
+.btn-sm:hover{background:rgba(var(--c),.22)}
+.clock{font:600 13px var(--mono);color:var(--txt2);min-width:74px;text-align:right}
+
+/* ---------- Left panel ---------- */
+.fleet-card{flex:1;display:flex;flex-direction:column;padding-bottom:6px}
+.fleet-chips{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:10px}
+.fchip{border:1px solid var(--line);border-radius:9px;padding:6px 8px;background:rgba(0,0,0,.2)}
+.fchip b{display:block;font:700 15px/1 var(--mono)}
+.fchip span{display:block;font:600 8px/1 var(--mono);letter-spacing:.12em;color:var(--mut);margin-top:4px}
+.fleet-list{flex:1;display:flex;flex-direction:column;gap:7px;padding-right:4px;margin-right:-4px}
+.dcard{--sc:var(--g);border:1px solid rgba(var(--sc),.22);border-left:3px solid rgba(var(--sc),.85);border-radius:11px;padding:9px 10px 8px;background:linear-gradient(90deg,rgba(var(--sc),.06),rgba(255,255,255,.012) 40%);cursor:pointer;transition:border-color .25s,box-shadow .25s,background .25s}
+.dcard:hover{background:linear-gradient(90deg,rgba(var(--sc),.11),rgba(255,255,255,.02) 50%)}
+.dcard.selected{box-shadow:0 0 0 1px rgba(var(--c),.7),0 0 20px -6px rgba(var(--c),.8)}
+.dcard.st-warn{--sc:var(--o)}
+.dcard.st-crit{--sc:var(--r);box-shadow:0 0 18px -8px rgba(var(--r),.9)}
+.dcard.st-off{--sc:100,116,139;opacity:.72}
+.dc-top{display:flex;align-items:center;gap:8px}
+.dc-id{font:800 13px var(--mono);letter-spacing:.06em;display:flex;align-items:center;gap:7px}
+.dc-led{width:7px;height:7px;border-radius:50%;background:rgb(var(--sc));box-shadow:0 0 8px rgb(var(--sc))}
+.dc-mode{font:600 8.5px var(--mono);color:var(--mut);letter-spacing:.14em}
+.pill{margin-left:auto;font:700 8.5px var(--mono);letter-spacing:.12em;padding:3px 7px;border-radius:20px;color:rgb(var(--sc));background:rgba(var(--sc),.12);border:1px solid rgba(var(--sc),.35);white-space:nowrap}
+.dc-chips{display:flex;gap:5px;margin:7px 0;flex-wrap:wrap}
+.chip{font:600 9px var(--mono);letter-spacing:.04em;padding:3px 7px;border-radius:6px;border:1px solid var(--line2);color:var(--txt2);white-space:nowrap}
+.chip.g{color:var(--green);border-color:rgba(var(--g),.35);background:rgba(var(--g),.07)}
+.chip.o{color:var(--orange);border-color:rgba(var(--o),.4);background:rgba(var(--o),.08)}
+.chip.r{color:var(--red);border-color:rgba(var(--r),.45);background:rgba(var(--r),.09)}
+.chip.c{color:var(--cyan);border-color:rgba(var(--c),.3);background:rgba(var(--c),.06)}
+.chip.blink{animation:blink 1s steps(2) infinite}
+.dc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:4px}
+.dc-grid div{background:rgba(0,0,0,.22);border-radius:6px;padding:4px 6px}
+.dc-grid span{display:block;font:600 7.5px var(--mono);color:var(--mut);letter-spacing:.14em}
+.dc-grid b{font:700 12px var(--mono)}
+.dc-grid i{font:500 8px var(--mono);color:var(--mut);font-style:normal;margin-left:2px}
+.dc-bottom{display:flex;align-items:center;gap:7px;margin-top:7px;font:600 9px var(--mono);color:var(--txt2)}
+.bat{width:46px;height:8px;border-radius:3px;border:1px solid var(--line2);padding:1px;position:relative}
+.bat::after{content:"";position:absolute;right:-3px;top:2px;width:2px;height:3px;background:var(--line2);border-radius:1px}
+.bat-fill{height:100%;border-radius:2px;background:var(--green);box-shadow:0 0 6px rgba(var(--g),.6)}
+.sig{display:flex;align-items:flex-end;gap:2px;height:10px;margin-left:auto}
+.sig i{width:3px;background:rgba(148,163,184,.2);border-radius:1px}
+.sig i:nth-child(1){height:3px}.sig i:nth-child(2){height:5px}.sig i:nth-child(3){height:7px}.sig i:nth-child(4){height:9px}.sig i:nth-child(5){height:10px}
+.sig i.on{background:rgb(var(--sc));box-shadow:0 0 4px rgba(var(--sc),.8)}
+.v-via{max-width:96px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mut)}
+
+.ctrl-grid{display:flex;flex-direction:column;gap:6px}
+.ctrl{--k:var(--c);display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:12px;border:1px solid var(--line2);background:rgba(255,255,255,.02);color:var(--txt);cursor:pointer;text-align:left;transition:all .2s}
+.ctrl .ic{width:30px;height:30px;border-radius:9px;display:grid;place-items:center;background:rgba(var(--k),.12);color:rgb(var(--k));flex:none}
+.ctrl b{display:block;font:700 11px/1.2 var(--font);letter-spacing:.07em}
+.ctrl small{display:block;font:500 9px/1.3 var(--mono);color:var(--mut);letter-spacing:.08em;margin-top:2px}
+.ctrl kbd{margin-left:auto;font:600 9px var(--mono);color:var(--mut);border:1px solid var(--line2);border-radius:5px;padding:2px 6px}
+.ctrl:hover{border-color:rgba(var(--k),.55);background:rgba(var(--k),.06)}
+.ctrl:active{transform:scale(.99)}
+.ctrl.active{border-color:rgba(var(--k),.85);background:linear-gradient(90deg,rgba(var(--k),.2),rgba(var(--k),.04));box-shadow:0 0 0 1px rgba(var(--k),.25),0 0 24px -6px rgba(var(--k),.7),inset 0 0 18px -8px rgba(var(--k),.6)}
+.ctrl.active small{color:rgb(var(--k))}
+.ctrl.active .ic{background:rgb(var(--k));color:#0A0E14;box-shadow:0 0 14px rgba(var(--k),.8)}
+.demo-btn{margin-top:8px;width:100%;background:none;border:1px dashed rgba(var(--c),.4);color:var(--cyan);font:700 10px var(--mono);letter-spacing:.14em;padding:8px;border-radius:10px;cursor:pointer}
+.demo-btn:hover{background:rgba(var(--c),.08)}
+.demo-btn.running{border-style:solid;background:rgba(var(--c),.12);animation:glow 1.6s infinite}
+
+/* ---------- Map ---------- */
+.map-card{padding:0;overflow:hidden;background:#080B10}
+#map{position:absolute;inset:0;display:block;cursor:grab}
+#map.dragging{cursor:grabbing}
+.hud{position:absolute;pointer-events:none;z-index:2}
+.hud-box{background:rgba(10,14,20,.78);border:1px solid var(--line2);border-radius:10px;padding:8px 11px;backdrop-filter:blur(6px);pointer-events:auto}
+.tl{top:12px;left:12px}.tr{top:12px;right:12px}.bl{bottom:12px;left:12px}.br{bottom:12px;right:12px}
+.hud-title{font:700 11px var(--mono);letter-spacing:.18em}
+.hud-title b{color:var(--cyan)}
+.hud-sub{font:500 9px var(--mono);color:var(--mut);letter-spacing:.1em;margin-top:4px}
+.map-ctrl{display:flex;flex-direction:column;gap:6px;align-items:flex-end}
+.map-ctrl .row{display:flex;gap:4px}
+.mbtn{background:rgba(10,14,20,.82);border:1px solid var(--line2);color:var(--txt2);font:700 9px var(--mono);letter-spacing:.12em;padding:6px 8px;border-radius:7px;cursor:pointer;pointer-events:auto;min-width:28px}
+.mbtn:hover{color:var(--txt);border-color:rgba(var(--c),.5)}
+.mbtn.on{color:var(--cyan);border-color:rgba(var(--c),.5);background:rgba(6,182,212,.1)}
+.legend{display:grid;grid-template-columns:auto auto;gap:5px 14px;font:600 9px var(--mono);color:var(--txt2);letter-spacing:.06em}
+.legend .ln{display:flex;align-items:center;gap:7px}
+.legend svg{flex:none}
+.coords{font:500 10px var(--mono);color:var(--txt2);text-align:right;line-height:1.5}
+.threat-banner{position:absolute;top:66px;left:50%;transform:translateX(-50%);z-index:3;display:flex;align-items:center;gap:10px;padding:9px 18px;border-radius:10px;font:800 11.5px var(--mono);letter-spacing:.14em;color:#fff;background:linear-gradient(90deg,rgba(239,68,68,.25),rgba(239,68,68,.5),rgba(239,68,68,.25));border:1px solid rgba(239,68,68,.9);box-shadow:0 0 30px -4px rgba(239,68,68,.8),inset 0 0 20px rgba(239,68,68,.3);white-space:nowrap;pointer-events:none;animation:alarm 1.1s ease-in-out infinite}
+.threat-banner.spoof-only{background:linear-gradient(90deg,rgba(245,158,11,.2),rgba(245,158,11,.42),rgba(245,158,11,.2));border-color:rgba(245,158,11,.9);box-shadow:0 0 30px -4px rgba(245,158,11,.7);animation:none}
+.threat-banner .tri{animation:blink .7s steps(2) infinite}
+.hidden{display:none!important}
+.map-hint{position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font:600 8.5px var(--mono);letter-spacing:.16em;color:var(--mut);z-index:2;pointer-events:none;white-space:nowrap}
+.tooltip{position:absolute;z-index:4;pointer-events:none;background:rgba(10,14,20,.94);border:1px solid rgba(var(--c),.5);border-radius:10px;padding:9px 11px;font:500 10px/1.55 var(--mono);color:var(--txt2);box-shadow:0 10px 30px rgba(0,0,0,.5),0 0 18px -6px rgba(var(--c),.6);min-width:210px}
+.tooltip b{color:var(--txt);font-weight:700}
+.tooltip .tt-h{font:800 12px var(--mono);color:var(--cyan);letter-spacing:.08em;margin-bottom:4px}
+
+/* ---------- Right panel ---------- */
+.gauges{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.gauge{--gc:var(--g);border:1px solid rgba(var(--gc),.22);border-radius:12px;padding:9px 9px 6px;background:radial-gradient(120% 80% at 50% 0%,rgba(var(--gc),.09),transparent 70%),rgba(0,0,0,.18);box-shadow:0 0 22px -12px rgba(var(--gc),.9);transition:border-color .4s,box-shadow .4s}
+.g-label{font:700 8.5px var(--mono);letter-spacing:.14em;color:var(--txt2);text-align:center}
+.g-ring{position:relative;width:96px;height:96px;margin:5px auto 0}
+.g-ring svg{width:100%;height:100%;overflow:visible}
+.g-bg{fill:none;stroke:rgba(148,163,184,.12);stroke-width:7;stroke-linecap:round}
+.g-val{fill:none;stroke:currentColor;stroke-width:7;stroke-linecap:round;filter:drop-shadow(0 0 5px currentColor);transition:stroke-dasharray .35s ease,color .4s}
+.g-tick{stroke:rgba(230,237,243,.7);stroke-width:2}
+.g-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.g-num{font:800 21px/1 var(--mono);color:rgb(var(--gc));text-shadow:0 0 14px rgba(var(--gc),.7)}
+.g-unit{font:600 9px var(--mono);color:var(--mut);margin-top:3px;letter-spacing:.1em}
+.g-sub{display:flex;justify-content:space-between;font:600 8px var(--mono);color:var(--mut);letter-spacing:.08em;margin-top:-4px}
+.g-extra{color:var(--txt2)}
+.g-spark{width:100%;height:26px;display:block;margin-top:4px}
+
+.tc-row{--tc:var(--c);display:flex;gap:10px;align-items:center;padding:7px 0}
+.tc-row+.tc-row{border-top:1px solid var(--line)}
+.tc-rank{width:24px;height:24px;border-radius:7px;display:grid;place-items:center;font:800 11px var(--mono);color:rgb(var(--tc));background:rgba(var(--tc),.12);border:1px solid rgba(var(--tc),.4);flex:none}
+.tc-main{flex:1;min-width:0}
+.tc-head{display:flex;align-items:center;gap:8px;font:700 10.5px var(--font);letter-spacing:.06em}
+.tc-tag{font:700 7.5px var(--mono);letter-spacing:.12em;padding:2px 5px;border-radius:4px;color:rgb(var(--tc));border:1px solid rgba(var(--tc),.4)}
+.tc-status{margin-left:auto;font:700 9px var(--mono);letter-spacing:.12em}
+.tc-bar{height:5px;border-radius:4px;background:rgba(148,163,184,.1);margin:6px 0 4px;overflow:hidden}
+.tc-bar i{display:block;height:100%;border-radius:4px;background:rgb(var(--tc));box-shadow:0 0 8px rgba(var(--tc),.8);transition:width .35s}
+.tc-meta{display:flex;justify-content:space-between;font:500 8.5px var(--mono);color:var(--mut);letter-spacing:.06em}
+.tc-row.dim{--tc:100,116,139}
+.tc-row.dim .tc-head{color:var(--mut)}
+
+.log-card{flex:1;display:flex;flex-direction:column}
+.terminal{flex:1;background:rgba(0,0,0,.42);border:1px solid var(--line);border-radius:10px;padding:8px 9px;font:500 10px/1.6 var(--mono);min-height:90px}
+.terminal .ln{display:flex;gap:7px;white-space:nowrap}
+.terminal .ts{color:var(--mut)}
+.terminal .lv{width:34px;flex:none;font-weight:700}
+.terminal .msg{white-space:normal;color:#C9D4E0}
+.lv-INFO .lv{color:var(--cyan)}.lv-OK .lv{color:var(--green)}.lv-WARN .lv{color:var(--orange)}.lv-CRIT .lv{color:var(--red)}.lv-NET .lv{color:#A78BFA}.lv-DBG .lv{color:var(--mut)}
+.lv-CRIT .msg{color:#FCA5A5}.lv-WARN .msg{color:#FCD34D}.lv-DBG .msg{color:var(--mut)}
+.terminal .cursor{display:inline-block;width:7px;height:12px;background:var(--green);vertical-align:middle;animation:blink 1s steps(2) infinite}
+
+@keyframes blink{50%{opacity:.15}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes alarm{0%,100%{box-shadow:0 0 18px -4px rgba(239,68,68,.6),inset 0 0 14px rgba(239,68,68,.25)}50%{box-shadow:0 0 42px 0 rgba(239,68,68,.95),inset 0 0 26px rgba(239,68,68,.45)}}
+@keyframes glow{50%{box-shadow:0 0 18px -4px rgba(6,182,212,.7)}}
+
+@media (max-width:1380px){#app{grid-template-columns:300px minmax(0,1fr) 340px}.hdr-stats .hstat:nth-child(n+4){display:none}#wsUrl{width:130px}}
+@media (max-width:1100px){html,body{overflow:auto}#app{grid-template-columns:1fr;grid-template-rows:auto 72vh auto auto;height:auto}header{flex-wrap:wrap;padding:10px 14px}.hdr-stats{margin-left:0}.fleet-list{max-height:420px}.terminal{max-height:300px}}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <div class="brand">
+      <div class="logo">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#06B6D4" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 2 4 5v6c0 5 3.4 9.3 8 11 4.6-1.7 8-6 8-11V5l-8-3Z"/><path d="M8 12h8M12 8v8"/><circle cx="12" cy="12" r="2.2" fill="#06B6D4"/>
+        </svg>
+      </div>
+      <div style="min-width:0">
+        <div class="brand-title">DORTMUND <b>AIR SHIELD</b></div>
+        <div class="brand-sub">MORPHEUS LOGISTIK · DO-DATA-HACKATHON 2026 · CHALLENGE 02 — OFF-GRID AIR</div>
+      </div>
+    </div>
+    <div class="hdr-stats">
+      <div class="hstat"><span>THREAT LEVEL</span><b id="hdrThreat" class="lvl-nominal">NOMINAL</b></div>
+      <div class="hstat"><span>FLEET ONLINE</span><b id="hdrFleet">10/10</b></div>
+      <div class="hstat"><span>MESH LINKS</span><b id="hdrLinks">—</b></div>
+      <div class="hstat"><span>GNSS INTEGRITY</span><b id="hdrGnss">—</b></div>
+      <div class="hstat"><span>MISSION T+</span><b id="hdrMission">00:00:00</b></div>
+    </div>
+    <div class="hdr-right">
+      <div class="seg" id="speedSeg" title="Simulation speed">
+        <button data-speed="0">❚❚</button><button data-speed="1">×1</button><button data-speed="6" class="on">×6</button><button data-speed="20">×20</button>
+      </div>
+      <div class="src mock" id="srcBox"><span class="dot"></span><span id="srcLabel">MOCK SIM</span></div>
+      <input id="wsUrl" value="ws://localhost:8765" spellcheck="false" title="Backend WebSocket URL">
+      <button class="btn-sm" id="wsBtn">CONNECT</button>
+      <div class="clock" id="clock">--:--:--</div>
+    </div>
+  </header>
+
+  <!-- ================= LEFT: NODE MONITORING ================= -->
+  <aside class="panel" id="left">
+    <section class="card fleet-card">
+      <div class="card-title"><span><i class="dot"></i>Node Monitoring · Fleet</span><span id="fleetCount">10 NODES</span></div>
+      <div class="fleet-chips">
+        <div class="fchip"><b id="fcOnline" style="color:var(--green)">10</b><span>ONLINE</span></div>
+        <div class="fchip"><b id="fcFallback" style="color:var(--orange)">0</b><span>FALLBACK</span></div>
+        <div class="fchip"><b id="fcGnss" style="color:var(--orange)">0</b><span>GNSS ⚠</span></div>
+        <div class="fchip"><b id="fcOffline" style="color:var(--red)">0</b><span>OFFLINE</span></div>
+      </div>
+      <div class="fleet-list scroll" id="fleetList"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-title"><span><i class="dot orange"></i>Event Injection · Mock</span><button class="link-btn" id="btnReset">RESET</button></div>
+      <div class="ctrl-grid">
+        <button class="ctrl" id="btnJam" style="--k:var(--r)">
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M2 12h3l2-6 3 12 3-9 2 5 2-2h5"/></svg></span>
+          <span><b>STIMULATE JAMMING</b><small id="stJam">STANDBY · 2.4 GHz / GNSS L1</small></span><kbd>J</kbd>
+        </button>
+        <button class="ctrl" id="btnSpoof" style="--k:var(--o)">
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/><path d="M4 4l16 16"/></svg></span>
+          <span><b>INJECT GPS SPOOFING</b><small id="stSpoof">STANDBY · GNSS PLAUSIBILITY</small></span><kbd>G</kbd>
+        </button>
+        <button class="ctrl" id="btnFail" style="--k:var(--r)">
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z"/></svg></span>
+          <span><b>FORCE NODE FAILURE</b><small id="stFail">0 NODES DOWN · AUTO-REBOOT 20s</small></span><kbd>F</kbd>
+        </button>
+        <button class="ctrl" id="btnRth" style="--k:var(--c)">
+          <span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 11 9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></svg></span>
+          <span><b>SAFE-RETURN-HOME</b><small id="stRth">STANDBY · EMERGENCY PROTOCOL</small></span><kbd>R</kbd>
+        </button>
+      </div>
+      <button class="demo-btn" id="btnDemo">▶ RUN DEMO SCENARIO</button>
+    </section>
+  </aside>
+
+  <!-- ================= CENTER: MAP ================= -->
+  <main class="card map-card" id="mapWrap">
+    <canvas id="map"></canvas>
+    <div class="hud tl"><div class="hud-box">
+      <div class="hud-title">FANET TOPOLOGY · <b>DORTMUND</b></div>
+      <div class="hud-sub" id="hudSub">51.5136°N 7.4653°E · DARK-GRID · 11 NODES</div>
+    </div></div>
+    <div id="threatBanner" class="threat-banner hidden"><span class="tri">▲</span><span id="threatText">ACTIVE JAMMING &amp; SPOOFING DETECTED - SECTOR OUEST</span><span class="tri">▲</span></div>
+    <div class="hud tr map-ctrl">
+      <div class="row"><button class="mbtn" id="zIn">+</button><button class="mbtn" id="zOut">−</button><button class="mbtn" id="zFit" title="Reset view">⌖</button></div>
+      <div class="row"><button class="mbtn on" data-layer="labels">LABELS</button><button class="mbtn" data-layer="ranges">RANGES</button><button class="mbtn on" data-layer="packets">PACKETS</button></div>
+    </div>
+    <div class="hud bl"><div class="hud-box legend">
+      <div class="ln"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="#10B981" stroke-width="2.2"/></svg>2.4 GHz STRONG</div>
+      <div class="ln"><svg width="14" height="14"><path d="M13 7 2 2 5 7 2 12Z" fill="#10B981"/></svg>NOMINAL NODE</div>
+      <div class="ln"><svg width="26" height="6"><line x1="0" y1="3" x2="26" y2="3" stroke="#F59E0B" stroke-width="2" stroke-dasharray="6 4"/></svg>DEGRADED / ALT ROUTE</div>
+      <div class="ln"><svg width="14" height="14"><path d="M13 7 2 2 5 7 2 12Z" fill="#F59E0B"/></svg>FALLBACK / GNSS ⚠</div>
+      <div class="ln"><svg width="26" height="6"><line x1="1" y1="3" x2="26" y2="3" stroke="#EF4444" stroke-width="2.4" stroke-linecap="round" stroke-dasharray="0.1 5"/></svg>868 MHz LoRa / LOSS</div>
+      <div class="ln"><svg width="14" height="14"><path d="M13 7 2 2 5 7 2 12Z" fill="#EF4444"/></svg>ISOLATED / CRIT</div>
+    </div></div>
+    <div class="hud br"><div class="hud-box coords" id="coords">CURSOR —<br>ZOOM —</div></div>
+    <div class="map-hint">SCROLL ZOOM · DRAG PAN · CLICK NODE · SHIFT+CLICK RELOCATE THREAT ZONE</div>
+    <div id="tooltip" class="tooltip hidden"></div>
+  </main>
+
+  <!-- ================= RIGHT: RESILIENCE METRICS ================= -->
+  <aside class="panel" id="right">
+    <section class="card">
+      <div class="card-title"><span><i class="dot green"></i>Measurable Resilience</span><span id="metricSrc">MOCK</span></div>
+      <div class="gauges" id="gauges"></div>
+    </section>
+    <section class="card">
+      <div class="card-title"><span><i class="dot"></i>Traffic Classification</span><span id="qosPolicy">NOMINAL</span></div>
+      <div id="traffic"></div>
+    </section>
+    <section class="card log-card">
+      <div class="card-title"><span><i class="dot green"></i>Latest Events / Logs</span><span style="display:flex;gap:6px"><button class="link-btn" id="logFollow">FOLLOW ✓</button><button class="link-btn" id="logClear">CLEAR</button></span></div>
+      <div class="terminal scroll" id="log"></div>
+    </section>
+  </aside>
+</div>
+
+<script>
+(() => {
+'use strict';
+
+/* =====================================================================
+ * 1. CONFIG & FLEET DEFINITION
+ * ===================================================================== */
+const CFG = {
+  VERSION: '1.0.0',
+  ORIGIN: { lat: 51.5136, lon: 7.4653 },
+  HQ: { lat: 51.5150, lon: 7.4560, alt: 45, name: 'CONTROL CENTER DORTMUND' },
+  ZONE: { lat: 51.5050, lon: 7.3650, radius: 2200, sector: 'SECTOR OUEST' },
+  WIFI_RANGE: 4000,          // m, 2.4 GHz air-to-air mesh
+  LORA_RANGE: 9000,          // m, 868 MHz LoRa fallback
+  WIFI_CAP_KBPS: 54000,
+  LORA_CAP_KBPS: 5.5,        // SF7/125 kHz
+  DEMAND_KBPS: { c2: 1.2, telemetry: 3.0, inter: 8, video: 2500 },
+  NET_TICK_MS: 200,
+  HISTORY: 120,              // samples (every 500 ms -> 60 s)
+  REBOOT_MS: 20000,
+  EXTERNAL_TTL_MS: 5000,     // backend data stays authoritative this long
+  TARGETS: { reach: 95, latency: 50, loss: 2, recovery: 3 },
+};
+
+const FLEET = [
+  { id: 'DR-01', lat: 51.5350, lon: 7.4650, r: 900,  v: 13, dir:  1, phase: 0.0, alt: 110, battery: 94, ecc: 0.8 },
+  { id: 'DR-02', lat: 51.5200, lon: 7.4200, r: 800,  v: 12, dir: -1, phase: 1.2, alt: 100, battery: 88 },
+  { id: 'DR-03', lat: 51.5320, lon: 7.3850, r: 1100, v: 14, dir:  1, phase: 2.1, alt: 120, battery: 76 },
+  { id: 'DR-04', lat: 51.5450, lon: 7.4950, r: 1000, v: 13, dir: -1, phase: 0.6, alt: 115, battery: 91 },
+  { id: 'DR-05', lat: 51.4950, lon: 7.4150, r: 900,  v: 12, dir:  1, phase: 3.3, alt: 105, battery: 83 },
+  { id: 'DR-06', lat: 51.4930, lon: 7.4800, r: 1000, v: 13, dir: -1, phase: 4.0, alt: 125, battery: 69 },
+  { id: 'DR-07', lat: 51.5050, lon: 7.3880, r: 1500, v: 15, dir:  1, phase: 2.2, alt: 95,  battery: 81, ecc: 0.75 },
+  { id: 'DR-08', lat: 51.5120, lon: 7.5050, r: 1000, v: 14, dir:  1, phase: 5.1, alt: 130, battery: 97 },
+  { id: 'DR-09', lat: 51.4750, lon: 7.4550, r: 900,  v: 12, dir: -1, phase: 1.9, alt: 110, battery: 72 },
+  { id: 'DR-10', lat: 51.4830, lon: 7.3520, r: 1000, v: 13, dir: -1, phase: 1.0, alt: 100, battery: 64 },
+];
+
+const COLORS = { green: '#10B981', red: '#EF4444', cyan: '#06B6D4', orange: '#F59E0B', grey: '#64748B', txt: '#E6EDF3' };
+
+const BASEMAP = {
+  boundary: [[51.600,7.380],[51.598,7.430],[51.590,7.470],[51.585,7.520],[51.575,7.570],[51.560,7.610],[51.540,7.635],[51.515,7.640],[51.490,7.625],[51.470,7.600],[51.445,7.560],[51.420,7.520],[51.416,7.470],[51.425,7.420],[51.440,7.380],[51.455,7.350],[51.475,7.320],[51.495,7.305],[51.520,7.300],[51.545,7.310],[51.565,7.325],[51.585,7.345]],
+  water: [
+    [[51.470,7.590],[51.478,7.555],[51.486,7.520],[51.492,7.495],[51.500,7.460],[51.506,7.435],[51.512,7.415],[51.525,7.405],[51.540,7.395],[51.552,7.370],[51.562,7.345],[51.572,7.310]],
+    [[51.527,7.448],[51.535,7.445],[51.548,7.438],[51.562,7.430],[51.578,7.418],[51.600,7.405]],
+  ],
+  lakes: [{ lat: 51.4885, lon: 7.5135, rx: 620, ry: 170, name: 'PHOENIX-SEE' }],
+  roads: [
+    { name: 'B1',   major: true, pts: [[51.500,7.300],[51.503,7.360],[51.505,7.420],[51.507,7.470],[51.506,7.520],[51.510,7.580],[51.515,7.640]] },
+    { name: 'A40',  major: true, pts: [[51.492,7.300],[51.500,7.330],[51.503,7.360]] },
+    { name: 'A45',  major: true, pts: [[51.600,7.395],[51.575,7.385],[51.545,7.370],[51.515,7.372],[51.485,7.390],[51.460,7.415],[51.430,7.450]] },
+    { name: 'A2',   major: true, pts: [[51.565,7.300],[51.578,7.350],[51.585,7.420],[51.580,7.490],[51.570,7.550],[51.560,7.640]] },
+    { name: 'A1',   major: true, pts: [[51.600,7.610],[51.560,7.618],[51.520,7.622],[51.480,7.615],[51.440,7.595]] },
+    { name: 'B54',  pts: [[51.580,7.462],[51.545,7.462],[51.522,7.466],[51.495,7.470],[51.465,7.468],[51.430,7.470]] },
+    { name: 'B236', pts: [[51.590,7.520],[51.550,7.528],[51.520,7.540],[51.490,7.545],[51.460,7.548]] },
+  ],
+  ring: { lat: 51.5136, lon: 7.4653, r: 650 },
+  districts: [
+    ['INNENSTADT', 51.5205, 7.4720], ['EVING', 51.5560, 7.4720], ['SCHARNHORST', 51.5450, 7.5450], ['BRACKEL', 51.5230, 7.5650],
+    ['APLERBECK', 51.4900, 7.5750], ['HÖRDE', 51.4780, 7.5050], ['HOMBRUCH', 51.4630, 7.4350], ['LÜTGENDORTMUND', 51.4980, 7.3330],
+    ['HUCKARDE', 51.5380, 7.4100], ['MENGEDE', 51.5800, 7.3780], ['DORSTFELD', 51.5100, 7.4200], ['MARTEN', 51.5160, 7.3850],
+  ],
+  landmarks: [
+    ['HBF', 51.5178, 7.4592], ['SIGNAL IDUNA PARK', 51.4926, 7.4519], ['FLORIANTURM', 51.4939, 7.4700],
+    ['TU DORTMUND', 51.4925, 7.4134], ['AIRPORT DTM', 51.5180, 7.6122], ['HAFEN', 51.5270, 7.4450],
+  ],
+};
+
+/* =====================================================================
+ * 2. UTILITIES & GEO PROJECTION (local ENU metres around ORIGIN)
+ * ===================================================================== */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+const lerp = (a, b, t) => a + (b - a) * t;
+const rand = (a, b) => a + Math.random() * (b - a);
+const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+const nowMs = () => performance.now();
+const hhmmss = d => d.toTimeString().slice(0, 8);
+const fmtDur = s => { s = Math.floor(s); const h = String(Math.floor(s / 3600)).padStart(2, '0'); const m = String(Math.floor(s / 60) % 60).padStart(2, '0'); return `${h}:${m}:${String(s % 60).padStart(2, '0')}`; };
+
+const M_PER_DEG_LAT = 110540;
+const M_PER_DEG_LON = 111320 * Math.cos(CFG.ORIGIN.lat * Math.PI / 180);
+const Geo = {
+  toXY: (lat, lon) => ({ x: (lon - CFG.ORIGIN.lon) * M_PER_DEG_LON, y: (lat - CFG.ORIGIN.lat) * M_PER_DEG_LAT }),
+  toLatLon: (x, y) => ({ lat: CFG.ORIGIN.lat + y / M_PER_DEG_LAT, lon: CFG.ORIGIN.lon + x / M_PER_DEG_LON }),
+  dist3: (a, b) => Math.hypot(a.x - b.x, a.y - b.y, (a.alt || 0) - (b.alt || 0)),
+};
+const linkKey = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
+const bandLabel = b => (b === 'WIFI' ? '2.4 GHz Mesh' : b === 'LORA' ? '868 MHz LoRa Fallback' : 'NO LINK');
+const normBand = b => { const s = String(b).toUpperCase(); return s.includes('LORA') || s.includes('868') || s.includes('SUB') ? 'LORA' : s.includes('NONE') ? 'NONE' : 'WIFI'; };
+
+class Emitter {
+  constructor() { this._h = {}; }
+  on(e, f) { (this._h[e] || (this._h[e] = [])).push(f); return () => this.off(e, f); }
+  off(e, f) { this._h[e] = (this._h[e] || []).filter(x => x !== f); }
+  emit(e, p) { (this._h[e] || []).forEach(f => { try { f(p); } catch (err) { console.error(err); } }); }
+}
+
+class Logger extends Emitter {
+  constructor() { super(); this.lines = []; }
+  log(level, msg) {
+    const e = { ts: new Date(), level, msg };
+    this.lines.push(e); if (this.lines.length > 400) this.lines.shift();
+    this.emit('line', e);
+  }
+  info(m) { this.log('INFO', m); } ok(m) { this.log('OK', m); } warn(m) { this.log('WARN', m); }
+  crit(m) { this.log('CRIT', m); } net(m) { this.log('NET', m); } debug(m) { this.log('DBG', m); }
+}
+
+/* =====================================================================
+ * 3. DOMAIN MODEL — Drone, ThreatEnvironment
+ * ===================================================================== */
+class Drone {
+  constructor(def, index) {
+    this.id = def.id;
+    this.index = index;
+    const c = Geo.toXY(def.lat, def.lon);
+    this.orbit = { cx: c.x, cy: c.y, r: def.r, w: def.dir * (def.v / def.r), phase: def.phase, ecc: def.ecc || 1, dir: def.dir };
+    this.baseAlt = def.alt;
+    this.battery = def.battery;
+    this.reset();
+  }
+  reset() {
+    const p = this.orbitTarget(0);
+    this.x = p.x; this.y = p.y; this.alt = this.baseAlt;
+    this.vx = 0; this.vy = 0; this.speed = 0; this.heading = 0;
+    this.status = 'ONLINE';           // ONLINE | OFFLINE
+    this.mode = 'MISSION';            // MISSION | RTH
+    this.rebootAt = 0;
+    this.gnss = 'OK';                 // OK | LOST | SPOOFED
+    this.spoofOffset = { x: 0, y: 0 };
+    this.spoofDetected = false;
+    this.jam = 0;
+    this.band = 'WIFI';               // WIFI | LORA | NONE
+    this.route = null;                // [self, ..., 'HQ']
+    this.routeState = 'JOINING';      // OK | REROUTING | ISOLATED | JOINING | DOWN
+    this.lossStart = nowMs(); this.convergeAt = nowMs() + 600 + this.index * 80; this.routeChangedAt = 0;
+    this.latency = 0; this.delivery = 0; this.pathCap = 0; this.hops = 0; this.linkQ = 0;
+    this.external = null;
+    this.overrides = {};
+    this.lowBatWarned = false;
+  }
+  get lat() { return Geo.toLatLon(this.x, this.y).lat; }
+  get lon() { return Geo.toLatLon(this.x, this.y).lon; }
+  orbitTarget(t) {
+    const o = this.orbit, a = o.phase + o.w * t;
+    return { x: o.cx + o.r * Math.cos(a), y: o.cy + o.r * o.ecc * Math.sin(a) };
+  }
+  override(key, now) { const o = this.overrides[key]; return o && now < o.until ? o.v : null; }
+
+  step(dt, t, sim) {
+    const now = sim.now;
+    if (this.status === 'OFFLINE') {
+      this.vx = this.vy = this.speed = 0;
+      this.alt = Math.max(this.alt - dt * 0.8, 40);
+      if (this.rebootAt && now >= this.rebootAt) sim.rebootDrone(this);
+      return;
+    }
+    const ext = this.external && now < this.external.until ? this.external : null;
+    let target, vmax = 26;
+    if (ext) { target = ext; vmax = 400; }
+    else if (this.mode === 'RTH') {
+      vmax = 60;
+      const rr = 260 + this.index * 55, a = this.orbit.phase + t * 0.03 * this.orbit.dir;
+      target = { x: sim.hq.x + rr * Math.cos(a), y: sim.hq.y + rr * Math.sin(a) };
+    } else target = this.orbitTarget(t);
+
+    const dx = target.x - this.x, dy = target.y - this.y, d = Math.hypot(dx, dy), maxStep = vmax * dt;
+    const nx = d <= maxStep ? target.x : this.x + (dx / d) * maxStep;
+    const ny = d <= maxStep ? target.y : this.y + (dy / d) * maxStep;
+    if (dt > 0) {
+      this.vx = lerp(this.vx, (nx - this.x) / dt, 0.15);
+      this.vy = lerp(this.vy, (ny - this.y) / dt, 0.15);
+    }
+    this.x = nx; this.y = ny;
+    this.speed = Math.hypot(this.vx, this.vy);
+    if (this.speed > 0.5) this.heading = Math.atan2(this.vy, this.vx);
+
+    const altT = ext && ext.alt != null ? ext.alt : this.mode === 'RTH' ? 55 + this.index * 7 : this.baseAlt + 7 * Math.sin(t * 0.04 + this.orbit.phase);
+    this.alt = lerp(this.alt, altT, clamp(dt * 0.5, 0, 1));
+
+    if (!(ext && ext.battery != null)) this.battery = Math.max(0, this.battery - dt * (0.004 + this.speed * 0.0003));
+    if (this.battery < 20 && !this.lowBatWarned) { this.lowBatWarned = true; sim.logger.warn(`${this.id} battery low (${this.battery.toFixed(0)}%) – recommend RTH`); }
+
+    this.updateGnss(dt, sim);
+  }
+
+  updateGnss(dt, sim) {
+    const env = sim.env;
+    this.jam = env.jamFactorAt(this.x, this.y);
+    let g = this.jam > 0.55 ? 'LOST' : env.spoofFactorAt(this.x, this.y) > 0 ? 'SPOOFED' : 'OK';
+    g = this.override('gnss', sim.now) || g;
+    if (g !== this.gnss) { sim.onGnssChange(this, this.gnss, g); this.gnss = g; }
+    const o = this.spoofOffset;
+    if (g === 'SPOOFED') {
+      o.x += env.spoofVec.x * dt; o.y += env.spoofVec.y * dt;
+      const m = Math.hypot(o.x, o.y);
+      if (!this.spoofDetected && m > 60) {
+        this.spoofDetected = true;
+        sim.logger.warn(`${this.id} GNSS plausibility FAILED (Δ=${m.toFixed(0)} m vs. INS/VIO) → GNSS rejected, INS navigation`);
+      }
+    } else {
+      const k = Math.exp(-dt / 25); o.x *= k; o.y *= k;
+      if (Math.hypot(o.x, o.y) < 5) { o.x = o.y = 0; this.spoofDetected = false; }
+    }
+  }
+}
+
+class ThreatEnvironment {
+  constructor() {
+    const z = Geo.toXY(CFG.ZONE.lat, CFG.ZONE.lon);
+    this.zone = { x: z.x, y: z.y, radius: CFG.ZONE.radius, sector: CFG.ZONE.sector };
+    this.jamming = false; this.spoofing = false;
+    this.spoofVec = { x: -5, y: 4 };
+    this.since = { jamming: 0, spoofing: 0 };
+  }
+  jamFactorAt(x, y) {
+    if (!this.jamming) return 0;
+    const d = Math.hypot(x - this.zone.x, y - this.zone.y), R = this.zone.radius;
+    if (d <= R) return 1;
+    if (d >= R * 1.35) return 0;
+    return 1 - (d - R) / (0.35 * R);
+  }
+  spoofFactorAt(x, y) {
+    if (!this.spoofing) return 0;
+    return Math.hypot(x - this.zone.x, y - this.zone.y) <= this.zone.radius * 1.5 ? 1 : 0;
+  }
+  moveZone(x, y) { this.zone.x = x; this.zone.y = y; }
+}
+
+/* =====================================================================
+ * 4. MESH NETWORK — link budget, band fallback, Dijkstra routing,
+ *    route convergence (= measurable recovery time)
+ * ===================================================================== */
+class MeshNetwork {
+  constructor(sim) {
+    this.sim = sim;
+    this.links = []; this.linkMap = new Map(); this.adj = new Map();
+    this.prevKeys = new Set(); this.broken = [];
+    this.routeEdges = new Set(); this.altEdges = new Set();
+    this.external = null; this.externalUntil = 0;
+  }
+  applyExternal(list) {
+    this.external = Array.isArray(list) ? list : (list && list.links) || [];
+    this.externalUntil = this.sim.now + CFG.EXTERNAL_TTL_MS;
+  }
+  makeLink(a, b, band, q, jam = 0) {
+    const env = this.sim.env;
+    let latency, loss, cap;
+    if (band === 'WIFI') {
+      latency = 3 + 22 * Math.pow(1 - q, 1.5) + (env.jamming ? 5 : 0);
+      loss = 0.001 + 0.05 * (1 - q) ** 2 + (env.jamming ? 0.008 : 0) + jam * 0.12;
+      cap = CFG.WIFI_CAP_KBPS * q;
+    } else {
+      latency = 140 + 150 * (1 - q) + 60 * jam;
+      loss = 0.025 + 0.10 * (1 - q) + 0.08 * jam;
+      cap = CFG.LORA_CAP_KBPS;
+    }
+    latency *= rand(0.88, 1.22);
+    return { key: linkKey(a.id, b.id), a: a.id, b: b.id, band, q, latency, loss: clamp(loss, 0, 0.95), cap, load: 0 };
+  }
+
+  compute() {
+    const sim = this.sim, env = sim.env, now = sim.now;
+    const online = sim.drones.filter(d => d.status !== 'OFFLINE');
+    const nodes = [sim.hq, ...online];
+    const links = [];
+    const bandNext = new Map();
+
+    if (this.external && now < this.externalUntil) {
+      for (const l of this.external) {
+        const a = sim.node(l.a), b = sim.node(l.b);
+        if (!a || !b || a.status === 'OFFLINE' || b.status === 'OFFLINE') continue;
+        links.push(this.makeLink(a, b, normBand(l.band || 'WIFI'), clamp(+l.quality || 0.7, 0.05, 1)));
+      }
+      for (const d of online) {
+        const mine = links.filter(l => l.a === d.id || l.b === d.id);
+        bandNext.set(d.id, mine.some(l => l.band === 'WIFI') ? 'WIFI' : mine.length ? 'LORA' : 'NONE');
+      }
+    } else {
+      const jamOf = n => (n.id === 'HQ' ? 0 : n.jam);
+      const forced = n => (n.id === 'HQ' ? null : n.override('band', now));
+      const wifiDeg = new Map();
+      for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
+        const a = nodes[i], b = nodes[j];
+        if (forced(a) === 'LORA' || forced(b) === 'LORA') continue;
+        const jam = Math.max(jamOf(a), jamOf(b));
+        if (jam > 0.5) continue;
+        const d = Geo.dist3(a, b);
+        let q = 1 - Math.pow(d / CFG.WIFI_RANGE, 3);
+        if (q <= 0) continue;
+        q *= (1 - jam * 0.9) * (env.jamming ? 0.93 : 1);
+        if (q < 0.12) continue;
+        links.push(this.makeLink(a, b, 'WIFI', q, jam));
+        wifiDeg.set(a.id, (wifiDeg.get(a.id) || 0) + 1);
+        wifiDeg.set(b.id, (wifiDeg.get(b.id) || 0) + 1);
+      }
+      const loraAdded = new Set();
+      for (const d of online) {
+        const needLora = forced(d) === 'LORA' || d.jam > 0.5 || !wifiDeg.get(d.id);
+        if (!needLora) { bandNext.set(d.id, 'WIFI'); continue; }
+        const cands = nodes.filter(n => n !== d).map(n => ({ n, dd: Geo.dist3(d, n) }))
+          .filter(c => c.dd < CFG.LORA_RANGE).sort((p, q) => p.dd - q.dd).slice(0, 3);
+        bandNext.set(d.id, cands.length ? 'LORA' : 'NONE');
+        for (const c of cands) {
+          const k = linkKey(d.id, c.n.id);
+          if (loraAdded.has(k)) continue;
+          loraAdded.add(k);
+          const q = (1 - Math.pow(c.dd / CFG.LORA_RANGE, 1.6)) * (1 - 0.3 * d.jam);
+          links.push(this.makeLink(d, c.n, 'LORA', clamp(q, 0.05, 1), d.jam));
+        }
+      }
+    }
+
+    for (const d of online) {
+      const nb = bandNext.get(d.id) || 'NONE';
+      if (nb !== d.band) sim.onBandChange(d, d.band, nb);
+      d.band = nb;
+    }
+
+    this.links = links;
+    this.linkMap = new Map(links.map(l => [l.key, l]));
+    this.adj = new Map(nodes.map(n => [n.id, []]));
+    for (const l of links) { this.adj.get(l.a).push({ to: l.b, l }); this.adj.get(l.b).push({ to: l.a, l }); }
+
+    const curKeys = new Set(links.map(l => l.key));
+    for (const k of this.prevKeys) if (!curKeys.has(k)) { const [a, b] = k.split('|'); this.broken.push({ a, b, t: now }); }
+    this.broken = this.broken.filter(b => now - b.t < 2500 && !curKeys.has(linkKey(b.a, b.b)));
+    this.prevKeys = curKeys;
+
+    const prev = this.dijkstra(nodes);
+    this.updateRoutes(online, prev);
+    this.computePathStats(online);
+  }
+
+  edgeCost(l) { return l.latency + l.loss * 400 + (l.band === 'LORA' ? 120 : 0); }
+
+  dijkstra(nodes) {
+    const dist = new Map(nodes.map(n => [n.id, Infinity])), prev = new Map(), done = new Set();
+    dist.set('HQ', 0);
+    for (;;) {
+      let u = null, best = Infinity;
+      for (const [id, dv] of dist) if (!done.has(id) && dv < best) { best = dv; u = id; }
+      if (u === null) break;
+      done.add(u);
+      for (const e of this.adj.get(u) || []) {
+        const nd = best + this.edgeCost(e.l);
+        if (nd < dist.get(e.to)) { dist.set(e.to, nd); prev.set(e.to, u); }
+      }
+    }
+    return prev;
+  }
+  pathFrom(prev, id) {
+    const p = [id]; let c = id, guard = 0;
+    while (c !== 'HQ') { c = prev.get(c); if (c == null || ++guard > 64) return null; p.push(c); }
+    return p;
+  }
+  pathCost(p) {
+    if (!p) return Infinity;
+    let c = 0;
+    for (let i = 0; i < p.length - 1; i++) { const l = this.linkMap.get(linkKey(p[i], p[i + 1])); if (!l) return Infinity; c += this.edgeCost(l); }
+    return c;
+  }
+  brokenHop(p) {
+    for (let i = 0; i < p.length - 1; i++) if (!this.linkMap.has(linkKey(p[i], p[i + 1]))) return `${p[i]}↔${p[i + 1]}`;
+    return '?';
+  }
+  convergenceDelay(p) {
+    const hops = p ? p.length - 1 : 2;
+    const lora = p && p.some((id, i) => i < p.length - 1 && this.linkMap.get(linkKey(id, p[i + 1]))?.band === 'LORA');
+    return 450 + 220 * hops + (lora ? 900 : 0) + rand(0, 450);
+  }
+
+  updateRoutes(online, prev) {
+    const sim = this.sim, now = sim.now, log = sim.logger;
+    for (const d of online) {
+      const best = this.pathFrom(prev, d.id);
+      if (d.routeState === 'OK') {
+        const curCost = this.pathCost(d.route);
+        if (curCost < Infinity) {
+          if (best && best.join() !== d.route.join() && this.pathCost(best) < curCost * 0.72) {
+            d.route = best; d.routeChangedAt = now;
+          }
+          continue;
+        }
+        log.warn(`${d.id} route lost (link ${this.brokenHop(d.route)} down) – mesh re-convergence started`);
+        d.routeState = 'REROUTING'; d.route = null; d.lossStart = now; d.convergeAt = now + this.convergenceDelay(best);
+      }
+      if (d.routeState === 'DOWN') { d.routeState = 'JOINING'; d.lossStart = now; d.convergeAt = now + this.convergenceDelay(best); }
+      if (!best) {
+        if (d.routeState === 'REROUTING' && now >= d.convergeAt) {
+          d.routeState = 'ISOLATED';
+          log.crit(`${d.id} NO ROUTE TO HQ – node isolated, autonomous loiter mode`);
+        }
+        continue;
+      }
+      if (d.routeState === 'ISOLATED') { d.routeState = 'REROUTING'; d.convergeAt = now + this.convergenceDelay(best); continue; }
+      if (now >= d.convergeAt) {
+        const wasJoining = d.routeState === 'JOINING';
+        d.route = best; d.routeState = 'OK'; d.routeChangedAt = now;
+        const via = best.slice(1).join(' → ');
+        if (wasJoining) { if (sim.booted) log.ok(`${d.id} joined mesh via ${via}`); }
+        else {
+          const rt = (now - d.lossStart) / 1000;
+          sim.metrics.addRecovery(rt);
+          log.ok(`${d.id} route healed in ${rt.toFixed(2)} s via ${via}`);
+        }
+      }
+    }
+  }
+
+  computePathStats(online) {
+    const now = this.sim.now;
+    this.routeEdges = new Set(); this.altEdges = new Set();
+    for (const l of this.links) l.load = 0;
+    for (const d of online) {
+      if (d.routeState !== 'OK' || !d.route) continue;
+      const recent = now - d.routeChangedAt < 6000;
+      for (let i = 0; i < d.route.length - 1; i++) {
+        const k = linkKey(d.route[i], d.route[i + 1]);
+        this.routeEdges.add(k); if (recent) this.altEdges.add(k);
+        const l = this.linkMap.get(k); if (l) l.load++;
+      }
+    }
+    for (const d of online) {
+      if (d.routeState !== 'OK' || !d.route) { d.latency = 0; d.delivery = 0; d.pathCap = 0; d.hops = 0; d.linkQ = 0; continue; }
+      let lat = 0, del = 1, cap = Infinity;
+      for (let i = 0; i < d.route.length - 1; i++) {
+        const l = this.linkMap.get(linkKey(d.route[i], d.route[i + 1]));
+        lat += l.latency + 0.8; del *= 1 - l.loss; cap = Math.min(cap, l.cap / Math.max(1, l.load));
+        if (i === 0) d.linkQ = l.q;
+      }
+      d.latency = lat * 2; d.delivery = del; d.pathCap = cap; d.hops = d.route.length - 1;
+    }
+  }
+}
+
+/* =====================================================================
+ * 5. TRAFFIC ENGINE — strict-priority scheduler per path
+ * ===================================================================== */
+const TRAFFIC_CLASSES = [
+  { key: 'c2',        name: 'C2 & EMERGENCY', tag: 'DSCP EF',   rgb: '239,68,68' },
+  { key: 'telemetry', name: 'TELEMETRY',      tag: 'DSCP AF41', rgb: '6,182,212' },
+  { key: 'inter',     name: 'INTER-DRONE',    tag: 'DSCP AF21', rgb: '16,185,129' },
+  { key: 'video',     name: 'VIDEO',          tag: 'DSCP CS1',  rgb: '148,163,184' },
+];
+
+class TrafficEngine {
+  constructor(sim) { this.sim = sim; this.stats = {}; this.policy = 'NOMINAL'; }
+  compute() {
+    const sim = this.sim, env = sim.env;
+    const agg = Object.fromEntries(TRAFFIC_CLASSES.map(c => [c.key, { demand: 0, delivered: 0 }]));
+    for (const d of sim.drones) {
+      if (d.status !== 'ONLINE' || d.routeState === 'JOINING') continue;
+      let avail = d.routeState === 'OK' ? d.pathCap : 0;
+      for (const c of TRAFFIC_CLASSES) {
+        const nominal = CFG.DEMAND_KBPS[c.key];
+        let want = nominal;
+        if (c.key === 'video') {
+          if (d.band !== 'WIFI') want = 0;
+          else if (env.jamming || sim.rth) want = nominal * 0.25;
+        }
+        const alloc = Math.min(want, avail); avail -= alloc;
+        const delivery = c.key === 'c2' ? 1 - (1 - d.delivery) ** 3 : d.delivery; // C2 uses ARQ (3 attempts)
+        agg[c.key].demand += nominal;
+        agg[c.key].delivered += alloc * delivery;
+      }
+    }
+    for (const c of TRAFFIC_CLASSES) {
+      const a = agg[c.key], ratio = a.demand ? a.delivered / a.demand : 0;
+      let status = ratio >= 0.95 ? 'NOMINAL' : ratio >= 0.6 ? 'DEGRADED' : ratio > 0.02 ? 'THROTTLED' : 'OFFLINE';
+      if (c.key === 'video' && (env.jamming || sim.rth) && status !== 'OFFLINE') status = 'THROTTLED';
+      this.stats[c.key] = { ratio, status, kbps: a.delivered, demand: a.demand };
+    }
+    this.policy = sim.rth ? 'EMERGENCY · C2 FIRST' : env.jamming ? 'ANTI-JAM · VIDEO SHED' : 'NOMINAL';
+  }
+}
+
+/* =====================================================================
+ * 6. METRICS ENGINE — reachability, latency, loss, recovery time
+ * ===================================================================== */
+class MetricsEngine {
+  constructor(sim) {
+    this.sim = sim;
+    this.v = { reach: 100, latency: 15, loss: 0.5, recovery: 0 };
+    this.raw = { ...this.v };
+    this.hist = { reach: [], latency: [], loss: [], recovery: [] };
+    this.recoveries = []; this.lastRecovery = null; this.healing = false;
+    this.override = null; this.overrideUntil = 0;
+  }
+  addRecovery(s) { this.recoveries.push(s); if (this.recoveries.length > 30) this.recoveries.shift(); this.lastRecovery = s; }
+  get avgRecovery() { return this.recoveries.length ? this.recoveries.reduce((a, b) => a + b, 0) / this.recoveries.length : 0; }
+  applyOverride(m) { this.override = { ...(this.override || {}), ...m }; this.overrideUntil = this.sim.now + CFG.EXTERNAL_TTL_MS; }
+  get isOverridden() { return this.override && this.sim.now < this.overrideUntil; }
+  compute() {
+    const now = this.sim.now;
+    const act = this.sim.drones.filter(d => d.status === 'ONLINE' && d.routeState !== 'JOINING');
+    const ok = act.filter(d => d.routeState === 'OK');
+    const healing = act.filter(d => d.routeState === 'REROUTING' || d.routeState === 'ISOLATED');
+    const r = this.raw;
+    r.reach = act.length ? (ok.length / act.length) * 100 : 0;
+    r.latency = ok.length ? ok.reduce((s, d) => s + d.latency, 0) / ok.length : 0;
+    r.loss = act.length ? (1 - ok.reduce((s, d) => s + d.delivery, 0) / act.length) * 100 : 100;
+    this.healing = healing.length > 0;
+    r.recovery = this.healing ? Math.max(...healing.map(d => (now - d.lossStart) / 1000)) : (this.lastRecovery ?? 0);
+    if (this.isOverridden) {
+      const o = this.override;
+      if (o.reachability != null) r.reach = +o.reachability;
+      if (o.latency_ms != null) r.latency = +o.latency_ms;
+      if (o.packet_loss != null) r.loss = +o.packet_loss;
+      if (o.recovery_s != null) r.recovery = +o.recovery_s;
+    }
+    for (const k of Object.keys(this.v)) this.v[k] = k === 'recovery' ? r[k] : lerp(this.v[k], r[k], 0.35);
+  }
+  sample() {
+    for (const k of Object.keys(this.hist)) { this.hist[k].push(this.v[k]); if (this.hist[k].length > CFG.HISTORY) this.hist[k].shift(); }
+  }
+}
+
+/* =====================================================================
+ * 7. SIMULATION — state machine owning everything
+ * ===================================================================== */
+class Simulation extends Emitter {
+  constructor() {
+    super();
+    this.logger = new Logger();
+    this.env = new ThreatEnvironment();
+    const hq = Geo.toXY(CFG.HQ.lat, CFG.HQ.lon);
+    this.hq = { id: 'HQ', x: hq.x, y: hq.y, alt: CFG.HQ.alt, status: 'ONLINE', name: CFG.HQ.name };
+    this.drones = FLEET.map((d, i) => new Drone(d, i));
+    this.droneMap = new Map(this.drones.map(d => [d.id, d]));
+    this.net = new MeshNetwork(this);
+    this.traffic = new TrafficEngine(this);
+    this.metrics = new MetricsEngine(this);
+    this.simTime = 0; this.speed = 6; this.now = nowMs(); this.lastNet = 0;
+    this.rth = false; this.booted = false;
+  }
+  node(id) { return id === 'HQ' ? this.hq : this.droneMap.get(id); }
+
+  tick(realDt) {
+    this.now = nowMs();
+    const dt = realDt * this.speed;
+    this.simTime += dt;
+    for (const d of this.drones) d.step(dt, this.simTime, this);
+    if (this.now - this.lastNet >= CFG.NET_TICK_MS) {
+      this.lastNet = this.now;
+      this.net.compute(); this.traffic.compute(); this.metrics.compute();
+      if (!this.booted && this.drones.every(d => d.routeState !== 'JOINING')) {
+        this.booted = true;
+        this.logger.ok(`Mesh converged · ${this.net.links.length} links · ${this.drones.filter(d => d.routeState === 'OK').length}/${this.drones.length} nodes reachable`);
+      }
+      this.emit('net');
+    }
+  }
+
+  /* ---- reactions ---- */
+  onGnssChange(d, from, to) {
+    const L = this.logger;
+    if (to === 'LOST') L.crit(`${d.id} GNSS SATELLITES LOST (0/14 SV, L1 jammed) → INS dead-reckoning`);
+    else if (to === 'SPOOFED') L.warn(`${d.id} GNSS anomaly: uniform C/N0 + clock jump → spoofing suspected`);
+    else if (from === 'LOST') L.ok(`${d.id} GNSS re-acquired (12 SV · HDOP 0.9)`);
+    else if (from === 'SPOOFED') L.ok(`${d.id} left spoofing area – GNSS authenticated (OSNMA OK)`);
+    this.emit('drone', d);
+  }
+  onBandChange(d, from, to) {
+    const L = this.logger;
+    if (to === 'LORA') {
+      L.warn(`${d.id} signal loss on 2.4GHz (RSSI −97 dBm, SNR −4 dB)`);
+      L.net(`${d.id} auto fallback to 868MHz LoRa (SF9 · 125 kHz)`);
+    } else if (to === 'WIFI' && from === 'LORA') L.ok(`${d.id} 2.4GHz mesh link restored – leaving LoRa fallback`);
+    else if (to === 'NONE') L.crit(`${d.id} all radio links lost (2.4 GHz + 868 MHz)`);
+  }
+
+  /* ---- commands (UI, demo script or backend) ---- */
+  command(action, value, origin) { if (origin !== 'backend') this.emit('command', { action, value }); }
+
+  setJamming(on, origin = 'ui') {
+    if (this.env.jamming === on) return;
+    this.env.jamming = on; this.env.since.jamming = this.now;
+    if (on) this.logger.crit(`RF JAMMING DETECTED – ${this.env.zone.sector} · 2.4 GHz / 5.8 GHz / GNSS L1 noise floor +38 dB`);
+    else this.logger.ok('Jamming ceased – spectrum nominal, noise floor −101 dBm');
+    this.command('SET_JAMMING', on, origin); this.emit('env');
+  }
+  setSpoofing(on, origin = 'ui') {
+    if (this.env.spoofing === on) return;
+    this.env.spoofing = on; this.env.since.spoofing = this.now;
+    if (on) {
+      const a = rand(2.0, 2.6);
+      this.env.spoofVec = { x: Math.cos(a) * 7, y: Math.sin(a) * 7 };
+      this.logger.crit(`GNSS SPOOFING injected – ${this.env.zone.sector} · counterfeit L1 C/A signals`);
+    } else this.logger.ok('GNSS spoofing source neutralised');
+    this.command('SET_SPOOFING', on, origin); this.emit('env');
+  }
+  failDrone(d, { reboot = true, reason = 'heartbeat timeout (3×500 ms) · power bus fault' } = {}) {
+    if (d.status === 'OFFLINE') return;
+    d.status = 'OFFLINE'; d.route = null; d.routeState = 'DOWN'; d.band = 'NONE';
+    d.rebootAt = reboot ? this.now + CFG.REBOOT_MS : 0;
+    this.logger.crit(`${d.id} NODE FAILURE – ${reason}`);
+    this.emit('drone', d);
+  }
+  failNodes(arg = 2, origin = 'ui') {
+    let targets;
+    if (Array.isArray(arg)) targets = arg.map(id => this.droneMap.get(id)).filter(Boolean);
+    else {
+      const pool = this.drones.filter(d => d.status === 'ONLINE');
+      targets = [];
+      for (let i = 0; i < Math.min(+arg || 2, pool.length - 1); i++) targets.push(pool.splice(Math.floor(Math.random() * pool.length), 1)[0]);
+    }
+    targets.forEach(d => this.failDrone(d));
+    if (targets.length) this.logger.net(`Mesh: ${targets.length} node(s) withdrawn – recalculating routes (OLSR/BATMAN-style)`);
+    this.command('FORCE_NODE_FAILURE', targets.map(d => d.id), origin); this.emit('env');
+  }
+  rebootDrone(d) {
+    if (d.status !== 'OFFLINE') return;
+    d.status = 'ONLINE'; d.rebootAt = 0; d.routeState = 'DOWN'; d.band = 'NONE';
+    this.logger.info(`${d.id} watchdog reboot complete – radio stack up, joining mesh`);
+    this.emit('drone', d); this.emit('env');
+  }
+  setRTH(on, origin = 'ui') {
+    if (this.rth === on) return;
+    this.rth = on;
+    this.drones.forEach(d => { d.mode = on ? 'RTH' : 'MISSION'; });
+    if (on) this.logger.crit('SAFE-RETURN-HOME engaged – emergency protocol · C2 priority · video shed');
+    else this.logger.ok('RTH released – fleet resuming mission orbits');
+    this.command('SAFE_RETURN_HOME', on, origin); this.emit('env');
+  }
+  reset(origin = 'ui') {
+    this.env.jamming = false; this.env.spoofing = false;
+    const z = Geo.toXY(CFG.ZONE.lat, CFG.ZONE.lon); this.env.moveZone(z.x, z.y);
+    this.rth = false; this.simTime = 0;
+    this.drones.forEach(d => d.reset());
+    this.metrics.recoveries = []; this.metrics.lastRecovery = null;
+    this.booted = false;
+    this.logger.info('Scenario reset – fleet re-initialised');
+    this.command('RESET', true, origin); this.emit('env'); this.emit('fleet');
+  }
+
+  /* ---- backend ingestion ---- */
+  addDrone(p) {
+    const ll = p.lat != null ? { lat: +p.lat, lon: +p.lon } : CFG.ORIGIN;
+    const d = new Drone({ id: p.id, lat: ll.lat, lon: ll.lon, r: 500, v: 10, dir: 1, phase: 0, alt: +p.alt || 100, battery: +p.battery || 100 }, this.drones.length);
+    this.drones.push(d); this.droneMap.set(d.id, d);
+    this.logger.info(`${d.id} registered by backend`);
+    this.emit('fleet');
+    return d;
+  }
+  applyDroneData(payload) {
+    const list = Array.isArray(payload) ? payload : payload && Array.isArray(payload.drones) ? payload.drones : [payload];
+    for (const p of list) {
+      if (!p || !p.id) continue;
+      const d = this.droneMap.get(p.id) || this.addDrone(p);
+      const until = this.now + CFG.EXTERNAL_TTL_MS;
+      let x = d.x, y = d.y;
+      if (p.lat != null && p.lon != null) ({ x, y } = Geo.toXY(+p.lat, +p.lon));
+      d.external = { x, y, alt: p.alt != null ? +p.alt : null, battery: p.battery, until };
+      if (p.battery != null) d.battery = +p.battery;
+      if (p.status) {
+        const s = String(p.status).toUpperCase();
+        if (s === 'OFFLINE') this.failDrone(d, { reboot: false, reason: 'reported OFFLINE by backend' });
+        else if (d.status === 'OFFLINE') this.rebootDrone(d);
+        if (s === 'RTH') d.mode = 'RTH'; else if (s === 'MISSION' || s === 'ONLINE') d.mode = this.rth ? 'RTH' : 'MISSION';
+      }
+      if (p.gnss) d.overrides.gnss = { v: String(p.gnss).toUpperCase(), until };
+      if (p.band) d.overrides.band = { v: normBand(p.band), until };
+    }
+  }
+  applyEvent(e = {}) {
+    const t = String(e.type || e.event || '').toUpperCase(), on = e.active !== false;
+    if (e.lat != null && e.lon != null) { const z = Geo.toXY(+e.lat, +e.lon); this.env.moveZone(z.x, z.y); }
+    if (e.radius_m) this.env.zone.radius = +e.radius_m;
+    switch (t) {
+      case 'JAMMING': this.setJamming(on, 'backend'); break;
+      case 'SPOOFING': case 'GPS_SPOOFING': this.setSpoofing(on, 'backend'); break;
+      case 'NODE_FAILURE': this.failNodes(e.ids || e.count || 2, 'backend'); break;
+      case 'NODE_RESTORE': (e.ids ? e.ids.map(id => this.droneMap.get(id)) : this.drones).filter(Boolean).forEach(d => this.rebootDrone(d)); break;
+      case 'RTH': case 'SAFE_RETURN_HOME': this.setRTH(on, 'backend'); break;
+      case 'RESET': this.reset('backend'); break;
+      case 'ZONE': this.emit('env'); break;
+      default: this.logger.warn(`Unknown backend event: ${t || JSON.stringify(e)}`);
+    }
+  }
+  getState() {
+    return {
+      ts: Date.now(), simTime: this.simTime,
+      env: { jamming: this.env.jamming, spoofing: this.env.spoofing, rth: this.rth, zone: { ...Geo.toLatLon(this.env.zone.x, this.env.zone.y), radius_m: this.env.zone.radius } },
+      metrics: { reachability: this.metrics.v.reach, latency_ms: this.metrics.v.latency, packet_loss: this.metrics.v.loss, recovery_s: this.metrics.v.recovery },
+      traffic: this.traffic.stats,
+      drones: this.drones.map(d => ({ id: d.id, lat: d.lat, lon: d.lon, alt: d.alt, speed: d.speed, battery: d.battery, status: d.status, mode: d.mode, band: d.band, gnss: d.gnss, route: d.route, routeState: d.routeState, latency_ms: d.latency })),
+      links: this.net.links.map(l => ({ a: l.a, b: l.b, band: l.band, quality: +l.q.toFixed(3) })),
+    };
+  }
+}
+
+/* =====================================================================
+ * 8. MAP RENDERER — Canvas 2D, dark-grid Dortmund, FANET mesh
+ * ===================================================================== */
+function rrect(ctx, x, y, w, h, r) {
+  ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath();
+}
+function rgba(hex, a) { const n = parseInt(hex.slice(1), 16); return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`; }
+
+class MapRenderer extends Emitter {
+  constructor(canvas, sim) {
+    super();
+    this.c = canvas; this.ctx = canvas.getContext('2d'); this.sim = sim;
+    this.cam = { x: -1200, y: -200, s: 0.05 }; this.camTarget = null;
+    this.layers = { labels: true, ranges: false, packets: true };
+    this.particles = []; this.drops = [];
+    this.selected = null; this.hover = null; this.mouse = null;
+    const xy = ([lat, lon]) => Geo.toXY(lat, lon);
+    this.base = {
+      boundary: BASEMAP.boundary.map(xy), water: BASEMAP.water.map(l => l.map(xy)),
+      roads: BASEMAP.roads.map(r => ({ ...r, pts: r.pts.map(xy) })),
+      lakes: BASEMAP.lakes.map(l => ({ ...l, ...Geo.toXY(l.lat, l.lon) })),
+      ring: { ...Geo.toXY(BASEMAP.ring.lat, BASEMAP.ring.lon), r: BASEMAP.ring.r },
+      districts: BASEMAP.districts.map(([n, la, lo]) => ({ n, ...Geo.toXY(la, lo) })),
+      landmarks: BASEMAP.landmarks.map(([n, la, lo]) => ({ n, ...Geo.toXY(la, lo) })),
+    };
+    this.resize();
+    new ResizeObserver(() => this.resize()).observe(canvas.parentElement);
+    this.bind();
+    sim.on('net', () => this.spawnPackets());
+  }
+  resize() {
+    const r = this.c.parentElement.getBoundingClientRect();
+    this.w = r.width; this.h = r.height; this.dpr = window.devicePixelRatio || 1;
+    this.c.width = Math.round(r.width * this.dpr); this.c.height = Math.round(r.height * this.dpr);
+    if (!this.fitted && this.w > 0) { this.fit(false); this.fitted = true; }
+  }
+  fit(animate = true) {
+    const t = { x: -1300, y: -300, s: Math.min(this.w / 20500, this.h / 15500) };
+    if (animate) this.camTarget = t; else Object.assign(this.cam, t);
+  }
+  zoom(f) { this.camTarget = { x: this.cam.x, y: this.cam.y, s: clamp(this.cam.s * f, 0.008, 0.6) }; }
+  focus(d) { this.camTarget = { x: d.x, y: d.y, s: Math.max(this.cam.s, 0.075) }; }
+  w2s(x, y) { return [this.w / 2 + (x - this.cam.x) * this.cam.s, this.h / 2 - (y - this.cam.y) * this.cam.s]; }
+  s2w(sx, sy) { return [(sx - this.w / 2) / this.cam.s + this.cam.x, -(sy - this.h / 2) / this.cam.s + this.cam.y]; }
+
+  select(id, focus) {
+    this.selected = id; const d = this.sim.droneMap.get(id);
+    if (d && focus) this.focus(d);
+    this.emit('select', id);
+  }
+  pickDrone(sx, sy) {
+    let best = null, bd = 16;
+    for (const d of this.sim.drones) { const [x, y] = this.w2s(d.x, d.y); const dd = Math.hypot(x - sx, y - sy); if (dd < bd) { bd = dd; best = d; } }
+    return best;
+  }
+  bind() {
+    const c = this.c;
+    let drag = null;
+    c.addEventListener('wheel', e => {
+      e.preventDefault(); this.camTarget = null;
+      const [wx, wy] = this.s2w(e.offsetX, e.offsetY);
+      this.cam.s = clamp(this.cam.s * Math.exp(-e.deltaY * 0.0015), 0.008, 0.6);
+      this.cam.x = wx - (e.offsetX - this.w / 2) / this.cam.s;
+      this.cam.y = wy + (e.offsetY - this.h / 2) / this.cam.s;
+    }, { passive: false });
+    c.addEventListener('pointerdown', e => { drag = { x: e.offsetX, y: e.offsetY, moved: 0 }; c.setPointerCapture(e.pointerId); });
+    c.addEventListener('pointermove', e => {
+      this.mouse = { x: e.offsetX, y: e.offsetY };
+      if (drag) {
+        const dx = e.offsetX - drag.x, dy = e.offsetY - drag.y;
+        drag.moved += Math.abs(dx) + Math.abs(dy);
+        if (drag.moved > 4) { c.classList.add('dragging'); this.camTarget = null; this.cam.x -= dx / this.cam.s; this.cam.y += dy / this.cam.s; }
+        drag.x = e.offsetX; drag.y = e.offsetY;
+      }
+      this.hover = this.pickDrone(e.offsetX, e.offsetY);
+    });
+    c.addEventListener('pointerup', e => {
+      c.classList.remove('dragging');
+      if (drag && drag.moved <= 4) {
+        if (e.shiftKey) {
+          const [wx, wy] = this.s2w(e.offsetX, e.offsetY);
+          this.sim.env.moveZone(wx, wy);
+          const ll = Geo.toLatLon(wx, wy);
+          this.sim.logger.info(`Threat zone relocated → ${ll.lat.toFixed(4)}°N ${ll.lon.toFixed(4)}°E`);
+          this.sim.command('MOVE_ZONE', { lat: ll.lat, lon: ll.lon, radius_m: this.sim.env.zone.radius }, 'ui');
+        } else {
+          const d = this.pickDrone(e.offsetX, e.offsetY);
+          this.select(d ? d.id : null, false);
+        }
+      }
+      drag = null;
+    });
+    c.addEventListener('pointerleave', () => { this.mouse = null; this.hover = null; });
+    c.addEventListener('dblclick', () => this.fit());
+  }
+
+  /* ---------- packets ---------- */
+  spawnPackets() {
+    if (!this.layers.packets) return;
+    const sim = this.sim;
+    for (const d of sim.drones) {
+      if (d.status !== 'ONLINE' || d.routeState !== 'OK' || !d.route) continue;
+      if (Math.random() < 0.5) this.addParticle(d.route, COLORS.cyan);
+      if (Math.random() < 0.12) this.addParticle([...d.route].reverse(), COLORS.red);
+    }
+    const ls = sim.net.links.filter(l => l.a !== 'HQ' && l.b !== 'HQ' && l.band === 'WIFI');
+    if (ls.length && Math.random() < 0.7) { const l = pick(ls); this.addParticle(Math.random() < 0.5 ? [l.a, l.b] : [l.b, l.a], COLORS.green); }
+  }
+  addParticle(path, color) { if (this.particles.length < 320 && path.length > 1) this.particles.push({ path, seg: 0, t: 0, color }); }
+  updateParticles(dt) {
+    const net = this.sim.net;
+    for (let i = this.particles.length - 1; i >= 0; i--) {
+      const p = this.particles[i];
+      const l = net.linkMap.get(linkKey(p.path[p.seg], p.path[p.seg + 1]));
+      if (!l) { this.dropAt(p); this.particles.splice(i, 1); continue; }
+      const dur = l.band === 'LORA' ? 1.8 : 0.32 + l.latency / 180;
+      p.t += dt / dur;
+      if (p.t >= 1) {
+        if (Math.random() < l.loss * 1.5) { this.dropAt(p); this.particles.splice(i, 1); continue; }
+        p.seg++; p.t = 0;
+        if (p.seg >= p.path.length - 1) this.particles.splice(i, 1);
+      }
+    }
+    const now = this.sim.now;
+    this.drops = this.drops.filter(d => now - d.t0 < 700);
+  }
+  particlePos(p) {
+    const a = this.sim.node(p.path[p.seg]), b = this.sim.node(p.path[p.seg + 1]);
+    if (!a || !b) return null;
+    return { x: lerp(a.x, b.x, Math.min(p.t, 1)), y: lerp(a.y, b.y, Math.min(p.t, 1)) };
+  }
+  dropAt(p) { const pos = this.particlePos(p); if (pos) this.drops.push({ ...pos, t0: this.sim.now }); }
+
+  /* ---------- frame ---------- */
+  draw(dt) {
+    const ctx = this.ctx, t = this.sim.now;
+    if (this.camTarget) {
+      const k = 1 - Math.exp(-dt * 6);
+      for (const key of ['x', 'y', 's']) this.cam[key] = lerp(this.cam[key], this.camTarget[key], k);
+      if (Math.abs(this.cam.s - this.camTarget.s) < 1e-5 && Math.abs(this.cam.x - this.camTarget.x) < 2 && Math.abs(this.cam.y - this.camTarget.y) < 2) this.camTarget = null;
+    }
+    ctx.setTransform(this.dpr, 0, 0, this.dpr, 0, 0);
+    ctx.clearRect(0, 0, this.w, this.h);
+    this.drawBackground();
+    this.drawGrid();
+    this.drawBase();
+    this.drawZone(t);
+    if (this.layers.ranges) this.drawRanges();
+    this.drawLinks(t);
+    this.updateParticles(dt);
+    if (this.layers.packets) this.drawParticles(t);
+    this.drawHQ(t);
+    this.drawDrones(t);
+    this.drawScale();
+  }
+
+  drawBackground() {
+    const ctx = this.ctx;
+    const g = ctx.createRadialGradient(this.w * 0.5, this.h * 0.45, 0, this.w * 0.5, this.h * 0.45, Math.max(this.w, this.h) * 0.75);
+    g.addColorStop(0, '#0E141D'); g.addColorStop(1, '#070A0F');
+    ctx.fillStyle = g; ctx.fillRect(0, 0, this.w, this.h);
+  }
+  drawGrid() {
+    const ctx = this.ctx, s = this.cam.s;
+    const step = s * 1000 > 45 ? 1000 : s * 2000 > 45 ? 2000 : 5000;
+    const [x0, y1] = this.s2w(0, 0), [x1, y0] = this.s2w(this.w, this.h);
+    ctx.lineWidth = 1;
+    for (let gx = Math.floor(x0 / step) * step; gx <= x1; gx += step) {
+      const [sx] = this.w2s(gx, 0), major = Math.round(gx) % (step * 5) === 0;
+      ctx.strokeStyle = major ? 'rgba(6,182,212,0.10)' : 'rgba(148,163,184,0.045)';
+      ctx.beginPath(); ctx.moveTo(Math.round(sx) + 0.5, 0); ctx.lineTo(Math.round(sx) + 0.5, this.h); ctx.stroke();
+    }
+    for (let gy = Math.floor(y0 / step) * step; gy <= y1; gy += step) {
+      const [, sy] = this.w2s(0, gy), major = Math.round(gy) % (step * 5) === 0;
+      ctx.strokeStyle = major ? 'rgba(6,182,212,0.10)' : 'rgba(148,163,184,0.045)';
+      ctx.beginPath(); ctx.moveTo(0, Math.round(sy) + 0.5); ctx.lineTo(this.w, Math.round(sy) + 0.5); ctx.stroke();
+    }
+    ctx.fillStyle = 'rgba(148,163,184,0.06)';
+    const ds = step / 2;
+    if (s * ds > 22) for (let gx = Math.floor(x0 / ds) * ds; gx <= x1; gx += ds) for (let gy = Math.floor(y0 / ds) * ds; gy <= y1; gy += ds) {
+      const [sx, sy] = this.w2s(gx, gy); ctx.fillRect(sx - 1, sy - 1, 2, 2);
+    }
+  }
+  pathOf(pts, close) {
+    const ctx = this.ctx; ctx.beginPath();
+    pts.forEach((p, i) => { const [x, y] = this.w2s(p.x, p.y); i ? ctx.lineTo(x, y) : ctx.moveTo(x, y); });
+    if (close) ctx.closePath();
+  }
+  drawBase() {
+    const ctx = this.ctx, b = this.base, s = this.cam.s;
+    this.pathOf(b.boundary, true);
+    ctx.fillStyle = 'rgba(6,182,212,0.028)'; ctx.fill();
+    ctx.save(); ctx.strokeStyle = 'rgba(6,182,212,0.12)'; ctx.lineWidth = 6; ctx.stroke();
+    ctx.setLineDash([5, 6]); ctx.strokeStyle = 'rgba(6,182,212,0.4)'; ctx.lineWidth = 1.1; ctx.stroke(); ctx.restore();
+
+    ctx.lineCap = 'round'; ctx.lineJoin = 'round';
+    for (const w of b.water) { this.pathOf(w); ctx.strokeStyle = 'rgba(56,189,248,0.10)'; ctx.lineWidth = 6; ctx.stroke(); ctx.strokeStyle = 'rgba(56,189,248,0.30)'; ctx.lineWidth = 1.6; ctx.stroke(); }
+    for (const l of b.lakes) {
+      const [x, y] = this.w2s(l.x, l.y);
+      ctx.beginPath(); ctx.ellipse(x, y, Math.max(3, l.rx * s), Math.max(1.5, l.ry * s), -0.08, 0, Math.PI * 2);
+      ctx.fillStyle = 'rgba(56,189,248,0.18)'; ctx.fill(); ctx.strokeStyle = 'rgba(56,189,248,0.45)'; ctx.lineWidth = 1; ctx.stroke();
+    }
+    for (const r of b.roads) {
+      this.pathOf(r.pts);
+      ctx.strokeStyle = r.major ? 'rgba(148,163,184,0.17)' : 'rgba(148,163,184,0.09)'; ctx.lineWidth = r.major ? 2.2 : 1.3; ctx.stroke();
+    }
+    const [rx, ry] = this.w2s(b.ring.x, b.ring.y);
+    ctx.beginPath(); ctx.arc(rx, ry, b.ring.r * s, 0, Math.PI * 2); ctx.strokeStyle = 'rgba(148,163,184,0.16)'; ctx.lineWidth = 1.6; ctx.stroke();
+
+    if (!this.layers.labels) return;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    ctx.font = '600 9px "JetBrains Mono", monospace';
+    for (const r of b.roads) {
+      const p = r.pts[Math.floor(r.pts.length / 2)], [x, y] = this.w2s(p.x, p.y);
+      ctx.fillStyle = 'rgba(10,14,20,0.9)'; rrect(ctx, x - 14, y - 7, 28, 14, 3); ctx.fill();
+      ctx.strokeStyle = r.major ? 'rgba(59,130,246,0.5)' : 'rgba(234,179,8,0.35)'; ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = r.major ? 'rgba(147,197,253,0.75)' : 'rgba(253,224,71,0.6)'; ctx.fillText(r.name, x, y + 0.5);
+    }
+    ctx.font = '600 10px Inter, sans-serif';
+    ctx.fillStyle = 'rgba(148,163,184,0.32)';
+    for (const d of b.districts) { const [x, y] = this.w2s(d.x, d.y); this.spaced(d.n, x, y, 2.2); }
+    ctx.font = '500 8.5px "JetBrains Mono", monospace';
+    for (const l of b.landmarks) {
+      const [x, y] = this.w2s(l.x, l.y);
+      ctx.fillStyle = 'rgba(6,182,212,0.55)';
+      ctx.beginPath(); ctx.moveTo(x, y - 3.5); ctx.lineTo(x + 3.5, y); ctx.lineTo(x, y + 3.5); ctx.lineTo(x - 3.5, y); ctx.fill();
+      ctx.fillStyle = 'rgba(148,163,184,0.5)'; ctx.textAlign = 'left'; ctx.fillText(l.n, x + 7, y + 0.5); ctx.textAlign = 'center';
+    }
+    const lk = b.lakes[0], [lx, ly] = this.w2s(lk.x, lk.y);
+    ctx.fillStyle = 'rgba(56,189,248,0.5)'; ctx.fillText(lk.name, lx, ly + 12);
+  }
+  spaced(text, x, y, sp) {
+    const ctx = this.ctx, ws = [...text].map(ch => ctx.measureText(ch).width);
+    const total = ws.reduce((a, b) => a + b, 0) + sp * (ws.length - 1);
+    let cx = x - total / 2; ctx.textAlign = 'left';
+    [...text].forEach((ch, i) => { ctx.fillText(ch, cx, y); cx += ws[i] + sp; });
+    ctx.textAlign = 'center';
+  }
+
+  drawZone(t) {
+    const ctx = this.ctx, env = this.sim.env, z = env.zone, [sx, sy] = this.w2s(z.x, z.y), R = z.radius * this.cam.s;
+    ctx.save();
+    if (!env.jamming && !env.spoofing) {
+      ctx.setLineDash([3, 7]); ctx.strokeStyle = 'rgba(148,163,184,0.25)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(sx, sy, R, 0, Math.PI * 2); ctx.stroke();
+      if (this.layers.labels) { ctx.font = '600 9px "JetBrains Mono", monospace'; ctx.fillStyle = 'rgba(148,163,184,0.45)'; ctx.textAlign = 'center'; ctx.fillText(`${z.sector} · MONITORED`, sx, sy - R - 9); }
+      ctx.restore(); return;
+    }
+    if (env.spoofing) {
+      const R2 = R * 1.5;
+      const g = ctx.createRadialGradient(sx, sy, R * 0.6, sx, sy, R2);
+      g.addColorStop(0, 'rgba(245,158,11,0)'); g.addColorStop(1, 'rgba(245,158,11,0.10)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, R2, 0, Math.PI * 2); ctx.fill();
+      ctx.setLineDash([10, 8]); ctx.lineDashOffset = -t * 0.012; ctx.strokeStyle = 'rgba(245,158,11,0.75)'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(sx, sy, R2, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      for (let i = 0; i < 4; i++) {
+        const a = t * 0.0004 + i * Math.PI / 2, x = sx + Math.cos(a) * R2, y = sy + Math.sin(a) * R2;
+        ctx.fillStyle = COLORS.orange; ctx.font = '700 10px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.fillText('⌖', x, y + 3);
+      }
+    }
+    if (env.jamming) {
+      const g = ctx.createRadialGradient(sx, sy, 0, sx, sy, R * 1.35);
+      g.addColorStop(0, 'rgba(239,68,68,0.34)'); g.addColorStop(0.72, 'rgba(239,68,68,0.15)'); g.addColorStop(1, 'rgba(239,68,68,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sx, sy, R * 1.35, 0, Math.PI * 2); ctx.fill();
+      ctx.save(); ctx.beginPath(); ctx.arc(sx, sy, R, 0, Math.PI * 2); ctx.clip();
+      ctx.strokeStyle = 'rgba(239,68,68,0.10)'; ctx.lineWidth = 1;
+      const off = (t * 0.01) % 12;
+      for (let k = -R * 2; k < R * 2; k += 12) { ctx.beginPath(); ctx.moveTo(sx + k + off - R, sy - R); ctx.lineTo(sx + k + off + R, sy + R); ctx.stroke(); }
+      const sweep = (t * 0.0012) % (Math.PI * 2);
+      const sg = ctx.createConicGradient ? ctx.createConicGradient(sweep, sx, sy) : null;
+      if (sg) { sg.addColorStop(0, 'rgba(239,68,68,0.35)'); sg.addColorStop(0.12, 'rgba(239,68,68,0)'); sg.addColorStop(1, 'rgba(239,68,68,0)'); ctx.fillStyle = sg; ctx.fillRect(sx - R, sy - R, R * 2, R * 2); }
+      ctx.restore();
+      const pulse = (t % 1800) / 1800;
+      for (let k = 0; k < 2; k++) {
+        const p = (pulse + k * 0.5) % 1;
+        ctx.strokeStyle = `rgba(239,68,68,${(1 - p) * 0.55})`; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(sx, sy, R * (0.25 + p * 1.1), 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.shadowColor = COLORS.red; ctx.shadowBlur = 16; ctx.strokeStyle = 'rgba(239,68,68,0.95)'; ctx.lineWidth = 1.8;
+      ctx.beginPath(); ctx.arc(sx, sy, R, 0, Math.PI * 2); ctx.stroke(); ctx.shadowBlur = 0;
+      ctx.setLineDash([2, 9]); ctx.lineDashOffset = t * 0.02; ctx.strokeStyle = 'rgba(239,68,68,0.5)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(sx, sy, R * 1.35, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = COLORS.red; ctx.beginPath(); ctx.arc(sx, sy, 4, 0, Math.PI * 2); ctx.fill();
+    }
+    const text = env.jamming && env.spoofing ? `ACTIVE JAMMING & SPOOFING DETECTED - ${z.sector}` : env.jamming ? `ACTIVE JAMMING DETECTED - ${z.sector}` : `GNSS SPOOFING DETECTED - ${z.sector}`;
+    const col = env.jamming ? COLORS.red : COLORS.orange;
+    const ly = sy - (env.spoofing ? R * 1.5 : R * 1.35) - 16;
+    ctx.font = '800 10px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    const tw = ctx.measureText(text).width + 34, on = Math.floor(t / 450) % 2 === 0;
+    ctx.fillStyle = rgba(col, on ? 0.32 : 0.18); rrect(ctx, sx - tw / 2, ly - 11, tw, 22, 5); ctx.fill();
+    ctx.strokeStyle = rgba(col, 0.95); ctx.lineWidth = 1.2; ctx.shadowColor = col; ctx.shadowBlur = on ? 14 : 4; ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = '#fff'; ctx.fillText(text, sx + 6, ly + 0.5);
+    ctx.fillStyle = on ? col : rgba(col, 0.3); ctx.fillText('▲', sx - tw / 2 + 12, ly);
+    ctx.restore();
+  }
+
+  drawRanges() {
+    const ctx = this.ctx, s = this.cam.s;
+    ctx.save(); ctx.setLineDash([2, 6]); ctx.lineWidth = 1;
+    for (const d of this.sim.drones) {
+      if (d.status !== 'ONLINE') continue;
+      const [x, y] = this.w2s(d.x, d.y);
+      ctx.strokeStyle = d.band === 'LORA' ? 'rgba(239,68,68,0.2)' : 'rgba(16,185,129,0.14)';
+      ctx.beginPath(); ctx.arc(x, y, (d.band === 'LORA' ? CFG.LORA_RANGE : CFG.WIFI_RANGE * 0.75) * s, 0, Math.PI * 2); ctx.stroke();
+    }
+    const [hx, hy] = this.w2s(this.sim.hq.x, this.sim.hq.y);
+    ctx.strokeStyle = 'rgba(6,182,212,0.25)'; ctx.beginPath(); ctx.arc(hx, hy, CFG.WIFI_RANGE * 0.75 * s, 0, Math.PI * 2); ctx.stroke();
+    ctx.restore();
+  }
+
+  drawLinks(t) {
+    const ctx = this.ctx, net = this.sim.net;
+    ctx.save(); ctx.lineCap = 'round';
+    for (const l of net.links) {
+      const a = this.sim.node(l.a), b = this.sim.node(l.b); if (!a || !b) continue;
+      const [ax, ay] = this.w2s(a.x, a.y), [bx, by] = this.w2s(b.x, b.y);
+      const used = net.routeEdges.has(l.key), alt = net.altEdges.has(l.key);
+      let col, dash, width, alpha;
+      if (l.band === 'LORA') { col = COLORS.red; dash = [0.1, 6]; width = 2.6; alpha = used ? 0.95 : 0.55; }
+      else if (alt) { col = COLORS.orange; dash = [8, 6]; width = 2; alpha = 0.9; }
+      else if (l.q < 0.55) { col = COLORS.orange; dash = [5, 6]; width = 1.4; alpha = used ? 0.85 : 0.45; }
+      else { col = COLORS.green; dash = []; width = used ? 2 : 1.1; alpha = used ? 0.9 : 0.3; }
+      if (used && dash.length === 0) {
+        ctx.strokeStyle = rgba(col, 0.14); ctx.lineWidth = 7; ctx.setLineDash([]);
+        ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      }
+      ctx.strokeStyle = rgba(col, alpha); ctx.lineWidth = width; ctx.setLineDash(dash); ctx.lineDashOffset = -t * (l.band === 'LORA' ? 0.006 : 0.02);
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+    }
+    for (const br of net.broken) {
+      const a = this.sim.node(br.a), b = this.sim.node(br.b); if (!a || !b) continue;
+      const age = (this.sim.now - br.t) / 2500, [ax, ay] = this.w2s(a.x, a.y), [bx, by] = this.w2s(b.x, b.y);
+      ctx.strokeStyle = rgba(COLORS.red, 0.85 * (1 - age)); ctx.lineWidth = 2; ctx.setLineDash([0.1, 5]);
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(bx, by); ctx.stroke();
+      const mx = (ax + bx) / 2, my = (ay + by) / 2; ctx.setLineDash([]); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(mx - 4, my - 4); ctx.lineTo(mx + 4, my + 4); ctx.moveTo(mx + 4, my - 4); ctx.lineTo(mx - 4, my + 4); ctx.stroke();
+    }
+    ctx.restore();
+  }
+
+  drawParticles() {
+    const ctx = this.ctx;
+    for (const p of this.particles) {
+      const pos = this.particlePos(p); if (!pos) continue;
+      const [x, y] = this.w2s(pos.x, pos.y);
+      ctx.fillStyle = rgba(p.color, 0.25); ctx.beginPath(); ctx.arc(x, y, 4.5, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2); ctx.fill();
+    }
+    for (const d of this.drops) {
+      const k = (this.sim.now - d.t0) / 700, [x, y] = this.w2s(d.x, d.y), r = 3 + k * 9;
+      ctx.strokeStyle = rgba(COLORS.red, 1 - k); ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(x - r, y - r); ctx.lineTo(x + r, y + r); ctx.moveTo(x + r, y - r); ctx.lineTo(x - r, y + r); ctx.stroke();
+    }
+  }
+
+  drawHQ(t) {
+    const ctx = this.ctx, hq = this.sim.hq, [x, y] = this.w2s(hq.x, hq.y), rth = this.sim.rth;
+    const col = rth ? COLORS.red : COLORS.cyan;
+    ctx.save();
+    for (let k = 0; k < 3; k++) {
+      const p = ((t / 2400) + k / 3) % 1;
+      ctx.strokeStyle = rgba(col, (1 - p) * 0.45); ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(x, y, 12 + p * (rth ? 70 : 42), 0, Math.PI * 2); ctx.stroke();
+    }
+    ctx.beginPath();
+    for (let i = 0; i < 6; i++) { const a = Math.PI / 6 + i * Math.PI / 3; const px = x + Math.cos(a) * 13, py = y + Math.sin(a) * 13; i ? ctx.lineTo(px, py) : ctx.moveTo(px, py); }
+    ctx.closePath(); ctx.fillStyle = rgba(col, 0.2); ctx.fill();
+    ctx.shadowColor = col; ctx.shadowBlur = 18; ctx.strokeStyle = col; ctx.lineWidth = 2; ctx.stroke(); ctx.shadowBlur = 0;
+    ctx.fillStyle = col; ctx.font = '800 9px "JetBrains Mono", monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('HQ', x, y + 0.5);
+    ctx.font = '700 9px "JetBrains Mono", monospace';
+    const label = rth ? 'RTH BEACON · CONTROL CENTER DORTMUND' : 'CONTROL CENTER DORTMUND';
+    const w = ctx.measureText(label).width + 14;
+    ctx.fillStyle = 'rgba(10,14,20,0.85)'; rrect(ctx, x - w / 2, y + 19, w, 17, 4); ctx.fill();
+    ctx.strokeStyle = rgba(col, 0.55); ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = col; ctx.fillText(label, x, y + 28);
+    ctx.restore();
+  }
+
+  droneColor(d) {
+    if (d.status === 'OFFLINE') return COLORS.grey;
+    if (d.routeState === 'ISOLATED' || d.band === 'NONE') return COLORS.red;
+    if (d.band === 'LORA' || d.routeState === 'REROUTING' || d.gnss !== 'OK') return COLORS.orange;
+    return COLORS.green;
+  }
+  warnings(d) {
+    const w = [];
+    if (d.status === 'OFFLINE') { w.push([d.rebootAt ? `NODE OFFLINE · REBOOT ${Math.max(0, Math.ceil((d.rebootAt - this.sim.now) / 1000))}s` : 'NODE OFFLINE', COLORS.red]); return w; }
+    if (d.band === 'LORA') w.push(['FALLBACK TO SUB-GHZ', COLORS.orange]);
+    if (d.gnss === 'LOST') w.push(['GNSS SATELLITES LOST', COLORS.red]);
+    if (d.gnss === 'SPOOFED') w.push([d.spoofDetected ? 'GPS SPOOFED · INS NAV' : 'GNSS PLAUSIBILITY CHECK…', COLORS.orange]);
+    if (d.routeState === 'REROUTING') w.push(['MESH REROUTING…', COLORS.orange]);
+    if (d.routeState === 'ISOLATED') w.push(['NO ROUTE TO HQ', COLORS.red]);
+    return w;
+  }
+
+  drawDrones(t) {
+    const ctx = this.ctx, blink = Math.floor(t / 380) % 2 === 0;
+    ctx.save();
+    for (const d of this.sim.drones) {
+      const o = d.spoofOffset, om = Math.hypot(o.x, o.y);
+      if (om > 8) {
+        const [gx, gy] = this.w2s(d.x + o.x, d.y + o.y), [x, y] = this.w2s(d.x, d.y);
+        ctx.setLineDash([3, 4]); ctx.strokeStyle = rgba(COLORS.orange, 0.7); ctx.lineWidth = 1.2;
+        ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(gx, gy); ctx.stroke();
+        ctx.beginPath(); ctx.arc(gx, gy, 7, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = rgba(COLORS.orange, 0.8); ctx.font = '600 8px "JetBrains Mono", monospace'; ctx.textAlign = 'left';
+        ctx.fillText(`FAKE FIX ${d.id} Δ${om.toFixed(0)}m`, gx + 10, gy + 3);
+      }
+    }
+    for (const d of this.sim.drones) {
+      const [x, y] = this.w2s(d.x, d.y), col = this.droneColor(d);
+      if (d.id === this.selected) {
+        ctx.save(); ctx.translate(x, y); ctx.rotate(t * 0.0015);
+        ctx.setLineDash([4, 4]); ctx.strokeStyle = COLORS.cyan; ctx.lineWidth = 1.4;
+        ctx.beginPath(); ctx.arc(0, 0, 21, 0, Math.PI * 2); ctx.stroke(); ctx.restore();
+      }
+      if (d.routeState === 'REROUTING' && d.status === 'ONLINE') {
+        ctx.strokeStyle = COLORS.orange; ctx.lineWidth = 2;
+        ctx.beginPath(); ctx.arc(x, y, 15, t * 0.008, t * 0.008 + Math.PI * 1.2); ctx.stroke();
+      }
+      ctx.strokeStyle = rgba(col, d.status === 'OFFLINE' ? 0.3 : 0.4); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y, 12, 0, Math.PI * 2); ctx.stroke();
+      ctx.save(); ctx.translate(x, y);
+      if (d.status === 'OFFLINE') {
+        ctx.strokeStyle = blink ? COLORS.red : COLORS.grey; ctx.lineWidth = 2.2;
+        ctx.beginPath(); ctx.moveTo(-6, -6); ctx.lineTo(6, 6); ctx.moveTo(6, -6); ctx.lineTo(-6, 6); ctx.stroke();
+      } else {
+        ctx.rotate(-d.heading);
+        ctx.shadowColor = col; ctx.shadowBlur = 14; ctx.fillStyle = col;
+        ctx.beginPath(); ctx.moveTo(10, 0); ctx.lineTo(-7, 6.5); ctx.lineTo(-3, 0); ctx.lineTo(-7, -6.5); ctx.closePath(); ctx.fill();
+        ctx.shadowBlur = 0;
+      }
+      ctx.restore();
+      const warns = this.warnings(d);
+      if (warns.length && d.status === 'ONLINE' && blink) {
+        ctx.fillStyle = warns.some(w => w[1] === COLORS.red) ? COLORS.red : COLORS.orange;
+        ctx.beginPath(); ctx.moveTo(x, y - 25); ctx.lineTo(x + 6, y - 15); ctx.lineTo(x - 6, y - 15); ctx.closePath(); ctx.fill();
+        ctx.fillStyle = '#0A0E14'; ctx.font = '900 8px Inter'; ctx.textAlign = 'center'; ctx.fillText('!', x, y - 18);
+      }
+    }
+    for (const d of this.sim.drones) this.drawDroneLabel(d, blink);
+    ctx.restore();
+    this.drawTooltip();
+  }
+
+  drawDroneLabel(d, blink) {
+    const ctx = this.ctx, [x, y] = this.w2s(d.x, d.y), col = this.droneColor(d);
+    const lx = x + 16, ly = y - 12;
+    ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    const sub = d.status === 'OFFLINE' ? 'OFFLINE' : d.band === 'LORA' ? '868M LoRa' : d.band === 'WIFI' ? `2.4G · ${d.hops}H` : '—';
+    ctx.font = '800 10px "JetBrains Mono", monospace'; const w1 = ctx.measureText(d.id).width;
+    ctx.font = '600 8.5px "JetBrains Mono", monospace'; const w2 = ctx.measureText(sub).width;
+    const w = w1 + w2 + 20;
+    ctx.fillStyle = 'rgba(10,14,20,0.82)'; rrect(ctx, lx, ly - 8, w, 16, 4); ctx.fill();
+    ctx.strokeStyle = rgba(col, 0.6); ctx.lineWidth = 1; ctx.stroke();
+    ctx.fillStyle = COLORS.txt; ctx.font = '800 10px "JetBrains Mono", monospace'; ctx.fillText(d.id, lx + 6, ly + 0.5);
+    ctx.fillStyle = col; ctx.font = '600 8.5px "JetBrains Mono", monospace'; ctx.fillText(sub, lx + 12 + w1, ly + 0.5);
+    let cy = ly + 18;
+    for (const [text, c] of this.warnings(d)) {
+      ctx.font = '800 8.5px "JetBrains Mono", monospace';
+      const tw = ctx.measureText(text).width + 22;
+      ctx.fillStyle = rgba(c, blink ? 0.3 : 0.16); rrect(ctx, lx, cy - 8, tw, 16, 4); ctx.fill();
+      ctx.strokeStyle = rgba(c, blink ? 1 : 0.5); ctx.lineWidth = 1; ctx.stroke();
+      ctx.fillStyle = blink ? c : rgba(c, 0.4); ctx.fillText('⚠', lx + 5, cy + 0.5);
+      ctx.fillStyle = '#fff'; ctx.fillText(text, lx + 16, cy + 0.5);
+      cy += 19;
+    }
+  }
+
+  drawTooltip() {
+    const el = document.getElementById('tooltip'), d = this.hover;
+    const coords = document.getElementById('coords');
+    if (this.mouse) {
+      const [wx, wy] = this.s2w(this.mouse.x, this.mouse.y), ll = Geo.toLatLon(wx, wy);
+      coords.innerHTML = `CURSOR ${ll.lat.toFixed(5)}°N ${ll.lon.toFixed(5)}°E<br>ZOOM ${(this.cam.s * 1000).toFixed(1)} px/km`;
+    }
+    if (!d || !this.mouse) { el.classList.add('hidden'); return; }
+    el.classList.remove('hidden');
+    const route = d.route ? d.route.join(' → ') : d.routeState;
+    el.innerHTML = `<div class="tt-h">${d.id} · ${d.mode}</div>
+      POS <b>${d.lat.toFixed(5)}°N ${d.lon.toFixed(5)}°E</b><br>
+      ALT <b>${d.alt.toFixed(0)} m</b> · SPD <b>${(d.speed * 3.6).toFixed(0)} km/h</b> · BAT <b>${d.battery.toFixed(0)}%</b><br>
+      LINK <b>${d.status === 'OFFLINE' ? 'OFFLINE' : bandLabel(d.band)}</b> · q <b>${d.linkQ.toFixed(2)}</b><br>
+      ROUTE <b>${route}</b><br>
+      RTT <b>${d.latency.toFixed(0)} ms</b> · LOSS <b>${((1 - d.delivery) * 100).toFixed(1)}%</b><br>
+      GNSS <b>${d.gnss}${d.spoofDetected ? ' (REJECTED)' : ''}</b> · JAM <b>${(d.jam * 100).toFixed(0)}%</b>`;
+    const x = Math.min(this.mouse.x + 18, this.w - 240), y = Math.min(this.mouse.y + 18, this.h - 150);
+    el.style.left = `${x}px`; el.style.top = `${y}px`;
+  }
+
+  drawScale() {
+    const ctx = this.ctx, s = this.cam.s;
+    const opts = [250, 500, 1000, 2000, 5000, 10000];
+    const len = opts.find(m => m * s > 70) || 10000, px = len * s;
+    const x = this.w - 30 - px, y = this.h - 62;
+    ctx.save(); ctx.strokeStyle = 'rgba(230,237,243,0.6)'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x, y - 4); ctx.lineTo(x, y); ctx.lineTo(x + px, y); ctx.lineTo(x + px, y - 4); ctx.stroke();
+    ctx.fillStyle = 'rgba(230,237,243,0.7)'; ctx.font = '600 9px "JetBrains Mono", monospace'; ctx.textAlign = 'center';
+    ctx.fillText(len >= 1000 ? `${len / 1000} KM` : `${len} M`, x + px / 2, y - 9);
+    const nx = this.w - 30, ny = 108;
+    ctx.translate(nx, ny); ctx.fillStyle = 'rgba(6,182,212,0.8)';
+    ctx.beginPath(); ctx.moveTo(0, -12); ctx.lineTo(5, 4); ctx.lineTo(0, 1); ctx.lineTo(-5, 4); ctx.closePath(); ctx.fill();
+    ctx.fillStyle = 'rgba(230,237,243,0.7)'; ctx.fillText('N', 0, 16);
+    ctx.restore();
+  }
+}
+
+/* =====================================================================
+ * 9. BACKEND BRIDGE — WebSocket / REST polling / global callbacks
+ * ===================================================================== */
+class BackendBridge extends Emitter {
+  constructor(sim) {
+    super();
+    this.sim = sim; this.ws = null; this.state = 'MOCK'; this.retry = 0; this.timer = null; this.pollTimer = null;
+    sim.on('command', c => this.send({ type: 'command', ...c, ts: Date.now() }));
+  }
+  setState(s) { this.state = s; this.emit('state', s); }
+  connect(url) {
+    this.disconnect(true);
+    this.url = url; this.manualClose = false;
+    let ws;
+    try { ws = new WebSocket(url); } catch (e) { this.sim.logger.crit(`WS: invalid URL ${url}`); this.setState('MOCK'); return; }
+    this.ws = ws; this.setState('CONNECTING');
+    this.sim.logger.info(`WS: connecting to ${url} …`);
+    ws.onopen = () => {
+      this.retry = 0; this.setState('LIVE');
+      this.sim.logger.ok(`Backend link established · ${url}`);
+      this.send({ type: 'hello', client: 'dortmund-air-shield', version: CFG.VERSION, fleet: this.sim.drones.map(d => d.id) });
+    };
+    ws.onmessage = ev => this.handle(ev.data);
+    ws.onclose = () => {
+      if (this.ws !== ws) return;
+      this.ws = null;
+      if (this.manualClose) { this.setState('MOCK'); return; }
+      const delay = Math.min(15000, 1000 * 2 ** this.retry++);
+      this.setState('RECONNECTING');
+      this.sim.logger.warn(`WS: backend unreachable – retry in ${(delay / 1000).toFixed(0)} s (mock sim continues)`);
+      this.timer = setTimeout(() => this.connect(url), delay);
+    };
+  }
+  disconnect(silent) {
+    this.manualClose = true; clearTimeout(this.timer);
+    const ws = this.ws; this.ws = null; if (ws) ws.close();
+    if (!silent) { this.setState('MOCK'); this.sim.logger.info('WS: disconnected – mock simulation authoritative'); }
+  }
+  send(obj) { if (this.ws && this.ws.readyState === 1) this.ws.send(JSON.stringify(obj)); }
+  poll(url, intervalMs = 1000) {
+    this.stopPolling();
+    const run = () => fetch(url, { cache: 'no-store' }).then(r => r.json()).then(j => this.handle(j)).catch(e => console.warn('poll failed', e));
+    run(); this.pollTimer = setInterval(run, intervalMs);
+    this.sim.logger.info(`REST: polling ${url} every ${intervalMs} ms`);
+  }
+  stopPolling() { clearInterval(this.pollTimer); this.pollTimer = null; }
+  handle(msg) {
+    if (typeof msg === 'string') { try { msg = JSON.parse(msg); } catch { return; } }
+    if (!msg) return;
+    if (Array.isArray(msg)) { this.sim.applyDroneData(msg); return; }
+    const type = String(msg.type || '').toLowerCase(), data = msg.data ?? msg.payload ?? msg;
+    switch (type) {
+      case 'drones': case 'drone': case 'telemetry': case 'drone_update': this.sim.applyDroneData(data); break;
+      case 'event': this.sim.applyEvent(data); break;
+      case 'metrics': this.sim.metrics.applyOverride(data); break;
+      case 'links': case 'mesh': this.sim.net.applyExternal(data); break;
+      case 'log': this.sim.logger.log(String(data.level || 'INFO').toUpperCase(), data.msg || data.message || ''); break;
+      case 'state_request': this.send({ type: 'state', data: this.sim.getState() }); break;
+      default:
+        if (msg.drones) this.sim.applyDroneData(msg.drones);
+        if (msg.metrics) this.sim.metrics.applyOverride(msg.metrics);
+        if (msg.links) this.sim.net.applyExternal(msg.links);
+        if (msg.events) [].concat(msg.events).forEach(e => this.sim.applyEvent(e));
+        if (msg.id) this.sim.applyDroneData(msg);
+    }
+  }
+}
+
+/* =====================================================================
+ * 10. UI CONTROLLER — side panels
+ * ===================================================================== */
+const GAUGES = [
+  { key: 'reach', label: 'NETWORK REACHABILITY', unit: '%', target: 'TARGET > 95%', fmt: v => v.toFixed(1),
+    frac: v => clamp(v / 100, 0, 1), tFrac: 0.95, rgb: v => (v >= 95 ? '16,185,129' : v >= 80 ? '245,158,11' : '239,68,68'), max: 100 },
+  { key: 'latency', label: 'AVG LATENCY', unit: 'ms · RTT', target: 'TARGET < 50 ms', fmt: v => v.toFixed(0),
+    frac: v => clamp(Math.log10(1 + v) / Math.log10(601), 0, 1), tFrac: Math.log10(51) / Math.log10(601), rgb: v => (v < 50 ? '6,182,212' : v < 150 ? '245,158,11' : '239,68,68'), max: 400 },
+  { key: 'loss', label: 'PACKET LOSS', unit: '%', target: 'TARGET < 2%', fmt: v => v.toFixed(1),
+    frac: v => clamp(Math.sqrt(v / 40), 0, 1), tFrac: Math.sqrt(2 / 40), rgb: v => (v < 2 ? '16,185,129' : v < 8 ? '245,158,11' : '239,68,68'), max: 30 },
+  { key: 'recovery', label: 'RECOVERY TIME', unit: 's · MESH HEAL', target: 'TARGET < 3 s', fmt: v => v.toFixed(2),
+    frac: v => clamp(v / 10, 0, 1), tFrac: 0.3, rgb: v => (v < 3 ? '6,182,212' : v < 6 ? '245,158,11' : '239,68,68'), max: 10 },
+];
+const RING_C = 2 * Math.PI * 40, RING_ARC = RING_C * 0.75;
+
+class UI {
+  constructor(sim, map, bridge) {
+    this.sim = sim; this.map = map; this.bridge = bridge;
+    this.$ = id => document.getElementById(id);
+    this.follow = true; this.demoTimers = [];
+    this.buildFleet(); this.buildGauges(); this.buildTraffic(); this.bindControls();
+    sim.logger.on('line', e => this.appendLog(e));
+    sim.on('env', () => this.updateControls());
+    sim.on('fleet', () => this.buildFleet());
+    map.on('select', id => this.highlightCard(id));
+    bridge.on('state', s => this.updateSource(s));
+    this.updateControls();
+  }
+
+  buildFleet() {
+    const list = this.$('fleetList'); list.innerHTML = ''; this.cards = new Map();
+    for (const d of this.sim.drones) {
+      const el = document.createElement('div');
+      el.className = 'dcard';
+      el.innerHTML = `
+        <div class="dc-top"><div class="dc-id"><span class="dc-led"></span>${d.id}</div><div class="dc-mode"></div><div class="pill"></div></div>
+        <div class="dc-chips"><span class="chip dc-band"></span><span class="chip dc-gnss"></span></div>
+        <div class="dc-grid">
+          <div><span>ALT</span><b class="v-alt">0</b><i>m</i></div>
+          <div><span>SPD</span><b class="v-spd">0</b><i>km/h</i></div>
+          <div><span>HOPS</span><b class="v-hops">0</b></div>
+          <div><span>RTT</span><b class="v-lat">0</b><i>ms</i></div>
+        </div>
+        <div class="dc-bottom"><div class="bat"><div class="bat-fill"></div></div><span class="v-bat">0%</span>
+          <div class="sig"><i></i><i></i><i></i><i></i><i></i></div><span class="v-via"></span></div>`;
+      const q = s => el.querySelector(s);
+      this.cards.set(d.id, { el, mode: q('.dc-mode'), pill: q('.pill'), band: q('.dc-band'), gnss: q('.dc-gnss'), alt: q('.v-alt'), spd: q('.v-spd'), hops: q('.v-hops'), lat: q('.v-lat'), batFill: q('.bat-fill'), bat: q('.v-bat'), sig: [...el.querySelectorAll('.sig i')], via: q('.v-via') });
+      el.addEventListener('click', () => this.map.select(d.id, true));
+      list.appendChild(el);
+    }
+    this.$('fleetCount').textContent = `${this.sim.drones.length} NODES`;
+    this.$('hudSub').textContent = `51.5136°N 7.4653°E · DARK-GRID · ${this.sim.drones.length + 1} NODES`;
+  }
+  highlightCard(id) {
+    for (const [cid, c] of this.cards) c.el.classList.toggle('selected', cid === id);
+    const c = id && this.cards.get(id); if (c) c.el.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }
+
+  buildGauges() {
+    const host = this.$('gauges'); this.gauges = {};
+    for (const g of GAUGES) {
+      const el = document.createElement('div'); el.className = 'gauge';
+      const ta = (135 + 270 * g.tFrac) * Math.PI / 180;
+      const tx1 = 50 + Math.cos(ta) * 33, ty1 = 50 + Math.sin(ta) * 33, tx2 = 50 + Math.cos(ta) * 47, ty2 = 50 + Math.sin(ta) * 47;
+      el.innerHTML = `
+        <div class="g-label">${g.label}</div>
+        <div class="g-ring">
+          <svg viewBox="0 0 100 100">
+            <circle class="g-bg" cx="50" cy="50" r="40" stroke-dasharray="${RING_ARC} ${RING_C}" transform="rotate(135 50 50)"/>
+            <circle class="g-val" cx="50" cy="50" r="40" stroke-dasharray="0 ${RING_C}" transform="rotate(135 50 50)"/>
+            <line class="g-tick" x1="${tx1}" y1="${ty1}" x2="${tx2}" y2="${ty2}"/>
+          </svg>
+          <div class="g-center"><b class="g-num">—</b><span class="g-unit">${g.unit}</span></div>
+        </div>
+        <div class="g-sub"><span>${g.target}</span><span class="g-extra"></span></div>
+        <canvas class="g-spark"></canvas>`;
+      host.appendChild(el);
+      this.gauges[g.key] = { def: g, el, val: el.querySelector('.g-val'), num: el.querySelector('.g-num'), extra: el.querySelector('.g-extra'), spark: el.querySelector('.g-spark') };
+    }
+  }
+  buildTraffic() {
+    const host = this.$('traffic'); this.tc = {};
+    TRAFFIC_CLASSES.forEach((c, i) => {
+      const el = document.createElement('div'); el.className = 'tc-row'; el.style.setProperty('--tc', c.rgb);
+      el.innerHTML = `<div class="tc-rank">${i + 1}</div><div class="tc-main">
+        <div class="tc-head"><span>${c.name}</span><span class="tc-tag">${c.tag}</span><span class="tc-status">—</span></div>
+        <div class="tc-bar"><i style="width:0%"></i></div>
+        <div class="tc-meta"><span class="tc-note"></span><span class="tc-kbps">—</span></div></div>`;
+      host.appendChild(el);
+      this.tc[c.key] = { el, c, status: el.querySelector('.tc-status'), bar: el.querySelector('.tc-bar i'), kbps: el.querySelector('.tc-kbps'), note: el.querySelector('.tc-note') };
+    });
+  }
+
+  bindControls() {
+    const s = this.sim;
+    this.$('btnJam').onclick = () => s.setJamming(!s.env.jamming);
+    this.$('btnSpoof').onclick = () => s.setSpoofing(!s.env.spoofing);
+    this.$('btnFail').onclick = () => s.failNodes(2);
+    this.$('btnRth').onclick = () => s.setRTH(!s.rth);
+    this.$('btnReset').onclick = () => { this.stopDemo(); s.reset(); };
+    this.$('btnDemo').onclick = () => (this.demoTimers.length ? this.stopDemo(true) : this.runDemo());
+    this.$('wsBtn').onclick = () => (this.bridge.state === 'MOCK' ? this.bridge.connect(this.$('wsUrl').value.trim()) : this.bridge.disconnect());
+    this.$('zIn').onclick = () => this.map.zoom(1.4);
+    this.$('zOut').onclick = () => this.map.zoom(1 / 1.4);
+    this.$('zFit').onclick = () => this.map.fit();
+    document.querySelectorAll('[data-layer]').forEach(b => b.onclick = () => { const k = b.dataset.layer; this.map.layers[k] = !this.map.layers[k]; b.classList.toggle('on', this.map.layers[k]); });
+    document.querySelectorAll('#speedSeg button').forEach(b => b.onclick = () => {
+      s.speed = +b.dataset.speed;
+      document.querySelectorAll('#speedSeg button').forEach(x => x.classList.toggle('on', x === b));
+      s.logger.debug(s.speed === 0 ? 'Simulation paused' : `Simulation speed ×${s.speed}`);
+    });
+    this.$('logClear').onclick = () => { this.$('log').innerHTML = ''; };
+    this.$('logFollow').onclick = () => { this.follow = !this.follow; this.$('logFollow').textContent = this.follow ? 'FOLLOW ✓' : 'FOLLOW ✗'; };
+    window.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.metaKey || e.ctrlKey) return;
+      const k = e.key.toLowerCase();
+      if (k === 'j') this.$('btnJam').click(); else if (k === 'g') this.$('btnSpoof').click();
+      else if (k === 'f') this.$('btnFail').click(); else if (k === 'r') this.$('btnRth').click();
+      else if (k === 'escape') this.map.select(null);
+    });
+  }
+
+  runDemo() {
+    const s = this.sim, L = s.logger;
+    this.stopDemo();
+    s.reset();
+    const steps = [
+      [500, () => L.info('DEMO ▶ Phase 1 – nominal FANET operation over Dortmund')],
+      [5000, () => { L.info('DEMO ▶ Phase 2 – hostile RF jammer activates in SECTOR OUEST'); s.setJamming(true); }],
+      [16000, () => { L.info('DEMO ▶ Phase 3 – GNSS spoofer joins the attack'); s.setSpoofing(true); }],
+      [28000, () => { L.info('DEMO ▶ Phase 4 – hardware failure on two relay nodes'); s.failNodes(2); }],
+      [42000, () => { L.info('DEMO ▶ Phase 5 – operator triggers SAFE-RETURN-HOME'); s.setRTH(true); }],
+      [62000, () => { L.info('DEMO ▶ Phase 6 – threat neutralised, mission resumes'); s.setRTH(false); s.setJamming(false); s.setSpoofing(false); }],
+      [70000, () => { L.ok('DEMO ■ scenario complete'); this.stopDemo(); }],
+    ];
+    this.demoTimers = steps.map(([ms, fn]) => setTimeout(fn, ms));
+    this.$('btnDemo').classList.add('running'); this.$('btnDemo').textContent = '■ STOP DEMO SCENARIO';
+  }
+  stopDemo(log) {
+    this.demoTimers.forEach(clearTimeout); this.demoTimers = [];
+    this.$('btnDemo').classList.remove('running'); this.$('btnDemo').textContent = '▶ RUN DEMO SCENARIO';
+    if (log) this.sim.logger.info('DEMO ■ stopped by operator');
+  }
+
+  updateControls() {
+    const s = this.sim, down = s.drones.filter(d => d.status === 'OFFLINE').length;
+    this.$('btnJam').classList.toggle('active', s.env.jamming);
+    this.$('stJam').textContent = s.env.jamming ? `ACTIVE · ${s.env.zone.sector} · 2.4G/GNSS` : 'STANDBY · 2.4 GHz / GNSS L1';
+    this.$('btnSpoof').classList.toggle('active', s.env.spoofing);
+    this.$('stSpoof').textContent = s.env.spoofing ? 'ACTIVE · FAKE L1 C/A SIGNALS' : 'STANDBY · GNSS PLAUSIBILITY';
+    this.$('btnFail').classList.toggle('active', down > 0);
+    this.$('stFail').textContent = `${down} NODE${down === 1 ? '' : 'S'} DOWN · AUTO-REBOOT 20s`;
+    this.$('btnRth').classList.toggle('active', s.rth);
+    this.$('stRth').textContent = s.rth ? 'ENGAGED · FLEET INBOUND HQ' : 'STANDBY · EMERGENCY PROTOCOL';
+    const banner = this.$('threatBanner');
+    banner.classList.toggle('hidden', !s.env.jamming && !s.env.spoofing);
+    banner.classList.toggle('spoof-only', s.env.spoofing && !s.env.jamming);
+    const sec = s.env.zone.sector;
+    this.$('threatText').textContent = s.env.jamming && s.env.spoofing ? `ACTIVE JAMMING & SPOOFING DETECTED - ${sec}` : s.env.jamming ? `ACTIVE JAMMING DETECTED - ${sec}` : `GNSS SPOOFING DETECTED - ${sec}`;
+  }
+  updateSource(state) {
+    const box = this.$('srcBox');
+    box.className = `src ${state === 'LIVE' ? 'live' : state === 'MOCK' ? 'mock' : 'wait'}`;
+    this.$('srcLabel').textContent = { MOCK: 'MOCK SIM', LIVE: 'LIVE · WS', CONNECTING: 'CONNECTING…', RECONNECTING: 'RECONNECTING…' }[state] || state;
+    this.$('wsBtn').textContent = state === 'MOCK' ? 'CONNECT' : 'DISCONNECT';
+  }
+
+  update() {
+    const s = this.sim, now = s.now;
+    let online = 0, fallback = 0, gnssBad = 0, offline = 0;
+    for (const d of s.drones) {
+      const c = this.cards.get(d.id); if (!c) continue;
+      const off = d.status === 'OFFLINE';
+      if (off) offline++; else online++;
+      if (!off && d.band === 'LORA') fallback++;
+      if (!off && d.gnss !== 'OK') gnssBad++;
+      let st = 'st-ok', pill = 'NOMINAL';
+      if (off) { st = 'st-off'; pill = d.rebootAt ? `REBOOT ${Math.max(0, Math.ceil((d.rebootAt - now) / 1000))}s` : 'OFFLINE'; }
+      else if (d.routeState === 'ISOLATED' || d.band === 'NONE') { st = 'st-crit'; pill = 'ISOLATED'; }
+      else if (d.routeState === 'REROUTING') { st = 'st-warn'; pill = 'REROUTING'; }
+      else if (d.routeState === 'JOINING') { st = 'st-warn'; pill = 'JOINING'; }
+      else if (d.gnss === 'LOST') { st = 'st-crit'; pill = 'GNSS LOST'; }
+      else if (d.band === 'LORA') { st = 'st-warn'; pill = 'FALLBACK'; }
+      else if (d.gnss === 'SPOOFED') { st = 'st-warn'; pill = 'SPOOFED'; }
+      c.el.className = `dcard ${st}${d.id === this.map.selected ? ' selected' : ''}`;
+      c.pill.textContent = pill;
+      c.mode.textContent = off ? 'RADIO OFF' : d.mode === 'RTH' ? 'RTH ⌂' : 'MISSION';
+      c.band.textContent = off ? 'RADIO OFF' : bandLabel(d.band);
+      c.band.className = `chip ${off ? '' : d.band === 'WIFI' ? 'g' : d.band === 'LORA' ? 'o' : 'r'}`;
+      c.gnss.textContent = d.gnss === 'OK' ? 'GNSS 3D-FIX' : d.gnss === 'LOST' ? 'GNSS LOST · INS' : d.spoofDetected ? 'GPS Spoofed! · INS' : 'GPS Spoofed!';
+      c.gnss.className = `chip ${d.gnss === 'OK' ? 'c' : d.gnss === 'LOST' ? 'r blink' : 'o blink'}`;
+      c.alt.textContent = d.alt.toFixed(0);
+      c.spd.textContent = (d.speed * 3.6).toFixed(0);
+      c.hops.textContent = d.routeState === 'OK' ? d.hops : '—';
+      c.lat.textContent = d.routeState === 'OK' ? d.latency.toFixed(0) : '—';
+      c.bat.textContent = `${d.battery.toFixed(0)}%`;
+      c.batFill.style.width = `${clamp(d.battery, 0, 100)}%`;
+      const bc = d.battery > 40 ? 'var(--green)' : d.battery > 20 ? 'var(--orange)' : 'var(--red)';
+      c.batFill.style.background = bc; c.batFill.style.boxShadow = `0 0 6px ${bc}`;
+      const bars = off || d.routeState !== 'OK' ? 0 : Math.max(1, Math.ceil(d.linkQ * 5));
+      c.sig.forEach((b, i) => b.classList.toggle('on', i < bars));
+      c.via.textContent = d.route && d.route.length > 1 ? `via ${d.route[1]}` : off ? '' : d.routeState.toLowerCase();
+    }
+    this.$('fcOnline').textContent = online; this.$('fcFallback').textContent = fallback;
+    this.$('fcGnss').textContent = gnssBad; this.$('fcOffline').textContent = offline;
+
+    const m = s.metrics;
+    for (const key of Object.keys(this.gauges)) {
+      const g = this.gauges[key], v = m.v[key], rgb = g.def.rgb(v);
+      g.el.style.setProperty('--gc', rgb);
+      g.val.style.color = `rgb(${rgb})`;
+      g.val.setAttribute('stroke-dasharray', `${(RING_ARC * g.def.frac(v)).toFixed(2)} ${RING_C}`);
+      g.num.textContent = key === 'recovery' && m.lastRecovery == null && !m.healing ? '—' : g.def.fmt(v);
+    }
+    const act = s.drones.filter(d => d.status === 'ONLINE' && d.routeState !== 'JOINING');
+    this.gauges.reach.extra.textContent = `${act.filter(d => d.routeState === 'OK').length}/${act.length} NODES`;
+    const lat = act.filter(d => d.routeState === 'OK').map(d => d.latency);
+    this.gauges.latency.extra.textContent = lat.length ? `P95 ${lat.sort((a, b) => a - b)[Math.floor(lat.length * 0.95)].toFixed(0)}` : '';
+    this.gauges.loss.extra.textContent = `${s.net.links.filter(l => l.band === 'LORA').length} LoRa`;
+    this.gauges.recovery.extra.textContent = m.healing ? 'HEALING…' : `AVG ${m.avgRecovery.toFixed(1)}s · ${m.recoveries.length}×`;
+    this.$('metricSrc').textContent = m.isOverridden ? 'BACKEND' : this.bridge.state === 'LIVE' ? 'HYBRID' : 'MOCK';
+
+    for (const c of TRAFFIC_CLASSES) {
+      const st = s.traffic.stats[c.key]; if (!st) continue;
+      const t = this.tc[c.key], pct = st.ratio * 100;
+      t.bar.style.width = `${pct.toFixed(1)}%`;
+      t.status.textContent = c.key === 'c2' && s.rth ? 'EMERGENCY' : st.status;
+      t.status.style.color = st.status === 'NOMINAL' ? 'var(--green)' : st.status === 'DEGRADED' ? 'var(--orange)' : st.status === 'THROTTLED' ? 'var(--orange)' : 'var(--red)';
+      if (c.key === 'c2' && s.rth) t.status.style.color = 'var(--red)';
+      t.kbps.textContent = st.kbps >= 1000 ? `${(st.kbps / 1000).toFixed(1)} Mbps · ${pct.toFixed(0)}%` : `${st.kbps.toFixed(1)} kbps · ${pct.toFixed(0)}%`;
+      t.note.textContent = c.key === 'c2' ? 'STRICT PRIORITY · PREEMPTS ALL' : c.key === 'telemetry' ? '10 Hz · ALT/POS/BAT' : c.key === 'inter' ? 'COLLISION AVOID · SWARM SYNC' : (s.env.jamming || s.rth) ? 'ABR 480p · SHED ON LoRa' : 'H.265 1080p';
+      t.el.classList.toggle('dim', c.key === 'video' && st.status !== 'NOMINAL');
+    }
+    this.$('qosPolicy').textContent = s.traffic.policy;
+
+    const reach = m.v.reach;
+    const lvl = (s.env.jamming && s.env.spoofing) || reach < 80 ? 'CRITICAL' : s.env.jamming || s.env.spoofing || reach < 95 || offline ? 'ELEVATED' : 'NOMINAL';
+    const th = this.$('hdrThreat'); th.textContent = lvl; th.className = `lvl-${lvl.toLowerCase()}`;
+    this.$('hdrFleet').textContent = `${online}/${s.drones.length}`;
+    this.$('hdrLinks').textContent = `${s.net.links.length} · ${s.net.links.filter(l => l.band === 'LORA').length} LoRa`;
+    this.$('hdrGnss').textContent = `${s.drones.filter(d => d.gnss === 'OK' && d.status === 'ONLINE').length}/${online} OK`;
+    this.$('hdrMission').textContent = fmtDur(s.simTime);
+    this.$('clock').textContent = hhmmss(new Date());
+  }
+
+  drawSparks() {
+    const hist = this.sim.metrics.hist;
+    for (const key of Object.keys(this.gauges)) {
+      const g = this.gauges[key], cv = g.spark, data = hist[key];
+      const w = cv.clientWidth, h = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+      if (cv.width !== Math.round(w * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+      const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, w, h);
+      if (data.length < 2) continue;
+      const max = Math.max(g.def.max, ...data) * 1.05, rgb = g.def.rgb(data[data.length - 1]);
+      const X = i => (i / (CFG.HISTORY - 1)) * w, Y = v => h - 2 - (v / max) * (h - 4);
+      const tv = CFG.TARGETS[key];
+      ctx.setLineDash([2, 3]); ctx.strokeStyle = 'rgba(230,237,243,0.25)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(0, Y(tv)); ctx.lineTo(w, Y(tv)); ctx.stroke(); ctx.setLineDash([]);
+      const off = CFG.HISTORY - data.length;
+      ctx.beginPath(); data.forEach((v, i) => (i ? ctx.lineTo(X(i + off), Y(v)) : ctx.moveTo(X(i + off), Y(v))));
+      ctx.strokeStyle = `rgb(${rgb})`; ctx.lineWidth = 1.4; ctx.stroke();
+      ctx.lineTo(X(data.length - 1 + off), h); ctx.lineTo(X(off), h); ctx.closePath();
+      const gr = ctx.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, `rgba(${rgb},0.3)`); gr.addColorStop(1, `rgba(${rgb},0)`);
+      ctx.fillStyle = gr; ctx.fill();
+    }
+  }
+
+  appendLog(e) {
+    const host = this.$('log');
+    const ln = document.createElement('div'); ln.className = `ln lv-${e.level}`;
+    ln.innerHTML = `<span class="ts">${hhmmss(e.ts)}</span><span class="lv">${e.level}</span><span class="msg"></span>`;
+    ln.querySelector('.msg').textContent = e.msg;
+    host.appendChild(ln);
+    while (host.children.length > 300) host.removeChild(host.firstChild);
+    if (this.follow) host.scrollTop = host.scrollHeight;
+  }
+}
+
+/* =====================================================================
+ * 11. BOOT + PUBLIC API (window.AirShield / window.updateDroneData)
+ * ===================================================================== */
+const sim = new Simulation();
+const map = new MapRenderer(document.getElementById('map'), sim);
+const bridge = new BackendBridge(sim);
+const ui = new UI(sim, map, bridge);
+
+window.AirShield = {
+  sim, map, bridge, CFG,
+  /** Push drone telemetry: object, array, or {drones:[...]}. Fields: id, lat, lon, alt, battery, status, gnss, band */
+  updateDroneData: p => sim.applyDroneData(p),
+  /** Override resilience metrics: {reachability, latency_ms, packet_loss, recovery_s} */
+  updateMetrics: m => sim.metrics.applyOverride(m),
+  /** Override mesh links: [{a:'DR-01', b:'HQ', band:'2.4GHz'|'868MHz', quality:0..1}] */
+  updateLinks: l => sim.net.applyExternal(l),
+  /** Inject event: {type:'JAMMING'|'SPOOFING'|'NODE_FAILURE'|'NODE_RESTORE'|'RTH'|'ZONE'|'RESET', active, lat, lon, radius_m, ids} */
+  injectEvent: e => sim.applyEvent(e),
+  log: (msg, level = 'INFO') => sim.logger.log(level.toUpperCase(), msg),
+  connect: url => bridge.connect(url),
+  disconnect: () => bridge.disconnect(),
+  poll: (url, ms) => bridge.poll(url, ms),
+  stopPolling: () => bridge.stopPolling(),
+  getState: () => sim.getState(),
+  /** Subscribe to operator commands (button clicks) – also forwarded over WS */
+  onCommand: cb => sim.on('command', cb),
+};
+window.updateDroneData = window.AirShield.updateDroneData;
+
+const L = sim.logger;
+L.info(`DORTMUND AIR SHIELD v${CFG.VERSION} – mission control online`);
+L.info(`HQ ${CFG.HQ.name} · ${CFG.HQ.lat.toFixed(4)}°N ${CFG.HQ.lon.toFixed(4)}°E`);
+L.net(`FANET bootstrap: ${sim.drones.length} nodes · primary 2.4 GHz mesh · fallback 868 MHz LoRa`);
+L.debug('Backend hooks ready: window.AirShield.*, window.updateDroneData(), WebSocket, REST polling');
+
+const params = new URLSearchParams(location.search);
+if (params.get('ws')) { document.getElementById('wsUrl').value = params.get('ws'); bridge.connect(params.get('ws')); }
+if (params.get('poll')) bridge.poll(params.get('poll'), +params.get('interval') || 1000);
+if (params.get('demo') === '1') setTimeout(() => ui.runDemo(), 1500);
+
+setInterval(() => {
+  const ok = sim.drones.filter(d => d.status === 'ONLINE' && d.routeState === 'OK');
+  if (!ok.length) return;
+  const d = pick(ok);
+  L.debug(`RX ${d.id} telemetry · ${d.band === 'LORA' ? '868M' : '2.4G'} · ${d.hops} hop${d.hops > 1 ? 's' : ''} · ${d.latency.toFixed(0)} ms`);
+  if (sim.env.jamming && Math.random() < 0.35) L.net(`SPECTRUM ${sim.env.zone.sector}: 2.4 GHz noise floor −63 dBm (+38 dB) · LoRa SNR ${rand(-9, -4).toFixed(1)} dB`);
+}, 3500);
+
+let last = performance.now(), uiAcc = 1, sampleAcc = 0;
+function frame() {
+  const ts = performance.now(), dt = clamp((ts - last) / 1000, 0, 0.1); last = ts;
+  sim.tick(dt);
+  map.draw(dt);
+  uiAcc += dt; if (uiAcc >= 0.25) { uiAcc = 0; ui.update(); }
+  sampleAcc += dt; if (sampleAcc >= 0.5) { sampleAcc = 0; sim.metrics.sample(); ui.drawSparks(); }
+  requestAnimationFrame(frame);
+}
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>
