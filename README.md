@@ -1,175 +1,180 @@
-# Dortmund Air Shield — Off-Grid Air Mission Control
+# Dortmund Air Shield
 
-Simulation dashboard for **DO-DATA-HACKATHON 2026 · Morpheus Logistik · Challenge 02: OFF-GRID AIR**.
+**A hybrid FSOC laser and DECT NR+ mesh, flown over a 3D Dortmund.**
 
-Ten drones fly a mesh over Dortmund and have to keep talking to the control center when someone takes the fast radio and the GPS away. The dashboard is one file, `index.html`, with no build step. A Python backend can drive it over WebSocket, and without a backend the built-in simulation runs the whole mission.
+Ten drones. One control center at the Reinoldikirche. A city that keeps getting in the way. The dashboard is a single file, `index.html`, with no build step. Open it and the mission is already running. A Python backend can take over the telemetry; until it does, the built-in simulation flies the whole thing.
 
-The thing the demo is scoring is **protection**: every 200 ms each drone tries to keep a path to HQ, keep a position it can trust, and spend whatever bandwidth is left on command-and-control first. The buttons along the bottom only start the attack. The mesh answers by itself. A **Protected / Unprotected** switch turns those answers off so the same attack can be shown both ways.
+DO-DATA-HACKATHON 2026 · Morpheus Logistik · Challenge 02: OFF-GRID AIR
 
-![45 second walkthrough: jamming, spoofing and two shot-down drones with protection on, then protection off, then on again](docs/img/demo.gif)
+**Live** · <https://soulnassim.github.io/dortmund-air-shield/>
 
-*Jamming, then spoofing, then two drones shot down, all with protection on. Then protection is switched off and back on in the middle of the attack.*
+---
 
-## The screen
+## The problem
 
-![Dashboard in nominal state: fleet list on the left, Dortmund map with the drone mesh in the middle, scorecard on the right, controls at the bottom](docs/img/01-nominal.png)
+A drone over a European city center goes quiet in three ways, and they stack. The hackathon question is what the fleet does in the minute after that happens.
 
-| Region | What it shows |
-|---|---|
-| Map | Dortmund as a dark grid. Drones are small silver chevrons labelled `01`–`10`. HQ is the ring in the middle. |
-| Fleet, left | One row per drone: status dot, id, mesh IP `10.41.0.x`, band, latency. Click a row to expand altitude, speed, battery, hops and GNSS, and to highlight that drone. |
-| Scorecard, right | Four big numbers plus a sparkline, then four thin bars for traffic priority. |
-| Toast, top | The latest log line. Click it to open the full event log. The pill on the right is the threat level: NOMINAL, ELEVATED, CRITICAL. |
-| Dock, bottom | Protection, then the four injections, then demo and reset. |
+### The building eats the laser
 
-| Click a drone | Click the toast |
-|---|---|
-| ![Drone DR-04 selected: the fleet row expands with altitude, speed, battery, hops and GNSS, and a detail card appears on the map](docs/img/02-drone-detail.png) | ![The system event log drawer opened under the toast, listing timestamped OK, WARN and debug lines](docs/img/11-event-log.png) |
-| The fleet row expands and a card follows the drone on the map | The full event log, with auto-scroll and clear |
+Free-space optical is the fast link: a laser, gigabit-class, a few milliseconds. A laser stops at the first solid object. Dortmund Innenstadt is a canyon. The Dortmunder U-Tower, the Hbf tower, Sparkasse, Ellipson, the RWE block, the Stadthaus, Westfalentower, Ostwall — several of them are taller than a drone cruising at 80–100 m.
 
-Map controls: scroll to zoom, drag to pan, click a drone, click it again to dismiss, **Shift+click** to move the threat zone. Keys: `P` protection · `J` jamming · `G` GPS spoofing · `F` node failure · `R` return home · `Esc` deselect.
+A node behind the U-Tower still has a perfect radio day and a dead optical path to HQ. The beam hits concrete. Video, telemetry and command die on the same face of the building. A mesh that only draws straight lines on a flat map never shows you why.
 
-### How to read the map
+### The jammer eats the radio that survives the building
 
-| You see | It means |
-|---|---|
-| Solid mint line | Healthy 2.4 GHz hop on a route to HQ |
-| Faint mint line | 2.4 GHz hop that exists but is not carrying a route |
-| Dashed amber line | Degraded hop, or a route that was just rebuilt |
-| Dotted red line | 868 MHz LoRa fallback |
-| Silver chevron `07` | Drone, pointing along its heading |
-| Pulsing amber dot | Fallback, spoofed, or rerouting |
-| Pulsing red dot | GNSS lost, isolated, or no radio |
-| Amber ghost with a dashed tether | The fake GNSS fix. The chevron stays on the real track while protection is on |
-| Red disc, west of the city | Jamming zone, Sector Ouest, 2.2 km across |
-| Larger amber ring | Spoofing reach, 1.5× the jam zone |
+The link that can pass a wall is the link a jammer is built to kill. Sector West, centered on the U-Tower, lifts the noise floor on 2.4 GHz, 5.8 GHz and GNSS L1. Inside the circle the laser is already contested and the satellite fix is gone. A fleet with one band leaves the map the moment it crosses that line, still airborne, still on its orbit, unreachable.
 
-## Run
+### The position can be a lie, and the relay can just die
 
-Live demo: <https://soulnassim.github.io/dortmund-air-shield/>
+Spoofing does not cut the radio. It moves the fix, a few metres a second, until the autopilot is flying a place the airframe is not. Separately, a relay can drop: heartbeat timeout, power bus. Every route that used it is gone. The drones on the far side can still see each other and have no way home.
 
-```bash
-python3 -m http.server 8000   # → http://localhost:8000
-```
+The number that matters is whether HQ can still reach every node after all three have happened, and how many seconds that took.
 
-| URL | What you get |
-|---|---|
-| `?demo=1` | 70 s scripted attack, then all-clear |
-| `?protect=0` | start with every automatic defense off |
-| `?protect=0&demo=1` | the scripted attack with no protection — open beside `?demo=1` |
-| `?ws=ws://localhost:8765` | connect to the Python backend on load |
-| `?poll=http://localhost:5000/state&interval=1000` | poll a REST endpoint instead |
+---
 
-## What protection does
+## What the mesh does
 
-Protection is on when you open the page. The shield pill in the dock reads **Protected** and glows mint. Press it, or `P`, and it reads **Unprotected** and glows red. The same four defenses switch together.
+Every 200 ms, each drone tries three things, in this order.
+
+1. **Keep a path to HQ.**
+2. **Keep a position it can trust.**
+3. **Spend the pipe on command-and-control first.**
+
+The buttons along the bottom only start the attack. The mesh answers by itself. **Protected / Unprotected** (`P`) turns those answers off, so the same attack can be shown both ways.
 
 ```mermaid
 flowchart TD
   tick["Every 200 ms, per drone"] --> radio["1 · Keep a path to HQ"]
-  radio --> pos["2 · Keep a position you can trust"]
-  pos --> pipe["3 · Spend the pipe on C2 first"]
-  radio --> seen["Map, fleet row, Recovery Time"]
+  radio --> pos["2 · Trust the fix only if it agrees with INS"]
+  pos --> pipe["3 · Fill the pipe: C2, then telemetry, then everyone else"]
+  radio --> seen["Map beams, fleet row, Recovery Time"]
   pos --> seen2["Ghost fix, GNSS badge"]
   pipe --> seen3["QoS bars, policy label"]
 ```
 
-| Defense | Protected | Unprotected |
+| | Protected | Unprotected |
 |---|---|---|
-| Radio | Jammed drone drops 2.4 GHz and opens 868 MHz LoRa | Jammed drone keeps asking for 2.4 GHz and falls off |
-| Position | GNSS is rejected once it disagrees with INS by 60 m. The drone stays on its real track | The autopilot trusts the fake fix and flies off course |
-| Routing | A broken route is rebuilt around the failure. A group cut off from HQ gets a LoRa bridge | The drone waits forever for the original route to come back |
-| Traffic | C2, then telemetry, then inter-drone, then video. C2 is sent three times. Video is shed under attack | Every class shares the pipe in proportion. Video competes with C2. No retries |
+| Line of sight | A blocked laser becomes a DECT NR+ hop through the building | The laser stops on the facade. Nothing replaces it |
+| Jamming | The node leaves FSOC and stays on the DECT mesh | The node keeps asking for a beam that is gone |
+| Position | GNSS is rejected once it disagrees with INS by 60 m. The airframe stays on the real track | The autopilot flies the fake fix |
+| Routing | A broken route is rebuilt. A group cut off from HQ gets a DECT bridge | The drone waits for the original hop to come back |
+| Traffic | C2, then telemetry, then inter-drone, then video. C2 is sent three times. Video is shed under attack | Every class shares the pipe. Video competes with C2 |
 
-Turning protection back on in the middle of an attack makes the mesh build the missing routes. In a test that took a few seconds and brought reachability from 50 % back to 99.8 %.
+---
 
-## The two radios
+## The visualisation
 
-LoRa here is a second radio **inside the simulation**, not a hardware modem and not something the Python backend speaks. The backend sends positions and events. The dashboard decides the band.
+The city is the interface. MapLibre draws Dortmund at a 60° pitch, bearing −18°, centered on `51.5136° N, 7.4653° E`. OpenStreetMap buildings extrude from real heights. Eight landmark volumes — the U-Tower among them — are also drawn as the exact blocks the line-of-sight raycast uses, so the thing that breaks the laser is the thing you are looking at.
 
-| | 2.4 GHz mesh | 868 MHz LoRa |
+Drones sit at their real altitude, with a drop-line down to a shadow on the street. HQ is the optical mast over the Reinoldikirche.
+
+![Desktop mission control: 3D Dortmund at 60 degrees, green FSOC beams, amber DECT fallback through the U-Tower, fleet on the left, resilience scorecard on the right](docs/img/desktop-3d-los.png)
+
+*Nominal hybrid mesh. Green beams are clear line of sight. Amber dashes are DECT NR+ where a building already ate the laser. The fleet list and the scorecard float over the city.*
+
+| Region | What it shows |
+|---|---|
+| Map | Pitched Dortmund. Drones are quadcopters labelled with id and altitude. HQ is the ring on the mast. |
+| Fleet, left | One row per drone: status dot, id, mesh IP `10.41.0.x`, band, latency. Click a row to expand altitude, speed, battery, hops, 3D line of sight and GNSS, and to pin that drone. |
+| Scorecard, right | Reachability, latency, packet loss, recovery time, each with a sparkline. Under them, four traffic bars. |
+| Toast, top | The latest log line. Click it for the full event log. The pill is the threat level: NOMINAL, ELEVATED, CRITICAL. |
+| Dock, bottom | Protection, the four injections, demo, reset, simulation speed. |
+
+Scroll to zoom. Drag to pan. Right-drag or Ctrl-drag to orbit and change pitch. `3D` snaps between 60° and a shallower view. `⌖` flies back to the Innenstadt.
+
+Click a drone, click it again to dismiss, **Shift+click** to move the threat zone. Keys: `P` protection · `J` jamming · `G` GPS spoofing · `F` node failure · `R` return home · `Esc` deselect.
+
+On a narrow screen the same panels collapse: fleet becomes a chip strip, the scorecard becomes a sheet, the dock scrolls sideways. The map stays full-bleed.
+
+### How to read the air
+
+| You see | It means |
+|---|---|
+| Solid green beam | FSOC laser on a clear 3D line of sight |
+| Green stub ending in a red ✕ | The laser reached a building face and stopped. The label on the block is the occluder |
+| Dashed amber line through a building | DECT NR+ fallback. The path is allowed to be non-line-of-sight |
+| `NLOS · DECT NR+` next to a drone | That node's route home is on the fallback radio |
+| Amber wireframe on the U-Tower | The landmark volume used by the raycast, drawn so the blocker is obvious |
+| Pulsing amber dot | Fallback, spoofed fix, or a route still rebuilding |
+| Pulsing red dot | GNSS lost, isolated, or no radio at all |
+| Amber ghost on a dashed tether | The fake GNSS fix. The airframe stays on the real track while protection is on |
+| Red disc, Sector West | Jamming, centered on the U-Tower |
+| Wider amber ring | Spoofing reach, 1.5× the jam zone |
+
+---
+
+## The two links
+
+DECT NR+ here is the second radio **inside the simulation**. It is not a hardware modem and the Python backend does not speak it. The backend sends positions and events. The dashboard decides the band, by raycasting every candidate hop against the building volumes.
+
+| | FSOC laser | DECT NR+ 1.9 GHz |
 |---|---|---|
-| Role | Primary | Automatic fallback |
-| Reach | 4 km, quality `1 − (d / 4 km)³` | 9 km |
-| Capacity | up to 54 Mbps, scaled by link quality | 5.5 kbps |
-| Latency | a few milliseconds | ~140–300 ms per hop |
-| Carries video | yes | no — video is dropped |
-| On the map | mint | dotted red |
+| Role | Primary, when the 3D path is clear | Automatic fallback through buildings, jamming and partitions |
+| Needs line of sight | yes — the beam dies on the first block it hits | no — the hop is drawn through the block |
+| Reach | 2.8 km | 4.5 km |
+| Capacity | up to 1 Gbps, scaled by link quality | 4.8 Mbps |
+| Latency | a few milliseconds | tens of milliseconds, higher inside the jam |
+| Carries full video | yes | video is shed; C2, telemetry and inter-drone still fit |
+| On the map | solid green | dashed amber |
 
 ```mermaid
 flowchart TD
-  A["Drone is online"] --> B{"A 2.4 GHz neighbor exists and jam is under half strength?"}
-  B -->|yes| W["Stay on 2.4 GHz"]
+  A["Drone is online"] --> B{"Clear 3D line of sight to a neighbor, inside 2.8 km, jam under half strength?"}
+  B -->|yes| W["Lock the FSOC laser"]
   B -->|no| P{"Protection on?"}
-  P -->|yes| L["Open up to 3 LoRa links to the nearest nodes inside 9 km"]
-  P -->|no| N["No link. The drone falls off the network"]
+  P -->|yes| L["Open DECT NR+ through the building, up to 3 neighbors inside 4.5 km"]
+  P -->|no| N["No link. The drone is still flying and off the network"]
   W --> I{"Its group still reaches HQ?"}
   I -->|yes| R["Dijkstra picks the cheapest route to HQ"]
-  I -->|"no, protection on"| G["The group member closest to the rest opens a LoRa bridge"]
+  I -->|"no, and protection is on"| G["The group member closest to the rest opens a DECT bridge"]
   G --> R
   L --> R
 ```
 
-Routing cost is `latency + packet-loss × 400`, plus 120 extra on every LoRa hop. A healthy 2.4 GHz path wins whenever it still reaches HQ. LoRa is taken only when it is the path that still works. A route already in use is kept until a new one is clearly better (under 72 % of the current cost), so the mesh does not flap.
+Routing cost is latency plus packet loss weighted hard, with an extra penalty on every DECT hop. A clear laser wins whenever it still reaches HQ. DECT is taken when it is the path that still works. A route already in use is kept until a new one is clearly cheaper, so the mesh does not flap every time a rotor crosses a roofline.
 
-## The four injections
+---
+
+## Four ways the city fights back
 
 ### Jamming — `J`
 
-A transmitter in **Sector Ouest** (west Dortmund, 2.2 km radius) wipes 2.4 GHz and the GNSS L1 signal. Strength is full inside the circle and fades to nothing at 1.35× the radius. DR-07 and DR-10 fly through it on their normal orbits.
-
-![Jamming with protection on: the red jam disc over Sector Ouest, dotted red LoRa links from DR-03, DR-07, DR-08 and DR-10, reachability 100 %, video throttled to 15 %](docs/img/03-jamming-protected.png)
-
-*Protected. Every drone in or near the zone is on 868 MHz (dotted red lines), reachability holds at 100 %, latency rises to about 250 ms, and video is shed to 15 % so C2 keeps 100 %.*
+A transmitter in **Sector West · U-Tower** (620 m, full strength inside, gone at 1.35×) takes 2.4 / 5.8 GHz and GNSS L1. Drones whose orbits cross the circle lose the laser and the satellite fix.
 
 | | Protected | Unprotected |
 |---|---|---|
-| Radio | Hops inside the zone turn dotted red. The fleet row reads `868 MHz` | The lines vanish. The row reads `Isolated` and latency becomes a dash |
-| GNSS | Fix marked lost. The drone navigates on inertial dead-reckoning | Same loss of fix, and no second radio to report it on |
-| Video | Cut to a quarter on 2.4 GHz, dropped entirely on LoRa. Policy label: `ANTI-JAM · VIDEO SHED` | Video keeps asking for its full share of a pipe that is already gone |
-| Scorecard | Reachability stays high. Latency and loss go up, because the surviving path is slow | Reachability drops by about 10 % per drone that loses its links |
+| Radio | The hop turns dashed amber. The row reads `NLOS - DECT Fallback` | The lines vanish. The row reads `Isolated` |
+| GNSS | Fix marked lost. Navigation continues on inertial dead-reckoning | Same loss of fix, and no second radio to report it on |
+| Video | Shed so C2 stays full. Policy label moves to anti-jam | Video keeps asking for a pipe that is already gone |
+| Scorecard | Reachability holds. Latency and loss rise, because the surviving path is the slower one | Reachability drops by about one tenth per drone that loses its links |
 
 ### GPS spoofing — `G`
 
-Does not cut the radio. Every drone inside 1.5× the zone radius is fed a fake fix that drifts at about 7 m/s. The cheat is drawn as an amber ghost tethered to the chevron.
-
-| Protected | Unprotected |
-|---|---|
-| ![Spoofing with protection on: amber spoofing ring, small amber ghost dots next to DR-03, DR-07 and DR-10 that stay on their orbits](docs/img/04-spoofing-protected.png) | ![Spoofing with protection off: the same ring, drones now steering after their ghost fixes, policy label UNPROTECTED BEST EFFORT](docs/img/05-spoofing-unprotected.png) |
-| The ghosts drift away. The chevrons keep flying the real orbit | The autopilot follows the ghost, so the drones are pulled off their orbits |
+The radio stays up. Every drone inside 1.5× the zone is fed a counterfeit L1 fix that drifts at about 7 m/s. The cheat is an amber ghost tethered to the airframe.
 
 | | Protected | Unprotected |
 |---|---|---|
 | Under 60 m | Badge says spoofed. The drone still flies its real orbit | The autopilot is already steering toward the fake fix |
-| Past 60 m | Plausibility check against INS fails. GNSS is rejected. The chevron stays on the real track | The drone leaves its orbit. In the comparison run the worst drift was **122 m** and still growing |
+| Past 60 m | The fix disagrees with INS and is rejected. The airframe stays on the real track | The drone leaves its orbit and the drift keeps growing |
 | After you turn it off | The offset decays and the fix is trusted again | The drone has to fly back to the orbit it left |
 
 ### Node failure — `F`
 
-Two random drones die: heartbeat timeout, power-bus fault. They stop, descend, and reboot themselves after 20 s. This is a different event from falling off the network — the node is actually offline, not just unreachable.
+Two random drones die: heartbeat timeout, power bus. They stop, descend, and reboot themselves after 20 s. This is a different event from falling off the network. The node is actually offline.
 
-Everyone who was routing through them loses that hop. Protected, Dijkstra installs a new route. The wait is about **450 ms + 220 ms per hop**, plus **900 ms** when the new path uses LoRa, plus up to 450 ms of jitter. That measured wait is the **Recovery Time** number. Unprotected, no new route is searched. Those drones stay broken until the dead relay finishes rebooting and the original hop exists again.
+Everyone who was routing through them loses that hop. Protected, Dijkstra installs a new route. The wait is about **450 ms plus 220 ms per hop**, plus **900 ms** when the new path uses DECT, plus a little jitter. That measured wait is the **Recovery Time** number. Unprotected, no new route is searched. Those drones stay broken until the dead relay finishes rebooting.
 
-Losing DR-02 and DR-05 cuts the west group (DR-03, DR-07, DR-10) off from HQ completely. Each of them still has 2.4 GHz neighbours, so none of them is "jammed", but the group as a whole has no way home. Protection detects that partition and makes the group member closest to the rest of the network (here DR-03) open a LoRa bridge. The others route through it over 2.4 GHz.
-
-| 0.7 s after the failure | 8 s later |
-|---|---|
-| ![Right after node failure: DR-02 and DR-05 offline, DR-03, DR-07 and DR-10 rerouting with no path, reachability around 69 %](docs/img/06-node-failure-rerouting.png) | ![Healed: DR-03 bridges to HQ, DR-01 and DR-06 over dotted red LoRa links, DR-07 and DR-10 route through DR-03, reachability back near 98 %](docs/img/07-node-failure-healed.png) |
-| Two relays down. The west group is rerouting and reachability drops | DR-03 opened 868 MHz to HQ. The whole group is back, with recovery time measured at about 2.5 s |
+If a whole group still meshes locally and has lost every path to HQ, protection picks the member closest to the rest of the network and opens a DECT bridge. The others ride that bridge home.
 
 ### Return home — `R`
 
-The one response that waits for the operator. The mesh will not fly the fleet home by itself. Pressing it pulls every drone toward HQ, sheds video, and marks C2 as emergency (`EMERGENCY · C2 FIRST`). Press again and the fleet returns to its orbits.
+The one response that waits for the operator. The mesh will not fly the fleet home by itself. Pressing it pulls every drone toward HQ, sheds video, and marks C2 as emergency. Press again and the fleet returns to its orbits.
 
-![Return home under jamming: all drones bunched around HQ with dense mesh links, the policy label reads EMERGENCY C2 FIRST](docs/img/10-return-home.png)
+---
 
-## When a drone falls off the network
+## When a drone falls off
 
-Falling off means the drone is still airborne and still flying, and it has no usable path to HQ. Command-and-control, telemetry, inter-drone traffic and video from that drone all deliver nothing.
-
-![Unprotected attack: DR-03 and DR-07 with GNSS lost, DR-08, DR-09 and DR-10 isolated as pulsing red dots without links, reachability 50 %, packet loss 51 %](docs/img/09-attack-unprotected.png)
-
-*Unprotected attack. The pulsing red dots without lines are drones that are still flying and have no path to HQ.*
+Falling off means the drone is still airborne and still flying, and it has no usable path to HQ. Command, telemetry, inter-drone traffic and video from that drone all deliver nothing.
 
 ```mermaid
 stateDiagram-v2
@@ -185,28 +190,32 @@ stateDiagram-v2
 
 What you see, in order:
 
-1. The 2.4 GHz lines disappear. With protection off, no red LoRa lines replace them. The log says all radios are lost.
-2. For about a second the drone is **rerouting**, route empty, latency a dash.
-3. The wait expires and the drone is **isolated**. A pulsing red dot replaces its links. The log calls this autonomous loiter. The flight code keeps the mission orbit — the drone does not stop and hover. With spoofing on and protection off, it keeps steering toward the fake fix and drifts further.
-4. It still counts as online, so the fleet header does not move it to "Off". It counts as unreachable, so reachability falls and packet loss jumps. Its traffic is booked as demand and delivered as zero.
-5. Average latency can look *healthier* after the drop. Only drones that still have a route are included in that average. Read reachability, not latency, when drones have gone isolated.
+1. The green beams disappear. With protection off, no amber DECT lines replace them. The log says the optical and DECT links are gone.
+2. For about a second the drone is **rerouting**. Route empty, latency a dash.
+3. The wait expires and the drone is **isolated**. A pulsing red dot replaces its links. The flight code keeps the mission orbit. With spoofing on and protection off, it keeps steering toward the fake fix.
+4. It still counts as online, so the fleet header does not move it to Off. It counts as unreachable, so reachability falls and packet loss jumps.
+5. Average latency can look healthier after the drop. Only drones that still have a route are in that average. Read reachability when nodes have gone isolated.
 
-It comes back when a path to HQ exists again. Protected, that is the moment a LoRa or 2.4 GHz route appears, and the heal time is recorded. Unprotected, it happens only when the original links return — jamming turned off, or the failed relay rebooted. Switching the shield pill back to Protected during the attack pulls isolated drones in within a few seconds.
+It comes back when a path to HQ exists again. Protected, that is the moment a DECT or FSOC route appears, and the heal time is recorded. Unprotected, it happens when the original links return: jamming off, or the failed relay rebooted. Switching the shield back to Protected during the attack pulls isolated drones in within a few seconds.
 
-## How to read the four numbers
+---
 
-| Number | Nominal | What moves it |
+## The four numbers
+
+| Number | Target | What moves it |
 |---|---|---|
-| Reachability | target > 95 % | Share of online drones that currently have a route to HQ. One isolated drone ≈ −10 % |
-| Avg latency | target < 50 ms | Round trip of the drones that still have a route. LoRa pushes this into the hundreds of ms. Isolated drones are left out |
-| Packet loss | target < 2 % | Traffic that does not arrive. Isolated drones count as a total loss |
-| Recovery time | target < 3 s | Seconds the mesh took to install a new route after one broke. While a heal is in progress it shows the wait so far |
+| Reachability | > 95 % | Share of online drones that currently have a route to HQ. One isolated drone is about −10 % |
+| Avg latency | < 50 ms | Round trip of the drones that still have a route. DECT pushes this up. Isolated drones are left out |
+| Packet loss | < 2 % | Traffic that does not arrive. An isolated drone counts as a total loss |
+| Recovery time | < 3 s | Seconds the mesh took to install a new route after one broke. During a heal it shows the wait so far |
 
-White numbers are inside the target. Amber, then red, means the target has been crossed.
+White is inside the target. Amber, then red, means the target has been crossed. The small label under each number says whether the figure is from the live simulation, a WebSocket feed, or a metric override.
 
-## Traffic priorities
+---
 
-Each drone's path is filled in strict order. C2 is about 1.2 kbps and is retried three times, so it stays near 100 % on a lossy link. Telemetry is about 3 kbps. Inter-drone is about 8 kbps. Video wants 2.5 Mbps.
+## Traffic, in order
+
+Each drone's path is filled strictly. C2 is about 1.2 kbps and is retried three times, so it stays near full on a lossy hop. Telemetry is about 3 kbps. Inter-drone is about 12 kbps. Video wants 3.5 Mbps.
 
 ```mermaid
 flowchart LR
@@ -216,39 +225,43 @@ flowchart LR
   inter --> vid["4 · Video, only with what is left"]
 ```
 
-On LoRa the pipe is 5.5 kbps, so video is dropped and the first three still fit. During jamming or return-home, video that is still on 2.4 GHz is cut to a quarter. Unprotected, the order is removed: all four classes take a proportional share, video included, and C2 gets no retries.
+On DECT the pipe is 4.8 Mbps, so video is the first thing shed and the first three still fit. During jamming or return-home, video that is still on the laser is cut back on purpose. Unprotected, the order is removed: all four classes take a proportional share, video included, and C2 gets no retries.
 
-## The same attack, both ways
+---
 
-Jamming, spoofing, and failure of DR-02 and DR-05 together, read about 9 s after the failures:
+## Seventy seconds
 
-![Side by side, same attack: protected on the left with reachability 100 % and LoRa links into the jam zone, unprotected on the right with reachability 50 % and four drones cut off](docs/img/compare-protected-vs-unprotected.png)
-
-| | Protected | Unprotected |
-|---|---|---|
-| Reachability | 100 % | 50 % — four drones isolated |
-| Avg latency | 262 ms, the LoRa paths | 41 ms, only the survivors |
-| Packet loss | 7.0 % | 51.1 % |
-| Recovery time | 2.5 s | 16 s and still waiting |
-| C2 delivered | 100 % | 49 % |
-| Video delivered | 15 %, shed on purpose | 49 %, competing with C2 |
-| Furthest drone off its real track | 0 m | 122 m |
-
-## The 70 second demo
-
-`?demo=1` runs this on its own. Add `?protect=0` for the same script with the defenses off.
+`?demo=1` runs the attack on its own. Add `?protect=0` for the same script with the defenses off.
 
 | Time | What happens |
 |---|---|
-| 0.5 s | Nominal mesh over Dortmund |
-| 5 s | Jammer on in Sector Ouest |
+| 0.5 s | Hybrid mesh over 3D Dortmund, lasers where the sky is clear |
+| 5 s | Jammer on in Sector West, on the U-Tower |
 | 16 s | Spoofer joins the jammer |
 | 28 s | Two relay drones fail |
 | 42 s | Operator sends return home |
-| 62 s | Threat cleared, fleet back on mission |
+| 62 s | Threat cleared, lasers come back, fleet returns to mission |
 | 70 s | Scenario ends |
 
-## Backend integration
+---
+
+## Run
+
+```bash
+python3 -m http.server 8000   # → http://localhost:8000
+```
+
+| URL | What you get |
+|---|---|
+| `?demo=1` | 70 s scripted attack, then all-clear |
+| `?protect=0` | start with every automatic defense off |
+| `?protect=0&demo=1` | the scripted attack with no protection — open it beside `?demo=1` |
+| `?ws=ws://localhost:8765` | connect to the Python backend on load |
+| `?poll=http://localhost:5000/state&interval=1000` | poll a REST endpoint instead |
+
+---
+
+## Backend
 
 ```bash
 pip install websockets
@@ -256,59 +269,64 @@ python backend/mock_backend.py
 # open index.html?ws=ws://localhost:8765
 ```
 
-`backend/mock_backend.py` streams positions at 2 Hz. Replace `telemetry()` with real data. The dashboard also accepts a REST poll. Click the **MOCK** pill in the header to reveal the WebSocket field.
+`backend/mock_backend.py` streams positions at 2 Hz. Replace `telemetry()` with real data. Click the **MOCK** pill to reveal the WebSocket field.
 
-Data from the backend is authoritative for 5 s per drone. After that the built-in simulation takes over again, so a partial feed works: positions only, for example.
+Data from the backend is authoritative for 5 s per drone. After that the built-in simulation takes over again, so a partial feed works: positions only, for example. The dashboard still raycasts line of sight and chooses FSOC or DECT unless you override the links.
 
 ### Backend → dashboard
 
 ```jsonc
-{"type": "drones", "data": [{"id": "DR-07", "lat": 51.505, "lon": 7.37, "alt": 95, "battery": 81,
-                             "status": "ONLINE|OFFLINE|RTH", "gnss": "OK|LOST|SPOOFED", "band": "2.4GHz|868MHz"}]}
+{"type": "drones", "data": [{"id": "DR-07", "lat": 51.514, "lon": 7.454, "alt": 78, "battery": 81,
+                             "status": "ONLINE|OFFLINE|RTH", "gnss": "OK|LOST|SPOOFED", "band": "FSOC|DECT"}]}
 {"type": "event",   "data": {"type": "JAMMING|SPOOFING|NODE_FAILURE|NODE_RESTORE|RTH|PROTECTION|ZONE|RESET",
-                             "active": true, "lat": 51.505, "lon": 7.365, "radius_m": 2200, "ids": ["DR-04"]}}
+                             "active": true, "lat": 51.5132, "lon": 7.4545, "radius_m": 620, "ids": ["DR-04"]}}
 {"type": "metrics", "data": {"reachability": 97.2, "latency_ms": 23, "packet_loss": 1.1, "recovery_s": 1.4}}
-{"type": "links",   "data": [{"a": "DR-01", "b": "HQ", "band": "2.4GHz", "quality": 0.82}]}
+{"type": "links",   "data": [{"a": "DR-01", "b": "HQ", "band": "FSOC", "quality": 0.82}]}
 {"type": "log",     "data": {"level": "INFO|OK|WARN|CRIT|NET", "msg": "text"}}
 {"type": "state_request"}
 ```
 
-A bare array of drones, or a single drone object with an `id`, is also accepted. Unknown drone IDs are added to the fleet automatically. `PROTECTION` with `"active": false` is the same switch as the shield pill.
+A bare array of drones, or a single drone object with an `id`, is also accepted. Unknown drone IDs are added to the fleet. `PROTECTION` with `"active": false` is the same switch as the shield. Older band strings (`2.4GHz`, `868MHz`, `LORA`) still map: anything that looks like a sub-GHz fallback becomes DECT, everything else becomes FSOC.
 
 ### Dashboard → backend
 
 ```jsonc
-{"type": "hello", "client": "dortmund-air-shield", "version": "1.0.0", "fleet": ["DR-01", "..."]}
+{"type": "hello", "client": "dortmund-air-shield", "version": "2.0.0", "fleet": ["DR-01"]}
 {"type": "command", "action": "SET_JAMMING|SET_SPOOFING|FORCE_NODE_FAILURE|SAFE_RETURN_HOME|SET_PROTECTION|MOVE_ZONE|RESET", "value": true, "ts": 0}
-{"type": "state", "data": { /* full snapshot, reply to state_request */ }}
+{"type": "state", "data": { }}
 ```
 
-### JavaScript API
+### JavaScript
 
 ```js
-window.updateDroneData([{ id: 'DR-07', lat: 51.505, lon: 7.37 }]);
+window.updateDroneData([{ id: 'DR-07', lat: 51.514, lon: 7.454, alt: 78 }]);
 AirShield.injectEvent({ type: 'JAMMING', active: true });
 AirShield.injectEvent({ type: 'PROTECTION', active: false });
 AirShield.updateMetrics({ reachability: 99 });
-AirShield.updateLinks([{ a: 'DR-01', b: 'HQ', band: '868MHz', quality: 0.4 }]);
+AirShield.updateLinks([{ a: 'DR-01', b: 'HQ', band: 'DECT', quality: 0.4 }]);
 AirShield.connect('ws://localhost:8765');
 AirShield.poll('http://localhost:5000/state', 1000);
 AirShield.onCommand(cmd => console.log(cmd));
 AirShield.getState();
 ```
 
-## Simulation constants
+---
+
+## Constants
 
 | Constant | Value |
 |---|---|
-| Fleet | DR-01 … DR-10, plus HQ at 51.5150° N, 7.4560° E |
+| Fleet | DR-01 … DR-10, plus HQ at the Reinoldikirche, 51.5136° N, 7.4653° E, 65 m |
 | Mesh addresses | `10.41.0.1` … `10.41.0.10` |
-| Jam zone | 51.5050° N, 7.3650° E, radius 2 200 m, Sector Ouest |
+| Camera | zoom 14.35, pitch 60°, bearing −18°, Dortmund center |
+| Occluders | U-Tower 155 m, Hbf tower, Sparkasse, Ellipson, RWE, Stadthaus, Westfalentower, Ostwall |
+| Jam zone | 51.5132° N, 7.4545° E, radius 620 m, Sector West · U-Tower |
 | Jam fringe | full strength to the radius, zero at 1.35× |
 | GNSS lost | jam strength above 0.55 |
 | Spoof radius | 1.5× the jam zone, drift ~7 m/s |
 | GNSS rejected | offset greater than 60 m against INS |
-| LoRa opened | jam above 0.5, or no 2.4 GHz neighbor, up to 3 links; plus one bridge drone per group cut off from HQ |
-| Rebuild wait | 450 ms + 220 ms/hop + 900 ms if the new path is LoRa |
+| FSOC | 2.8 km, up to 1 Gbps, requires a clear 3D ray |
+| DECT NR+ | 4.5 km, 4.8 Mbps, opened when the ray hits a building, the jam is above 0.5, or a group has lost HQ |
+| Rebuild wait | 450 ms + 220 ms/hop + 900 ms if the new path is DECT |
 | Failed node | back after 20 s |
 | Network tick | every 200 ms |
