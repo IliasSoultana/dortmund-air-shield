@@ -20,7 +20,7 @@
     margin: 0;
     padding: 0;
     font-size: 9.3pt;
-    line-height: 1.4;
+    line-height: 1.41;
   }
   .header {
     background: #09090b;
@@ -94,7 +94,7 @@
     font-weight: 600;
   }
   .speech {
-    font-size: 9.3pt;
+    font-size: 9.35pt;
     color: #18181b;
     margin: 3px 0;
   }
@@ -258,7 +258,7 @@
 <div class="header">
   <div>
     <h1>PART 1 (CONT.) — WEBSITE SLIDES (#6 to #11)</h1>
-    <p>Slide #6 (Pop-Up) · Slide #7 (Contrastive 0.0s) · Slide #8 (LLM Co-Pilot) · Slide #9 (Results) · Slide #10 (Team) · Slide #11 (Demo)</p>
+    <p>Slide #6 (Pop-Up) · Slide #7 (Slow Jammer &amp; Honest AI) · Slide #8 (LLM Co-Pilot &amp; Fleet Learning) · Slides #9–#11</p>
   </div>
   <div class="badge">Website Slides #6 – #11</div>
 </div>
@@ -279,35 +279,37 @@
   </div>
 </div>
 
-<!-- ================= SLIDE #7 ================= -->
+<!-- ================= SLIDE #7 (FULL 1 + 2 TEXT) ================= -->
 <div class="section" style="border-left-color: #38bdf8;">
   <div class="sec-head">
     <span class="sec-title">Slide #7 · Layer 2: Threat Detection — <code>Catch the slow attack at onset (9.5s vs 0.0s)</code></span>
     <span class="sec-meta" style="background:#dbeafe; color:#1e40af;">pitch.html#7</span>
   </div>
   <div class="stage-cue">
-    🎬 ON SCREEN: Slide #7 (`Threshold rules 9.5s` vs `Contrastive prototypes 0.0s`). Press [→] to reveal all items.
+    🎬 ON SCREEN: Slide #7 (`Threshold rules 9.5s` vs `Contrastive prototypes 0.0s` + `Unexplained → learned`). Press [→] to reveal all items.
   </div>
   <div class="speech">
-    <p>"Physics keeps the link alive — <b><i>but how will tomorrow's smart attackers try to bypass standard threat detectors?</i></b> <i>(1s pause)</i></p>
-    <p>Instead of turning a jammer on at full power all at once, a smart attacker <b>increases jamming power very slowly (+1.55 dB/s) — a Ramping Jammer</b>. <b><i>Why does that fool standard threshold rules for <span class="hl">9.5 seconds</span>?</i></b> Because a standard detector only compares the current signal to the <b>moving average of the last 4 seconds</b> — when jamming increases slowly, that 4-second average shifts down right along with the attack, just like your eyes adjusting to a slowly darkening room!</p>
-    <p><b>Our <span class="hl-blue">Contrastive Prototype Detector</span> catches it at <span class="hl-green">0.0 seconds</span>:</b> at takeoff, it freezes a <b>healthy baseline</b> of 4 sensors (Signal Strength, Signal Clarity, Packet Loss, and GPS-to-INS offset). Because that takeoff baseline never shifts, it catches slow jamming and slow GPS drift at <b>0.0s</b> with <b>0 false flags</b>! And when a novel combined attack hits, it stays honest (MPI-SP principle) and flags <span class="hl">Unexplained</span> instead of guessing."</p>
+    <p><b>1. The Slow Jammer Problem — 25 sec:</b></p>
+    <p>"<b><i>How will tomorrow's smart attackers bypass standard detectors?</i></b> <i>(1s pause)</i> Instead of turning a jammer on at full power all at once, a smart attacker <b>increases the jamming power very slowly over time — a Ramping Jammer</b>. <b><i>Why does that fool a standard detector?</i></b> Because a standard detector only compares the current signal to the <b>moving average of the last 4 seconds</b>. When the jamming increases slowly, that 4-second average shifts down right along with the attack — just like your eyes adjusting to a slowly darkening room — so the detector stays completely blind for <span class="hl">9.5 seconds</span> (over 130 meters of flight). <b>Our <span class="hl-green">Contrastive Detector</span> fixes this:</b> at takeoff, it saves a <b>frozen healthy baseline</b> of 4 values (Signal Strength, Signal Clarity, Packet Loss, and GPS-to-INS offset). Because that takeoff baseline never shifts, we detect even a slow ramping jammer at <span class="hl-green">0.0 seconds</span>!"</p>
+    <p><b>2. The Honest AI — 15 sec:</b></p>
+    <p>"<b><i>Now, what if an attacker combines two weapons at once — Jamming AND GPS Spoofing — in a pattern we have never seen before?</i></b> <i>(1s pause)</i> Most AI models blindly guess — and a wrong guess triggers the wrong defense. From my security research discussions at <b>MPI-SP</b>, <b>real trust comes when AI is honest about what it does NOT know</b>. Therefore, instead of guessing, our detector flags <code>DR-03</code> and <code>DR-07</code> in yellow as <span class="hl">UNEXPLAINED — needs label</span>."</p>
   </div>
 </div>
 
-<!-- ================= SLIDE #8 ================= -->
+<!-- ================= SLIDE #8 (FULL 3 TEXT) ================= -->
 <div class="section" style="border-left-color: #a78bfa;">
   <div class="sec-head">
-    <span class="sec-title">Slide #8 · Layer 3: LLM Co-Pilot — <code>The LLM never detects. It explains.</code></span>
+    <span class="sec-title">Slide #8 · Layer 3: LLM Co-Pilot &amp; Collaborative Fleet Learning — <code>The LLM never detects. It explains.</code></span>
     <span class="sec-meta" style="background:#ede9fe; color:#5b21b6;">pitch.html#8</span>
   </div>
   <div class="stage-cue">
     🎬 ON SCREEN: Slide #8 (4-step pipeline: `4D telemetry` → `Rules + contrastive detector` → `Verdict` → `LLM analyst`). Press [→] 4 times.
   </div>
   <div class="speech">
-    <p>"<b>And because an <code>unexplained</code> verdict needs a label, that is where our <span class="hl-purple">LLM Security Co-Pilot</span> steps in!</b></p>
-    <p>Look at our pipeline: <b>the LLM never flies the drone and never detects</b> — detection is deterministic math (`z-score` + `cosine similarity` on our 4D telemetry). The LLM sits strictly downstream <b>offline at <code>HQ</code></b> (with university LLM support via one env variable): it writes a <b>two-sentence German briefing</b>, files a <b><code>LOW / MED / CRIT</code> ticket</b>, and gives a <b>one-click <code>Confirm Threat</code> command</b>.</p>
-    <p><b>When the commander clicks <code>Confirm Threat</code> once, it triggers <span class="hl-blue">Collaborative Fleet Learning</span>:</b> <code>HQ</code> broadcasts that tiny <b>4-number threat fingerprint to all 10 drones</b> — so every approaching drone recognizes it at 0.0s and switches to its DECT backup route before its link breaks (keeping recovery under 3s) — <b>cutting fleet downtime, sinking operational costs, and keeping hospital deliveries on schedule for Morpheus Logistik!</b>"</p>
+    <p><b>3. Bridge to LLM CoPilot &amp; Collaborative Fleet Learning — 30 sec:</b></p>
+    <p>"<b>And because this new attack needs a label, that is exactly where our <span class="hl-purple">LLM Security Analyst</span> comes in!</b> We never let an LLM fly the drone — survival happens automatically in milliseconds, and the LLM runs <b>offline at HQ</b> strictly as a <b>CoPilot for the human commander</b>: it translates those raw sensor jumps into <b>two plain sentences</b>, opens a <b>critical ticket</b> for the ground team, and gives me this <b>Confirm Threat</b> button.</p>
+    <p>Watch what happens when I click <b>Confirm Threat</b> once: this triggers <b>Collaborative Fleet Learning</b>! Instead of every drone having to encounter this unknown attack alone, <code>DR-03</code> and <code>DR-07</code> share this tiny <b>4-number threat fingerprint</b> across the network via <code>HQ</code> — so all 10 drones immediately turn <span class="hl-blue">blue</span>, recognize this attack in real time at 0.0 seconds, and proactively switch to their DECT backup routes to keep Recovery Time under 3 seconds!</p>
+    <p><b><i>And why is this a game-changer for clients like Morpheus Logistik?</i></b> Because when one drone learns a new threat, the other nine drones don't have to abort their flights or get grounded for inspection — <b>drastically cutting fleet downtime, lowering operational costs, and keeping hospital deliveries on schedule!</b>"</p>
   </div>
 </div>
 
@@ -316,9 +318,6 @@
   <div class="sec-head">
     <span class="sec-title">Slides #9, #10 &amp; #11 · Results (`10/10 · 3.2s · 0.0s · 225g`), Team &amp; Launch Live Demo</span>
     <span class="sec-meta">pitch.html#9 – #11</span>
-  </div>
-  <div class="stage-cue">
-    🎬 ON SCREEN: Slide #9 (KPIs + 3-Phase Roadmap) &rarr; Slide #10 (Team) &rarr; Slide #11 (Click Green Button `Open mission control → index.html`).
   </div>
   <div class="speech">
     <p>• <b>Slide #9 (Results &amp; F&amp;E Roadmap):</b> "In numbers: <b>10/10 drones reachable</b> under jamming and dense fog, <b>3.2s worst-case recovery</b>, <b>0.0s slow-attack detection</b>, and a <b>225g pod</b> plugging into Morpheus Leitstand via MAVLink 2 — scaling from Phase 1 COTS DECT NR+ bench test (Months 1–3) to Phase 2 1550 nm gimbal flight test (Months 4–8) and Phase 3 10-drone BVLOS trial between Klinikum Mitte and Westfalenhallen (Months 9–12)."</p>
@@ -333,7 +332,7 @@
 <div class="header">
   <div>
     <h1>PART 2 — FULL LEFT-TO-RIGHT LIVE DEMO SCRIPT (index.html)</h1>
-    <p>Your Complete Left-to-Right Walkthrough of Mission Control (Left Sidebar &rarr; Center 3D Map &rarr; Right Sidebar)</p>
+    <p>Your Complete Left-to-Right Walkthrough of Mission Control (including the Full 3-Part Threat Intelligence &amp; LLM Script!)</p>
   </div>
   <div class="badge">Live Dashboard Script</div>
 </div>
@@ -344,8 +343,11 @@
     <span class="sec-meta">Left Panel</span>
   </div>
   <div class="speech">
-    <p>"On the left side, you see our ten drones — <code>DR-01</code> through <code>DR-10</code> — each with its own private sky-network IP address (<code>10.41.0.1</code> to <code>10.41.0.10</code>) talking back to <b>HQ</b> at the Reinoldikirche:</p>
-    <p>• When the sky is clear, they use <span class="hl-green">green FSOC Lasers</span> (1 Gbps, 2–5 ms latency). When a building or <b>Dense Fog (<code>[W]</code>)</b> blocks the laser beyond 520 meters, they automatically switch to <span class="hl">orange DECT NR+</span> (1.9 GHz) bouncing up to our <b>120-meter relays (<code>DR-01</code> &amp; <code>DR-02</code>)</b>. And if a jammer blocks radio, any drone with clear Line-of-Sight stays 100% immune on the green laser!"</p>
+    <p>"On the left side, you see our ten drones — <code>DR-01</code> through <code>DR-10</code> — each with its own private sky-network IP address (<code>10.41.0.1</code> to <code>10.41.0.10</code>). Every drone's goal is simply to keep a working connection back to <b>HQ</b>, our ground control base station on the roof.</p>
+    <p>To do that without public internet, our drones use <b>two communication channels that protect each other</b>:</p>
+    <p>• <b>First, when the sky is clear</b>, they connect over <span class="hl-green">green FSOC Lasers</span> at <b>1 Gigabit per second</b> with just 2 to 5 milliseconds of latency — fast enough to stream live HD camera video, steering commands, and telemetry straight to HQ.</p>
+    <p>• <b><i>But what happens when a drone flies behind a tall building like the Dortmunder U-Tower — or through thick fog (<code>[W]</code>) and fire smoke — and the laser loses Line-of-Sight?</i></b> <i>(1s pause)</i> Automatically, the drone switches to our second channel: <span class="hl">orange DECT NR+</span> — <b>the world's first license-free 5G-standard radio that lets drones build their own private network in the sky (with zero SIM cards and zero cell towers)</b>, penetrating buildings and thick fog, and bouncing steering commands and 3D positions from drone to drone up to our two <b>High-Altitude Relay Drones (<code>DR-01</code> and <code>DR-02</code>)</b> flying at 120 meters!</p>
+    <p>• <b><i>And what if the opposite happens — what if an attacker blasts a radio jammer to block DECT NR+ radio?</i></b> <i>(1s pause)</i> Because <b>FSOC is a narrow beam of light (not a radio wave)</b>, a radio jammer on the ground cannot jam the laser! Any drone with clear Line-of-Sight to HQ or our 120-meter relays stays 100% immune on the green laser."</p>
   </div>
 </div>
 
@@ -355,53 +357,82 @@
     <span class="sec-meta">Center 3D Map</span>
   </div>
   <div class="stage-cue">
-    🎬 ACTION: Press [J] Jamming and [G] GPS Spoofing (or click buttons at the bottom bar).
+    🎬 ACTION: Click [⚡ Jamming] and [📍 GPS Spoofing] at the bottom bar so the 3 circles appear around the U-Tower.
   </div>
   <div class="speech">
-    <p>"In the center 3D map around the <b>95-meter Dortmunder U-Tower</b>, drones outside the circles (like <code>DR-04</code> and <code>DR-08</code>) stay green because a ground jammer has limited range. Inside the attack zone, you see three concentric rings:</p>
-    <p>1. <b>Outer Yellow Circle (GPS Spoofing):</b> Drones cross-check GPS against their <b>internal movement sensor (<code>INS</code>)</b>, reject the fake GPS jump, and hold their true flight path.</p>
-    <p>2. <b>Middle Red Circle (Radio Jamming — <code>DR-07</code>):</b> Switches to <b>DECT NR+ backup radio</b> and cuts heavy video to 0%.</p>
-    <p>3. <b>Inner Purple Circle (<code>DOUBLE-FAIL</code> — <code>DR-03</code>):</b> Behind the U-Tower at 50m, both laser and radio are blocked! After 1.5s, <code>DR-03</code> uses <b>INS/VIO</b> to <b>climb straight up (<code>POP-UP</code> to 125m)</b>, peeks over the 95m roof, and restores its green laser in <b>3.2 seconds</b>!"</p>
+    <p>"Now look at the center 3D map of Dortmund when we turn on an attack around the <b>95-meter Dortmunder U-Tower</b>. First, why are some drones like <code>DR-04</code> and <code>DR-08</code> still green? Because an attacker on the ground has a limited physical range — drones outside the circles stay untouched. Inside the attack zone, you see <b>three concentric rings</b>:</p>
+    <p>1. <b>In the outer Yellow Circle (GPS Spoofing):</b> The attacker sends fake satellite GPS coordinates. Our drone spots the sudden jump by cross-checking GPS against its own <b>internal movement sensor (INS)</b>, rejects the fake GPS, and stays on its real flight path.</p>
+    <p>2. <b>In the middle Red Circle (Radio Jamming — <code>DR-07</code>):</b> The attacker blasts heavy radio noise, so the drone switches to <b>DECT NR+ backup radio</b> and cuts off heavy video.</p>
+    <p>3. <b>And in the inner Purple Circle (<code>DOUBLE-FAIL</code> — <code>DR-03</code>):</b> Look at <code>DR-03</code> — it is flying at 50 meters right behind the 95-meter U-Tower, so the building blocks its laser <b>AND</b> the jammer crushes its radio at the same time! After 1.5 seconds isolated, the drone switches to <b>INS/VIO</b> and automatically <b>climbs straight up (<code>POP-UP</code> to 125m)</b> until it clears the 95-meter roof and catches a clean laser beam again in <b>3.2 seconds</b>!"</p>
   </div>
 </div>
 
 <div class="section">
   <div class="sec-head">
-    <span class="sec-title">Demo Step 3 · Right Sidebar (Top &amp; Middle) — Resilience Metrics &amp; QoS Traffic Shedding</span>
+    <span class="sec-title">Demo Step 3 · Right Sidebar (Top &amp; Middle) — Resilience Metrics &amp; QoS Traffic Priorities</span>
     <span class="sec-meta">Right Top &amp; Mid</span>
   </div>
   <div class="speech">
-    <p>"At the top of the Right Sidebar, the <b>4 Resilience Metrics</b> show <b>100% Reachability</b>, <b>Average Latency</b>, <b>Packet Loss</b>, and <b>3.2s Recovery Time</b>. Right below, under <b>QoS Traffic Priorities</b> (<code>C2 Command</code>, <code>Telemetry</code>, <code>Inter-Drone</code> 3D anti-collision/laser aiming, and <code>Video</code>), because video eats <b>99% of bandwidth</b> while steering needs less than <b>1% (12 kbps)</b>, our system automatically sheds video to <b><code>0%</code></b> so <b>C2 Steering stays locked at 100%</b>!"</p>
+    <p>"Now look at the top of the <b>Right Sidebar</b>: the <b>top four boxes (Resilience Metrics)</b> are our network health scorecards — showing <b>100% Reachability</b>, <b>Average Latency</b>, <b>Packet Loss</b>, and <b>3.2s Recovery Time</b>.</p>
+    <p>Right below that, look at the <b>four bars under Traffic Priorities (QoS)</b>: <b>C2 Command</b> (steering), <b>Telemetry</b> (battery and height reports), <b>Inter-Drone</b> (drones sharing 3D positions so they don't collide, aim their lasers, and route packets), and <b>Live Camera Video</b>. Because live video eats <b>99% of our bandwidth</b> while steering commands need less than <b>1% (12 kbps)</b>, our system automatically <b>cuts off the heavy video (<code>SHED · 0%</code>)</b> in an emergency — guaranteeing that <b>C2 Steering stays locked at 90 to 100%</b> so no drone ever crashes!"</p>
   </div>
 </div>
 
-<div class="section">
+<div class="page-break"></div>
+
+<div class="section" style="border-left-color: #38bdf8;">
   <div class="sec-head">
-    <span class="sec-title">Demo Step 4 · Right Sidebar (Bottom) — Contrastive Detector, LLM Co-Pilot &amp; 1-Click Fleet Learning</span>
-    <span class="sec-meta">Right Bottom</span>
+    <span class="sec-title">Demo Step 4 · Right Sidebar (Bottom) — Threat Intelligence &amp; LLM Security Analyst (Full 3-Part Script)</span>
+    <span class="sec-meta" style="background:#dbeafe; color:#1e40af;">Right Bottom (70 sec)</span>
   </div>
   <div class="stage-cue">
-    🎬 ACTION: Click [🎯 Coordinated RF+GNSS] (Turns YELLOW) &rarr; Click [✓ Confirm Threat] (Turns BLUE!).
+    🎬 ACTION 1: Point to [⚡ Ramp Jammer] &rarr; ACTION 2: Click [🎯 Coordinated RF+GNSS] (Turns YELLOW) &rarr; ACTION 3: Click [✓ Confirm Threat] (Turns BLUE!).
   </div>
   <div class="speech">
-    <p>"At the bottom right, when I trigger <b><code>Coordinated RF+GNSS</code></b>, our <b>Contrastive Detector</b> flags <code>DR-03</code> and <code>DR-07</code> in yellow as <span class="hl">UNEXPLAINED — needs label</span>. Right below, our offline <b>LLM Security Analyst</b> translates the 4D sensor jump into two German sentences, opens a <code>CRIT</code> ticket, and gives me <b><code>Confirm Threat</code></b>. When I click <b><code>Confirm Threat</code></b> once, <b>Collaborative Fleet Learning</b> broadcasts that 4-number threat fingerprint from <code>HQ</code> to all 10 drones — turning them <span class="hl-blue">blue</span> so approaching drones proactively switch to DECT backup routes (<3s recovery), cutting downtime and cost for Morpheus Logistik!"</p>
+    <p><b>1. The Slow Jammer Problem (<code>[⚡ Ramp Jammer]</code>) — 25 sec:</b></p>
+    <p>"Now look at our <b>Threat Intelligence</b> box on the bottom right. <b><i>How will tomorrow's smart attackers bypass standard detectors?</i></b> <i>(1s pause)</i> Instead of turning a jammer on at full power all at once, a smart attacker <b>increases the jamming power very slowly over time — a Ramping Jammer</b>. <b><i>Why does that fool a standard detector?</i></b> Because a standard detector only compares the current signal to the <b>moving average of the last 4 seconds</b>. When the jamming increases slowly, that 4-second average shifts down right along with the attack — just like your eyes adjusting to a slowly darkening room — so the detector stays completely blind for <span class="hl">9.5 seconds</span> (over 130 meters of flight). <b>Our <span class="hl-green">Contrastive Detector</span> fixes this:</b> at takeoff, it saves a <b>frozen healthy baseline</b> of 4 values (Signal Strength, Signal Clarity, Packet Loss, and GPS-to-INS offset). Because that takeoff baseline never shifts, we detect even a slow ramping jammer at <span class="hl-green">0.0 seconds</span>!"</p>
+
+    <p><b>2. The Honest AI (Click <code>[🎯 Coordinated RF+GNSS]</code>) — 15 sec:</b></p>
+    <p>"<b><i>Now, what if an attacker combines two weapons at once — Jamming AND GPS Spoofing — in a pattern we have never seen before?</i></b> <i>(1s pause)</i> Most AI models blindly guess — and a wrong guess triggers the wrong defense. From my security research discussions at <b>MPI-SP</b>, <b>real trust comes when AI is honest about what it does NOT know</b>. Therefore, instead of guessing, our detector flags <code>DR-03</code> and <code>DR-07</code> in yellow as <span class="hl">UNEXPLAINED — needs label</span>."</p>
+
+    <p><b>3. Bridge to LLM CoPilot &amp; Collaborative Fleet Learning (Click <code>[✓ Confirm Threat]</code>) — 30 sec:</b></p>
+    <p>"<b>And because this new attack needs a label, that is exactly where our <span class="hl-purple">LLM Security Analyst</span> right below comes in!</b> We never let an LLM fly the drone — survival happens automatically in milliseconds, and the LLM runs <b>offline at HQ</b> strictly as a <b>CoPilot for the human commander</b>: it translates those raw sensor jumps into <b>two plain sentences</b>, opens a <b>critical ticket</b> for the ground team, and gives me this <b>Confirm Threat</b> button.</p>
+    <p>Watch what happens when I click <b>Confirm Threat</b> once: this triggers <b>Collaborative Fleet Learning</b>! Instead of every drone having to encounter this unknown attack alone, <code>DR-03</code> and <code>DR-07</code> share this tiny <b>4-number threat fingerprint</b> across the network via <code>HQ</code> — so all 10 drones immediately turn <span class="hl-blue">blue</span>, recognize this attack in real time at 0.0 seconds, and proactively switch to their DECT backup routes to keep our Recovery Time under 3 seconds!</p>
+    <p><b><i>And why is this a game-changer for clients like Morpheus Logistik?</i></b> Because when one drone learns a new threat, the other nine drones don't have to abort their flights or get grounded for inspection — <b>drastically cutting fleet downtime, lowering operational costs, and keeping hospital deliveries on schedule!</b>"</p>
   </div>
 </div>
 
 <!-- ================= TECHNICAL Q&A BOX ================= -->
-<div class="header" style="background:#18181b; margin-top:8px; margin-bottom:6px; padding:8px 14px;">
+<div class="header" style="background:#18181b; margin-top:10px; margin-bottom:7px; padding:9px 15px;">
   <div>
-    <h1 style="font-size:11.5pt;">Technical Deep-Dive Notes (For Jury Q&amp;A Only)</h1>
+    <h1 style="font-size:12pt;">Technical Deep-Dive Notes (For Jury Q&amp;A Only)</h1>
+    <p>How Z-Score, Cosine Similarity, Detector-to-LLM JSON, and Hardware Scope work under the hood</p>
   </div>
   <div class="badge" style="background:#38bdf8; color:#082f49;">Q&amp;A Ready</div>
 </div>
 
 <div class="qa-grid">
   <div class="qa-card">
-    <div class="qa-q">1. How Z-Score (&gt;= 4.5) &amp; Cosine Similarity (&gt;= 0.84) + Detector-to-LLM JSON Work</div>
+    <div class="qa-q">1. How Z-Score (&gt;= 4.5) and Cosine Similarity (&gt;= 0.84) Work Under the Hood</div>
     <p class="qa-a">
-      • <b>Z-Score Gate:</b> 40s (80-tick) takeoff warmup freezes <code>(mean, std)</code> of <code>[RSSI, SNR, Loss, GNSS_INS_Offset]</code>. Euclidean length <code>z_score &gt;= 4.5</code> triggers detection at <code>0.0s</code>. <b>Cosine Similarity:</b> Compares 4D Z-vector direction against known prototypes; <code>Coordinated RF+GNSS</code> scores <code>sim = 0.68 &lt; 0.84</code> &rarr; <code>UNEXPLAINED</code>.<br/>
-      • <b>LLM JSON &amp; 1-Click Learning:</b> Detector passes <code>{device, label, z_score, dims, similarity}</code> to <code>llm_analyst.py</code> at HQ. Clicking <code>Confirm Threat</code> stores the normalized 4-float (16-byte) unit vector in the shared fleet prototype table (<code>sim</code> jumps to <code>0.99</code> across all 10 drones). Latency &amp; speed are excluded from the 4D detector so building handovers (5ms &rarr; 40ms) cause <b>0 false cyberattack alarms</b>.
+      • <b>Step 1 — Anomaly Detection (Z-Score):</b> During the 40s (80-tick) takeoff warmup, each drone records the mean (&mu;) and standard deviation (&sigma;) of 4 sensors: <code>[RSSI, SNR, Packet_Loss, GNSS_INS_Offset]</code>. Every 0.5s tick, we compute the 4D Z-score deviation vector <code>[z_rssi, z_snr, z_loss, z_gnss]</code>. If its Euclidean length <code>z_score &gt;= 4.5</code> (e.g., <code>z = 24.6</code>), an attack is detected at <code>0.0s</code>.<br/>
+      • <b>Step 2 — Attribution (Cosine Similarity):</b> We compare the <i>direction</i> of that 4D Z-vector against known attack prototypes using Cosine Similarity (<code>sim</code> from <code>0.00</code> to <code>1.00</code>). Pure <code>jamming</code> points along <code>[High, High, Med, 0]</code>; pure <code>spoofing</code> points along <code>[0, 0, 0, High]</code>. When both hit together (<code>Coordinated RF+GNSS</code>), the vector points diagonally between them: max similarity is only <code>sim = 0.68 &lt; 0.84</code> threshold &rarr; flagged as <code>UNEXPLAINED</code>.
+    </p>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">2. How the Detector Feeds the LLM &amp; How 1-Click Collaborative Learning Works</div>
+    <p class="qa-a">
+      • <b>Detector &rarr; LLM JSON:</b> The detector passes a structured JSON payload <code>{device: "DR-07", label: "UNEXPLAINED", z_score: 24.6, dims: {rssi: 8.1, snr: 18.2, loss: 4.0, gnss_offset_m: 16.4}, similarity: 0.68}</code> to the LLM Analyst (<code>llm_analyst.py</code>), which runs offline at HQ (with optional live API mode to <code>gpt-6-studierende</code> on <code>chat.kiconnect.nrw/v1/responses</code>).<br/>
+      • <b>1-Click Fleet Learning (<code>CONFIRM_THREAT</code>):</b> Clicking Confirm Threat normalizes the 4D Z-vector into a unit vector (4 floats = 16 bytes) and saves it in the shared fleet prototype table as <code>coordinated_rf_gnss</code>. On the very next tick, similarity jumps from <code>0.68</code> to <code>0.99 &gt;= 0.84</code> across all 10 drones.
+    </p>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">3. Why Only 4 Sensors in the Detector? &amp; How Do Moving Drones Aim Lasers?</div>
+    <p class="qa-a">
+      • <b>Why we excluded Latency &amp; Velocity from the 4D detector (Invariance):</b> When a drone flies behind the U-Tower and switches from FSOC Laser to DECT radio, its latency jumps from 5ms to 40ms. If latency or speed were inside the cyberattack detector, every building in Dortmund would trigger a false cyberattack alarm! Keeping only link-budget &amp; navigation residuals gives us <b>0 false alarms</b> across 1,200 noisy drone-ticks.<br/>
+      • <b>How drones aim FSOC lasers (PAT) &amp; Hardware Economics:</b> Drones broadcast their 3D GPS/INS coordinates over omnidirectional <b>DECT NR+</b> (<code>Inter-Drone</code> channel) so gimbals know where to aim the laser. And because our MEMS optical gimbal weighs 155g and our Nordic nRF9151 DECT NR+ radio weighs 70g (total <b>225g / 9.7W</b> hybrid pod), our architecture puts high-altitude relays on <code>DR-01</code> and <code>DR-02</code> at 120m while allowing lower drones to use DECT NR+ seamlessly.
     </p>
   </div>
 </div>
