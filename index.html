@@ -745,6 +745,7 @@ const M_PER_DEG_LON = 111320 * Math.cos(CFG.ORIGIN.lat * Math.PI / 180);
 const Geo = {
   toXY: (lat, lon) => ({ x: (lon - CFG.ORIGIN.lon) * M_PER_DEG_LON, y: (lat - CFG.ORIGIN.lat) * M_PER_DEG_LAT }),
   toLatLon: (x, y) => ({ lat: CFG.ORIGIN.lat + y / M_PER_DEG_LAT, lon: CFG.ORIGIN.lon + x / M_PER_DEG_LON }),
+  toLL: (x, y) => ({ lat: CFG.ORIGIN.lat + y / M_PER_DEG_LAT, lon: CFG.ORIGIN.lon + x / M_PER_DEG_LON }),
   dist3: (a, b) => Math.hypot(a.x - b.x, a.y - b.y, (a.alt || 0) - (b.alt || 0)),
 };
 const linkKey = (a, b) => (a < b ? `${a}|${b}` : `${b}|${a}`);
@@ -2828,7 +2829,8 @@ class MapRenderer extends Emitter {
       ctx.strokeStyle = borderCol;
       ctx.lineWidth = 1.3;
       ctx.beginPath();
-      ctx.roundRect(18, 36, W - 36, 58, 8);
+      if (ctx.roundRect) ctx.roundRect(18, 36, W - 36, 58, 8);
+      else ctx.rect(18, 36, W - 36, 58);
       ctx.fill();
       ctx.stroke();
 
@@ -2970,7 +2972,7 @@ class MapRenderer extends Emitter {
     ctx.fillStyle = '#F87171';
     ctx.fillText(off ? '● OFF' : 'REC ●', W - 8, 12);
 
-    const ll = Geo.toLL(d.x, d.y);
+    const ll = Geo.toLatLon(d.x, d.y);
     ctx.textAlign = 'left';
     ctx.fillStyle = '#A1A1AA';
     ctx.fillText(`${ll.lat.toFixed(4)}°N ${ll.lon.toFixed(4)}°E`, 8, H - 6);
@@ -3863,12 +3865,16 @@ setInterval(() => {
 
 let last = performance.now(), uiAcc = 1, sampleAcc = 0;
 function frame() {
-  const ts = performance.now(), dt = clamp((ts - last) / 1000, 0, 0.1); last = ts;
-  sim.tick(dt);
-  map.draw(dt);
-  uiAcc += dt; if (uiAcc >= 0.10) { uiAcc = 0; ui.update(); }
-  sampleAcc += dt; if (sampleAcc >= 0.5) { sampleAcc = 0; sim.metrics.sample(); ui.drawSparks(); }
   requestAnimationFrame(frame);
+  try {
+    const ts = performance.now(), dt = clamp((ts - last) / 1000, 0, 0.1); last = ts;
+    sim.tick(dt);
+    map.draw(dt);
+    uiAcc += dt; if (uiAcc >= 0.10) { uiAcc = 0; ui.update(); }
+    sampleAcc += dt; if (sampleAcc >= 0.5) { sampleAcc = 0; sim.metrics.sample(); ui.drawSparks(); }
+  } catch (err) {
+    console.error('Frame render error:', err);
+  }
 }
 requestAnimationFrame(frame);
 })();
