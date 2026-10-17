@@ -327,24 +327,83 @@ button,input{font-family:inherit}
 }
 .zbtn:hover{color:var(--txt);border-color:var(--border-hi)}
 
-/* ---------- Selected Drone Floating Card ---------- */
+/* ---------- Selected Drone Inspector HUD (Tesla/Apple-Style Modal Card) ---------- */
 .node-card{
-  position:absolute;z-index:15;pointer-events:none;
-  width:236px;padding:11px 13px;border-radius:15px;
-  background:rgba(14,14,18,0.90);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);
-  border:1px solid var(--border-hi);box-shadow:0 16px 36px rgba(0,0,0,0.65);
-  font-size:10.5px;color:var(--txt2);transform:translate(-50%,-100%);margin-top:-18px;
+  position:fixed;left:332px;bottom:74px;z-index:22;pointer-events:auto;
+  width:392px;padding:13px 14px;border-radius:18px;
+  background:rgba(11,13,19,0.92);backdrop-filter:blur(26px) saturate(185%);-webkit-backdrop-filter:blur(26px) saturate(185%);
+  border:1px solid rgba(255,255,255,0.15);
+  box-shadow:0 24px 60px rgba(0,0,0,0.82), inset 0 1px 0 rgba(255,255,255,0.10);
+  font-size:10.5px;color:var(--txt2);
+  transition:opacity .2s ease, transform .2s cubic-bezier(0.22,1,0.36,1);
 }
-.nc-top{display:flex;align-items:center;justify-content:space-between;gap:6px;margin-bottom:7px}
-.nc-id{font-size:12px;font-weight:700;color:var(--txt)}
-.nc-badge{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 6px;border-radius:999px;background:rgba(16,185,129,0.18);color:var(--mint-hi);white-space:nowrap}
-.nc-badge.warn{background:rgba(245,158,11,0.22);color:#FBBF24}
-.nc-badge.crit{background:rgba(239,68,68,0.22);color:#F87171}
+.node-card.hidden{display:none!important}
+.nc-top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:9px}
+.nc-id-wrap{display:flex;align-items:center;gap:7px;min-width:0}
+.nc-id{font-size:13.5px;font-weight:800;color:var(--txt);letter-spacing:-.01em}
+.nc-ip{font-family:var(--mono);font-size:10px;color:var(--mut)}
+.nc-top-right{display:flex;align-items:center;gap:6px;flex:none}
+.nc-close{
+  width:22px;height:22px;border-radius:7px;border:1px solid var(--border);
+  background:rgba(255,255,255,0.05);color:var(--txt2);font-size:13px;line-height:1;
+  display:grid;place-items:center;cursor:pointer;transition:all .15s;
+}
+.nc-close:hover{background:rgba(255,255,255,0.12);color:var(--txt);border-color:var(--border-hi)}
+.nc-badge{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:999px;background:rgba(16,185,129,0.18);color:var(--mint-hi);white-space:nowrap;border:1px solid rgba(16,185,129,0.35)}
+.nc-badge.warn{background:rgba(245,158,11,0.20);color:#FBBF24;border-color:rgba(245,158,11,0.45)}
+.nc-badge.crit{background:rgba(239,68,68,0.22);color:#F87171;border-color:rgba(239,68,68,0.45)}
 .nc-badge.popup{background:linear-gradient(90deg,rgba(239,68,68,0.32),rgba(168,85,247,0.32));color:#F0ABFC;border:1px solid rgba(192,132,252,0.6)}
-.nc-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px 8px;font-variant-numeric:tabular-nums}
-.nc-grid span{font-size:8.5px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);display:block}
-.nc-grid b{font-size:11px;font-weight:600;color:var(--txt)}
-.nc-route{margin-top:6px;padding-top:6px;border-top:1px solid var(--border);font-size:9.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* Section 1: Live Mock Fly Camera Feed */
+.nc-cam-wrap{
+  position:relative;border-radius:12px;overflow:hidden;
+  border:1px solid rgba(255,255,255,0.11);background:#05070B;margin-bottom:10px;
+}
+.nc-cam-bar{
+  display:flex;align-items:center;justify-content:space-between;gap:6px;
+  padding:5px 9px;background:rgba(0,0,0,0.65);border-bottom:1px solid rgba(255,255,255,0.07);
+  font-family:var(--mono);font-size:8.5px;letter-spacing:.05em;
+}
+.nc-cam-title{color:var(--txt2);font-weight:600;display:flex;align-items:center;gap:5px}
+.nc-rec-dot{width:6px;height:6px;border-radius:50%;background:#EF4444;box-shadow:0 0 8px #EF4444;animation:pulse 1.2s infinite}
+.nc-cam-qos{font-weight:700;padding:1.5px 6px;border-radius:4px;font-size:8px}
+.nc-cam-qos.fsoc{background:rgba(16,185,129,0.18);color:#34D399;border:1px solid rgba(16,185,129,0.4)}
+.nc-cam-qos.dect{background:rgba(245,158,11,0.18);color:#FBBF24;border:1px solid rgba(245,158,11,0.4)}
+.nc-cam-qos.funk{background:rgba(56,189,248,0.18);color:#38BDF8;border:1px solid rgba(56,189,248,0.4)}
+.nc-cam-qos.shed{background:rgba(239,68,68,0.22);color:#FCA5A5;border:1px solid rgba(239,68,68,0.5)}
+.nc-cam-qos.popup{background:rgba(192,132,252,0.24);color:#E9D5FF;border:1px solid rgba(192,132,252,0.55)}
+.nc-cam-canvas{display:block;width:100%;height:136px}
+
+/* Section 2 & 3: Morpheus Wireframe + Logistics & Telemetry */
+.nc-body{display:grid;grid-template-columns:132px 1fr;gap:10px;align-items:stretch}
+.nc-wire-box{
+  display:flex;flex-direction:column;align-items:center;justify-content:space-between;
+  padding:7px 6px;border-radius:11px;background:rgba(255,255,255,0.025);
+  border:1px solid rgba(255,255,255,0.07);
+}
+.nc-wire-svg{width:118px;height:122px;display:block;overflow:visible}
+.nc-swap-tag{
+  font-family:var(--mono);font-size:7.8px;color:var(--txt2);text-align:center;
+  background:rgba(0,0,0,0.45);border:1px solid rgba(255,255,255,0.08);
+  padding:2.5px 5px;border-radius:5px;width:100%;white-space:nowrap;
+}
+
+.nc-info-col{display:flex;flex-direction:column;justify-content:space-between;min-width:0;gap:6px}
+.nc-mission-box{
+  padding:7px 9px;border-radius:10px;
+  background:linear-gradient(145deg,rgba(16,185,129,0.08),rgba(255,255,255,0.02));
+  border:1px solid rgba(16,185,129,0.24);
+}
+.nc-mission-kicker{font-family:var(--mono);font-size:7.8px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mint-hi);margin-bottom:2px}
+.nc-mission-task{font-size:11.5px;font-weight:700;color:var(--txt);line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nc-mission-cargo{font-size:9.8px;color:#D4D4D8;margin-top:3px;display:flex;align-items:center;justify-content:space-between;gap:4px}
+.nc-mission-cargo b{font-family:var(--mono);font-size:9.5px;color:#FBBF24;background:rgba(245,158,11,0.14);padding:1px 5px;border-radius:4px;border:1px solid rgba(245,158,11,0.3);flex:none}
+.nc-mission-route{font-family:var(--mono);font-size:8.8px;color:var(--txt2);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.nc-grid{display:grid;grid-template-columns:1fr 1fr;gap:4px 8px;font-variant-numeric:tabular-nums;padding:2px 2px 0}
+.nc-grid span{font-size:8px;text-transform:uppercase;letter-spacing:.07em;color:var(--mut);display:block}
+.nc-grid b{font-family:var(--mono);font-size:10.5px;font-weight:600;color:var(--txt)}
+.nc-route{margin-top:7px;padding-top:6px;border-top:1px solid var(--border);font-family:var(--mono);font-size:9px;color:var(--txt2);display:flex;align-items:center;justify-content:space-between;gap:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 
 /* ---------- Mobile Compatible Responsive Breakpoint (<= 740px) ---------- */
 @media (max-width: 740px) {
@@ -380,6 +439,7 @@ button,input{font-family:inherit}
     width:100%;display:flex;align-items:center;justify-content:space-between;
     font-size:9.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);
   }
+  .node-card{left:10px;right:10px;bottom:70px;width:auto}
 }
 
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
@@ -617,16 +677,26 @@ const OBSTACLES = [
 // DR-03 & DR-07: Urban canyon inspection nodes operating at 50m–52m behind Dortmunder U (95m, <150m jam core) and Ellipson (76m, >150m outer jam zone).
 // Remaining fleet: Normal cruise altitudes between 85m and 105m (well above 15m–30m urban rooftops).
 const FLEET = [
-  { id: 'DR-01', role: 'RELAY',  lat: 51.5155, lon: 7.4575, r: 210, v: 22, dir:  1, phase: 0.2, alt: 120, battery: 96, ecc: 0.78 },
-  { id: 'DR-02', role: 'RELAY',  lat: 51.5148, lon: 7.4648, r: 230, v: 22, dir: -1, phase: 1.4, alt: 120, battery: 94, ecc: 0.80 },
-  { id: 'DR-03', role: 'CANYON', lat: 51.5149, lon: 7.4518, r: 42,  v: 14, dir:  1, phase: 2.5, alt: 90,  canyonAlt: 50, battery: 86, ecc: 0.80 },
-  { id: 'DR-04', role: 'CRUISE', lat: 51.5162, lon: 7.4710, r: 390, v: 24, dir: -1, phase: 0.8, alt: 98,  battery: 91, ecc: 0.82 },
-  { id: 'DR-05', role: 'CRUISE', lat: 51.5112, lon: 7.4595, r: 360, v: 24, dir:  1, phase: 3.4, alt: 88,  battery: 84, ecc: 0.78 },
-  { id: 'DR-06', role: 'CRUISE', lat: 51.5102, lon: 7.4695, r: 410, v: 25, dir: -1, phase: 4.1, alt: 95,  battery: 76, ecc: 0.80 },
-  { id: 'DR-07', role: 'CANYON', lat: 51.5122, lon: 7.4560, r: 46,  v: 15, dir:  1, phase: 2.0, alt: 88,  canyonAlt: 52, battery: 82, ecc: 0.76 },
-  { id: 'DR-08', role: 'CRUISE', lat: 51.5128, lon: 7.4750, r: 400, v: 25, dir:  1, phase: 5.1, alt: 104, battery: 95, ecc: 0.76 },
-  { id: 'DR-09', role: 'CRUISE', lat: 51.5088, lon: 7.4628, r: 390, v: 24, dir: -1, phase: 1.8, alt: 92,  battery: 78, ecc: 0.82 },
-  { id: 'DR-10', role: 'CRUISE', lat: 51.5168, lon: 7.4535, r: 310, v: 24, dir: -1, phase: 1.0, alt: 86,  battery: 74, ecc: 0.75 },
+  { id: 'DR-01', role: 'RELAY',  lat: 51.5155, lon: 7.4575, r: 210, v: 22, dir:  1, phase: 0.2, alt: 120, battery: 96, ecc: 0.78,
+    mission: { task: 'Optical Backbone Relay · North', cargo: 'FSOC/DECT Mesh Transceiver Pod', weight: '1.8 kg', route: 'Orbit · Reinoldikirche ↔ Hbf (120m)' } },
+  { id: 'DR-02', role: 'RELAY',  lat: 51.5148, lon: 7.4648, r: 230, v: 22, dir: -1, phase: 1.4, alt: 120, battery: 94, ecc: 0.80,
+    mission: { task: 'Optical Backbone Relay · South', cargo: 'FSOC/DECT Mesh Transceiver Pod', weight: '1.8 kg', route: 'Orbit · Stadtgarten ↔ RWE Tower (120m)' } },
+  { id: 'DR-03', role: 'CANYON', lat: 51.5149, lon: 7.4518, r: 42,  v: 14, dir:  1, phase: 2.5, alt: 90,  canyonAlt: 50, battery: 86, ecc: 0.80,
+    mission: { task: 'Urgent Trauma Blood Supply', cargo: '4x O-Neg Blood Units (4°C Cryo-Box)', weight: '4.2 kg', route: 'Klinikum Mitte → Westfalenhallen' } },
+  { id: 'DR-04', role: 'CRUISE', lat: 51.5162, lon: 7.4710, r: 390, v: 24, dir: -1, phase: 0.8, alt: 98,  battery: 91, ecc: 0.82,
+    mission: { task: 'BVB Matchday Medical Standby', cargo: 'Automated Defibrillator + Epinephrine', weight: '3.6 kg', route: 'Signal Iduna Park (81k Crowd RF Blackout)' } },
+  { id: 'DR-05', role: 'CRUISE', lat: 51.5112, lon: 7.4595, r: 360, v: 24, dir:  1, phase: 3.4, alt: 88,  battery: 84, ecc: 0.78,
+    mission: { task: 'ICU Lab Tissue Express', cargo: 'Frozen Biopsy Samples (UN3373)', weight: '2.1 kg', route: 'St.-Johannes-Hospital → Knappschaft' } },
+  { id: 'DR-06', role: 'CRUISE', lat: 51.5102, lon: 7.4695, r: 410, v: 25, dir: -1, phase: 4.1, alt: 95,  battery: 76, ecc: 0.80,
+    mission: { task: 'Grid Substation Inspection', cargo: 'Thermal / LiDAR Inspection Pod', weight: '3.9 kg', route: 'DEW21 Umspannwerk → Phoenix-See' } },
+  { id: 'DR-07', role: 'CANYON', lat: 51.5122, lon: 7.4560, r: 46,  v: 15, dir:  1, phase: 2.0, alt: 88,  canyonAlt: 52, battery: 82, ecc: 0.76,
+    mission: { task: 'Emergency Antidote Delivery', cargo: 'Intensive Care Pharma Kit #A4', weight: '3.4 kg', route: 'Apotheke Westentor → Hafen Clinic' } },
+  { id: 'DR-08', role: 'CRUISE', lat: 51.5128, lon: 7.4750, r: 400, v: 25, dir:  1, phase: 5.1, alt: 104, battery: 95, ecc: 0.76,
+    mission: { task: 'BOS First-Responder Relay', cargo: 'Feuerwehr Situational Awareness Pod', weight: '2.9 kg', route: 'Feuerwache 1 → Ostwall Sector' } },
+  { id: 'DR-09', role: 'CRUISE', lat: 51.5088, lon: 7.4628, r: 390, v: 24, dir: -1, phase: 1.8, alt: 92,  battery: 78, ecc: 0.82,
+    mission: { task: 'Stadium Corridor Overwatch', cargo: 'Crowd Safety & MedEvac Beacon', weight: '3.1 kg', route: 'Signal Iduna Park ↔ Florianturm' } },
+  { id: 'DR-10', role: 'CRUISE', lat: 51.5168, lon: 7.4535, r: 310, v: 24, dir: -1, phase: 1.0, alt: 86,  battery: 74, ecc: 0.75,
+    mission: { task: 'Critical Spare Part Logistics', cargo: 'High-Voltage Thyristor Module', weight: '4.8 kg', route: 'TU Dortmund Campus → Unionviertel' } },
 ];
 
 const COLORS = { green: '#10B981', red: '#EF4444', cyan: '#06B6D4', orange: '#F59E0B', grey: '#64748B', txt: '#E6EDF3' };
@@ -761,6 +831,12 @@ class Drone {
     this.id = def.id;
     this.index = index;
     this.role = def.role || 'CRUISE'; // 'RELAY' (120m) | 'CANYON' (dives to 50m) | 'CRUISE' (85m-105m)
+    this.mission = def.mission || {
+      task: 'Autonomous Urban Patrol',
+      cargo: 'FSOC/DECT Telemetry Pod',
+      weight: '2.4 kg',
+      route: 'Dortmund Innenstadt Orbit',
+    };
     const c = Geo.toXY(def.lat, def.lon);
     this.orbit = { cx: c.x, cy: c.y, r: def.r, w: def.dir * (def.v / def.r), phase: def.phase, ecc: def.ecc || 1, dir: def.dir };
     this.baseAlt = def.alt;
@@ -2159,7 +2235,7 @@ class MapRenderer extends Emitter {
     if (this.layers.packets) this.drawParticles();
     this.drawHQ(t);
     this.drawDrones(t);
-    this.updateSelectedCard();
+    this.updateSelectedCard(t, dt);
   }
 
   drawFallbackBackground() {
@@ -2570,16 +2646,366 @@ class MapRenderer extends Emitter {
     ctx.restore();
   }
 
-  updateSelectedCard() {
+  ensureInspectorDOM(el) {
+    if (this._inspectorReady) return;
+    this._inspectorReady = true;
+    el.innerHTML = `
+      <div class="nc-top">
+        <div class="nc-id-wrap">
+          <span class="nc-id" id="ncId">DR-01</span>
+          <span class="nc-ip" id="ncIp">(10.41.0.1)</span>
+        </div>
+        <div class="nc-top-right">
+          <span class="nc-badge" id="ncBadge">FSOC Laser (1550nm LoS)</span>
+          <button class="nc-close" id="ncClose" title="Close Inspector (Esc)">×</button>
+        </div>
+      </div>
+
+      <!-- 1. LIVE MOCK FLY CAMERA FEED (Canvas [CAM 01 · DOWNWARD OPTICAL / IR]) -->
+      <div class="nc-cam-wrap">
+        <div class="nc-cam-bar">
+          <span class="nc-cam-title"><span class="nc-rec-dot" id="ncRecDot"></span>[CAM 01 · DOWNWARD OPTICAL / IR]</span>
+          <span class="nc-cam-qos fsoc" id="ncCamQos">HD 1080p60 · 3.5 Mbps · FSOC LASER</span>
+        </div>
+        <canvas class="nc-cam-canvas" id="ncCamCanvas" width="362" height="136"></canvas>
+      </div>
+
+      <!-- 2. INTERACTIVE MORPHEUS WIREFRAME + 3. LOGISTICS & TASK TELEMETRY -->
+      <div class="nc-body">
+        <div class="nc-wire-box">
+          <svg class="nc-wire-svg" viewBox="0 0 120 124" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <!-- Subtle blueprint grid rings -->
+            <circle cx="60" cy="48" r="38" stroke="rgba(148,163,184,0.12)" stroke-width="0.8" stroke-dasharray="2 3"/>
+            <line x1="60" y1="6" x2="60" y2="92" stroke="rgba(148,163,184,0.10)" stroke-width="0.7"/>
+            <line x1="16" y1="48" x2="104" y2="48" stroke="rgba(148,163,184,0.10)" stroke-width="0.7"/>
+
+            <!-- FSOC Optical Beam Cone (top turret) -->
+            <polygon id="wfFsocCone" points="60,26 42,4 78,4" fill="rgba(16,185,129,0.18)"/>
+
+            <!-- DECT NR+ 1.9 GHz Phased Antenna RF Waves -->
+            <g id="wfDectWaves" opacity="0.25" stroke="#F59E0B" stroke-width="1.2" stroke-linecap="round">
+              <path d="M 24 40 A 18 18 0 0 0 24 56"/>
+              <path d="M 19 36 A 24 24 0 0 0 19 60"/>
+              <path d="M 96 40 A 18 18 0 0 1 96 56"/>
+              <path d="M 101 36 A 24 24 0 0 1 101 60"/>
+            </g>
+
+            <!-- Carbon X-Frame Arms -->
+            <line id="wfArm1" x1="30" y1="24" x2="90" y2="72" stroke="#94A3B8" stroke-width="2.4" stroke-linecap="round"/>
+            <line id="wfArm2" x1="90" y1="24" x2="30" y2="72" stroke="#94A3B8" stroke-width="2.4" stroke-linecap="round"/>
+
+            <!-- 4 Heavy-Lift Brushless Rotors -->
+            <g id="wfRotors">
+              <circle cx="30" cy="24" r="13" fill="rgba(56,189,248,0.06)" stroke="rgba(226,232,240,0.45)" stroke-width="1.1"/>
+              <circle cx="90" cy="24" r="13" fill="rgba(56,189,248,0.06)" stroke="rgba(226,232,240,0.45)" stroke-width="1.1"/>
+              <circle cx="30" cy="72" r="13" fill="rgba(56,189,248,0.06)" stroke="rgba(226,232,240,0.45)" stroke-width="1.1"/>
+              <circle cx="90" cy="72" r="13" fill="rgba(56,189,248,0.06)" stroke="rgba(226,232,240,0.45)" stroke-width="1.1"/>
+              <circle cx="30" cy="24" r="2.2" fill="#E2E8F0"/>
+              <circle cx="90" cy="24" r="2.2" fill="#E2E8F0"/>
+              <circle cx="30" cy="72" r="2.2" fill="#E2E8F0"/>
+              <circle cx="90" cy="72" r="2.2" fill="#E2E8F0"/>
+            </g>
+
+            <!-- DECT NR+ 1.9 GHz Phased Array Frame Ring -->
+            <rect id="wfDectRing" x="45" y="34" width="30" height="28" rx="6" fill="rgba(15,23,42,0.88)" stroke="#64748B" stroke-width="1.6"/>
+            <text x="60" y="51" text-anchor="middle" fill="#94A3B8" font-family="JetBrains Mono, monospace" font-size="6.2" font-weight="700" id="wfCoreTxt">DECT 1.9G</text>
+
+            <!-- Nose / Top FSOC 1550nm Optical Gimbal Turret -->
+            <circle id="wfFsocTurret" cx="60" cy="29" r="5.8" fill="#064E3B" stroke="#10B981" stroke-width="1.8"/>
+            <circle id="wfFsocLens" cx="60" cy="29" r="2.3" fill="#34D399"/>
+
+            <!-- Underslung Morpheus Logistics Cargo Pod + Tethers -->
+            <line x1="50" y1="62" x2="46" y2="79" stroke="#64748B" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+            <line x1="70" y1="62" x2="74" y2="79" stroke="#64748B" stroke-width="1.2" stroke-dasharray="2 1.5"/>
+            <rect id="wfCargoBox" x="35" y="79" width="50" height="22" rx="4" fill="rgba(245,158,11,0.14)" stroke="#F59E0B" stroke-width="1.3"/>
+            <text x="60" y="88.5" text-anchor="middle" fill="#FDE68A" font-family="Inter, sans-serif" font-size="6.2" font-weight="700">MORPHEUS POD</text>
+            <text x="60" y="97.5" text-anchor="middle" fill="#FAFAFA" font-family="JetBrains Mono, monospace" font-size="7.5" font-weight="700" id="wfCargoWeight">4.2 kg</text>
+
+            <!-- Component Callout Labels -->
+            <text x="60" y="114" text-anchor="middle" fill="#A1A1AA" font-family="JetBrains Mono, monospace" font-size="6.5" id="wfActiveHw">FSOC 1550nm OPTICS ACTIVE</text>
+          </svg>
+          <div class="nc-swap-tag">FSOC+DECT Pod: <b style="color:#FAFAFA">225 g · 9.7 W</b></div>
+        </div>
+
+        <div class="nc-info-col">
+          <div class="nc-mission-box" id="ncMissionBox">
+            <div class="nc-mission-kicker" id="ncMissionKicker">DORTMUND LOGISTICS MISSION</div>
+            <div class="nc-mission-task" id="ncMissionTask">Urgent Trauma Blood Supply</div>
+            <div class="nc-mission-cargo">
+              <span id="ncMissionCargo" style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap">4x O-Neg Blood Units (4°C Cryo-Box)</span>
+              <b id="ncMissionWeight">4.2 kg</b>
+            </div>
+            <div class="nc-mission-route" id="ncMissionRoute">Klinikum Mitte → Westfalenhallen</div>
+          </div>
+
+          <div class="nc-grid">
+            <div><span>Altitude</span><b id="ncAlt">90 m AGL</b></div>
+            <div><span>Speed / Bat</span><b id="ncSpd">50 km/h · 86%</b></div>
+            <div><span>Link / Band</span><b id="ncLink">FSOC 1550nm</b></div>
+            <div><span>Latency / Hops</span><b id="ncLat">5 ms · 1H</b></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="nc-route">
+        <span id="ncLos" style="overflow:hidden;text-overflow:ellipsis">Clear 3D Line-of-Sight</span>
+        <span id="ncPath" style="color:var(--txt);font-weight:600;flex:none">DR-01 → HQ</span>
+      </div>`;
+
+    document.getElementById('ncClose').addEventListener('click', e => {
+      e.stopPropagation();
+      this.select(null, false);
+    });
+    this._camPhase = 0;
+  }
+
+  drawHudCamera(d, t, dt = 0.016) {
+    const cv = document.getElementById('ncCamCanvas');
+    if (!cv) return;
+    const ctx = cv.getContext('2d');
+    const W = cv.width, H = cv.height;
+    const isPopUp = this.sim.protection && (d.popUpActive || d.routeState === 'ISOLATED');
+    const off = d.status === 'OFFLINE';
+    const funkLost = !this.sim.protection && (d.routeState === 'ISOLATED' || d.routeState === 'REROUTING' || d.band === 'NONE');
+    const videoShed = d.qosEmergency || isPopUp || off || funkLost;
+    const isDectLowBitrate = !videoShed && d.band === 'DECT';
+
+    this._camPhase = (this._camPhase || 0) + (off ? 0 : Math.max(0.25, d.speed * 0.065)) * (dt || 0.016);
+    const scroll = this._camPhase;
+
+    ctx.save();
+    ctx.clearRect(0, 0, W, H);
+
+    if (videoShed) {
+      // Dark digital static + synthetic INS/VIO wireframe terrain fallback screen
+      ctx.fillStyle = '#05070C';
+      ctx.fillRect(0, 0, W, H);
+
+      // Synthetic INS/VIO wireframe grid scrolling underneath
+      const horizonY = 44;
+      ctx.strokeStyle = isPopUp ? 'rgba(192,132,252,0.22)' : d.qosEmergency ? 'rgba(245,158,11,0.18)' : 'rgba(239,68,68,0.15)';
+      ctx.lineWidth = 1;
+      for (let i = -6; i <= 6; i++) {
+        ctx.beginPath();
+        ctx.moveTo(W / 2 + i * 14, horizonY);
+        ctx.lineTo(W / 2 + i * 68, H);
+        ctx.stroke();
+      }
+      for (let r = 0; r < 6; r++) {
+        const u = ((r / 6) + (scroll * 0.35) % (1 / 6));
+        const y = horizonY + Math.pow(u, 1.55) * (H - horizonY);
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.lineTo(W, y);
+        ctx.stroke();
+      }
+
+      // Digital static noise specks + INS/VIO optical flow feature points
+      for (let i = 0; i < 48; i++) {
+        const nx = ((i * 73 + Math.floor(t * 0.19)) % W);
+        const ny = ((i * 41 + Math.floor(t * 0.13)) % H);
+        ctx.fillStyle = isPopUp ? 'rgba(192,132,252,0.28)' : 'rgba(148,163,184,0.14)';
+        ctx.fillRect(nx, ny, (i % 3) + 1, 1.5);
+      }
+      if (isPopUp) {
+        // Draw tracked VIO optical-flow corner features (+)
+        ctx.strokeStyle = 'rgba(52,211,153,0.65)';
+        ctx.lineWidth = 1;
+        for (let k = 0; k < 7; k++) {
+          const fx = 40 + ((k * 47) % (W - 80));
+          const fy = 52 + (((k * 29 + Math.floor(scroll * 38)) % (H - 64)));
+          ctx.beginPath();
+          ctx.moveTo(fx - 3, fy); ctx.lineTo(fx + 3, fy);
+          ctx.moveTo(fx, fy - 3); ctx.lineTo(fx, fy + 3);
+          ctx.stroke();
+        }
+      }
+
+      // Prominent Glowing Banner in center of camera viewport
+      const bannerCol = isPopUp ? 'rgba(88,28,135,0.86)' : d.qosEmergency ? 'rgba(120,53,15,0.88)' : 'rgba(127,29,29,0.88)';
+      const borderCol = isPopUp ? '#C084FC' : d.qosEmergency ? '#F59E0B' : '#EF4444';
+      ctx.fillStyle = bannerCol;
+      ctx.strokeStyle = borderCol;
+      ctx.lineWidth = 1.3;
+      ctx.beginPath();
+      ctx.roundRect(18, 36, W - 36, 58, 8);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.textAlign = 'center';
+      ctx.font = '700 10px "JetBrains Mono", monospace';
+      ctx.fillStyle = isPopUp ? '#F3E8FF' : d.qosEmergency ? '#FEF3C7' : '#FECACA';
+      const line1 = off
+        ? 'NODE OFFLINE · CAMERA FEED TERMINATED'
+        : isPopUp
+        ? 'AUTONOMOUS INS/VIO OPTICAL FLOW ACTIVE · CLIMBING ↑'
+        : d.qosEmergency
+        ? 'VIDEO SHED TO 0% (QoS EMERGENCY) · 12 kbps C2 LOCKED'
+        : '2.4 GHz FUNK BLACKOUT · VIDEO & C2 STREAM LOST';
+      ctx.fillText(line1, W / 2, 58);
+
+      ctx.font = '600 8.8px "JetBrains Mono", monospace';
+      ctx.fillStyle = isPopUp ? '#E9D5FF' : d.qosEmergency ? '#FDE68A' : '#FCA5A5';
+      const line2 = off
+        ? 'WATCHDOG REBOOT IN PROGRESS'
+        : isPopUp
+        ? `ALT ${d.alt.toFixed(0)}m → 125m TARGET · ROOF CLEARANCE >95m · ZERO RF/GPS`
+        : d.qosEmergency
+        ? `DECT NR+ 1.9 GHz FHSS SURVIVAL · +40ms LATENCY · C2 ARQ 100%`
+        : 'NO DECT NR+ FALLBACK · DRONE UNREACHABLE';
+      ctx.fillText(line2, W / 2, 77);
+    } else {
+      // Live 60fps Downward/Forward Night-Vision Optical / IR Fly Camera over Dortmund
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+      skyGrad.addColorStop(0, '#040811');
+      skyGrad.addColorStop(0.32, '#091322');
+      skyGrad.addColorStop(1, '#060C15');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, W, H);
+
+      const horizonY = 36 + Math.sin(t * 0.0018 + d.index) * 3;
+      const bank = Math.sin(t * 0.0022 + d.index) * 0.045;
+
+      ctx.save();
+      ctx.translate(W / 2, horizonY);
+      ctx.rotate(bank);
+
+      // Distant Dortmund skyline silhouette (U-Tower, RWE Tower, Florianturm)
+      ctx.fillStyle = 'rgba(15,23,42,0.95)';
+      const skyline = [[-170,10,16],[-145,14,12],[-118,28,18],[-88,12,22],[-52,32,14],[-24,15,20],[12,24,16],[48,36,4],[75,14,22],[112,22,16],[145,12,20]];
+      for (const [sx, sh, sw] of skyline) {
+        ctx.fillRect(sx, -sh, sw, sh);
+      }
+      // Golden "U" glow on distant U-Tower
+      ctx.fillStyle = '#F59E0B';
+      ctx.fillRect(-112, -25, 6, 5);
+
+      // Perspective 3D street grid scrolling beneath the drone
+      const groundH = H - horizonY + 20;
+      ctx.strokeStyle = isDectLowBitrate ? 'rgba(245,158,11,0.22)' : 'rgba(16,185,129,0.22)';
+      ctx.lineWidth = isDectLowBitrate ? 1.4 : 1.0;
+
+      for (let lane = -7; lane <= 7; lane++) {
+        ctx.beginPath();
+        ctx.moveTo(lane * 11, 0);
+        ctx.lineTo(lane * 64, groundH);
+        ctx.stroke();
+      }
+
+      for (let r = 0; r < 8; r++) {
+        const u = ((r / 8) + (scroll * 0.55) % (1 / 8));
+        const py = Math.pow(u, 1.7) * groundH;
+        ctx.beginPath();
+        ctx.moveTo(-W, py);
+        ctx.lineTo(W, py);
+        ctx.stroke();
+
+        // Scrolling city block footprints & glowing streetlights / vehicles
+        const scale = 0.2 + u * 1.15;
+        for (let b = -3; b <= 3; b++) {
+          if (b === 0) continue; // central avenue
+          const bx = b * 54 * scale;
+          const bw = 28 * scale, bh = 10 * scale;
+          ctx.fillStyle = 'rgba(15,23,42,0.68)';
+          ctx.strokeStyle = isDectLowBitrate ? 'rgba(251,191,36,0.24)' : 'rgba(52,211,153,0.26)';
+          ctx.fillRect(bx - bw / 2, py - bh, bw, bh);
+          ctx.strokeRect(bx - bw / 2, py - bh, bw, bh);
+        }
+
+        // Moving headlights / taillights along central Dortmund avenue
+        const carY = py;
+        const carX1 = -8 * scale, carX2 = 8 * scale;
+        ctx.fillStyle = '#FDE68A';
+        ctx.fillRect(carX1 - 1.5, carY - 1.5, 3 * scale, 2.2 * scale);
+        ctx.fillStyle = '#F87171';
+        ctx.fillRect(carX2 - 1.5, carY - 1.5, 3 * scale, 2.2 * scale);
+      }
+      ctx.restore();
+
+      // If on normal DECT NR+ (1.2 Mbps), overlay subtle scanlines / compression bands
+      if (isDectLowBitrate) {
+        ctx.fillStyle = 'rgba(245,158,11,0.045)';
+        for (let y = 0; y < H; y += 4) ctx.fillRect(0, y, W, 1.5);
+      }
+
+      // Central HUD Pitch Ladder & Target Reticle
+      const cx = W / 2, cy = H / 2 + 6;
+      const hudCol = isDectLowBitrate ? 'rgba(251,191,36,0.78)' : d.band === 'FUNK' ? 'rgba(56,189,248,0.78)' : 'rgba(52,211,153,0.82)';
+      ctx.strokeStyle = hudCol;
+      ctx.lineWidth = 1.1;
+      // Reticle brackets
+      ctx.beginPath();
+      ctx.arc(cx, cy, 14, 0, Math.PI * 2);
+      ctx.moveTo(cx - 22, cy); ctx.lineTo(cx - 8, cy);
+      ctx.moveTo(cx + 8, cy);  ctx.lineTo(cx + 22, cy);
+      ctx.moveTo(cx, cy - 20); ctx.lineTo(cx, cy - 8);
+      ctx.moveTo(cx, cy + 8);  ctx.lineTo(cx, cy + 20);
+      ctx.stroke();
+
+      // Pitch ladder rungs
+      for (const dy of [-18, 18]) {
+        ctx.beginPath();
+        ctx.moveTo(cx - 38, cy + dy); ctx.lineTo(cx - 26, cy + dy); ctx.lineTo(cx - 26, cy + dy + (dy > 0 ? -4 : 4));
+        ctx.moveTo(cx + 38, cy + dy); ctx.lineTo(cx + 26, cy + dy); ctx.lineTo(cx + 26, cy + dy + (dy > 0 ? -4 : 4));
+        ctx.stroke();
+      }
+    }
+
+    // Top Heading Tape & Bottom Telemetry Overlay (always visible on HUD glass)
+    const hdgDeg = ((Math.round((-d.heading * 180) / Math.PI) % 360) + 360) % 360;
+    const dirs = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+    const dirLbl = dirs[Math.round(hdgDeg / 45) % 8];
+    ctx.fillStyle = 'rgba(0,0,0,0.52)';
+    ctx.fillRect(0, 0, W, 18);
+    ctx.fillRect(0, H - 19, W, 19);
+
+    ctx.font = '700 8.5px "JetBrains Mono", monospace';
+    ctx.fillStyle = '#E4E4E7';
+    ctx.textAlign = 'left';
+    ctx.fillText(`HDG ${String(hdgDeg).padStart(3, '0')}° ${dirLbl}`, 8, 12);
+    ctx.textAlign = 'center';
+    ctx.fillStyle = '#34D399';
+    ctx.fillText(`▼ ${d.mission.task.toUpperCase().slice(0, 26)}`, W / 2, 12);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#F87171';
+    ctx.fillText(off ? '● OFF' : 'REC ●', W - 8, 12);
+
+    const ll = Geo.toLL(d.x, d.y);
+    ctx.textAlign = 'left';
+    ctx.fillStyle = '#A1A1AA';
+    ctx.fillText(`${ll.lat.toFixed(4)}°N ${ll.lon.toFixed(4)}°E`, 8, H - 6);
+    ctx.textAlign = 'right';
+    ctx.fillStyle = '#FAFAFA';
+    ctx.fillText(`ALT ${d.alt.toFixed(0)}m · SPD ${(d.speed * 3.6).toFixed(0)}km/h · PAYLOAD ${d.mission.weight}`, W - 8, H - 6);
+
+    ctx.restore();
+  }
+
+  updateSelectedCard(t = this.sim.now, dt = 0.016) {
     const el = document.getElementById('nodeCard');
     const d = this.selected ? this.sim.droneMap.get(this.selected) : null;
     if (!d) { el.classList.add('hidden'); return; }
-    const [sx, sy] = this.w2s(d.x, d.y, d.alt);
+    this.ensureInspectorDOM(el);
     el.classList.remove('hidden');
+
+    // Draw subtle leader reticle around selected drone on 3D map canvas
+    const [sx, sy] = this.w2s(d.x, d.y, d.alt);
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.strokeStyle = 'rgba(52,211,153,0.75)';
+    ctx.lineWidth = 1.4;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(sx, sy, 22, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
+
     const distress = this.isDistressed(d);
     const isPopUp = this.sim.protection && (d.popUpActive || d.routeState === 'ISOLATED');
+    const off = d.status === 'OFFLINE';
     const badgeCls = isPopUp ? 'popup' : distress === 'crit' ? 'crit' : distress === 'warn' ? 'warn' : '';
-    const badgeTxt = d.status === 'OFFLINE'
+    const badgeTxt = off
       ? 'OFFLINE'
       : isPopUp
       ? (d.popUpActive && d.alt < CFG.ROOF_CLEAR_ALT
@@ -2600,6 +3026,7 @@ class MapRenderer extends Emitter {
       : d.role === 'RELAY'
       ? 'High-Alt Relay (120m FSOC)'
       : 'FSOC Laser (1550nm LoS)';
+
     const ip = `10.41.0.${d.index + 1}`;
     const route = d.route ? d.route.join(' → ') : d.routeState;
     const losInfo = d.nlosReason ? `Blocked: ${d.nlosReason}` : 'Clear 3D Line-of-Sight';
@@ -2614,22 +3041,88 @@ class MapRenderer extends Emitter {
       : d.band === 'FSOC'
       ? 'FSOC 1550nm'
       : 'NO LINK';
-    el.innerHTML = `
-      <div class="nc-top">
-        <span class="nc-id">${d.id} <span style="color:var(--mut);font-weight:400;font-size:10px">(${ip})</span></span>
-        <span class="nc-badge ${badgeCls}">${badgeTxt}</span>
-      </div>
-      <div class="nc-grid">
-        <div><span>Altitude</span><b>${d.popUpActive ? `↑ ${d.alt.toFixed(0)} m (Pop-Up)` : `${d.alt.toFixed(0)} m AGL`}</b></div>
-        <div><span>Speed</span><b>${(d.speed * 3.6).toFixed(0)} km/h</b></div>
-        <div><span>Link / LoS</span><b>${linkName}</b></div>
-        <div><span>Latency / Hops</span><b>${d.routeState === 'OK' ? `${d.latency.toFixed(0)} ms · ${d.hops}H` : '—'}</b></div>
-      </div>
-      <div class="nc-route">${losInfo} · ${route}</div>`;
-    const cx = clamp(sx, 120, this.w - 120);
-    const cy = clamp(sy, 145, this.h - 180);
-    el.style.left = `${cx}px`;
-    el.style.top = `${cy}px`;
+
+    document.getElementById('ncId').textContent = d.id;
+    document.getElementById('ncIp').textContent = `(${ip})`;
+    const badgeEl = document.getElementById('ncBadge');
+    badgeEl.className = `nc-badge ${badgeCls}`;
+    badgeEl.textContent = badgeTxt;
+
+    // Update Camera QoS Header Badge
+    const camQos = document.getElementById('ncCamQos');
+    if (off) {
+      camQos.className = 'nc-cam-qos shed';
+      camQos.textContent = 'OFFLINE · 0 kbps';
+    } else if (isPopUp) {
+      camQos.className = 'nc-cam-qos popup';
+      camQos.textContent = 'INS/VIO OPTICAL FLOW · 0 RF';
+    } else if (d.qosEmergency) {
+      camQos.className = 'nc-cam-qos shed';
+      camQos.textContent = 'VIDEO SHED 0% · 12 kbps C2';
+    } else if (!this.sim.protection && (d.routeState !== 'OK' || d.band === 'NONE')) {
+      camQos.className = 'nc-cam-qos shed';
+      camQos.textContent = '2.4G LOST · 0 kbps';
+    } else if (d.band === 'DECT') {
+      camQos.className = 'nc-cam-qos dect';
+      camQos.textContent = 'LOW-BITRATE · 1.2 Mbps · DECT NR+';
+    } else if (d.band === 'FUNK') {
+      camQos.className = 'nc-cam-qos funk';
+      camQos.textContent = '720p30 · 2.1 Mbps · 2.4G FUNK';
+    } else {
+      camQos.className = 'nc-cam-qos fsoc';
+      camQos.textContent = 'HD 1080p60 · 3.5 Mbps · FSOC LASER';
+    }
+
+    // Update Interactive Morpheus Drone SVG Wireframe
+    const fsocActive = !off && d.band === 'FSOC' && d.routeState === 'OK';
+    const dectActive = !off && d.band === 'DECT';
+    const losBlocked = !!d.nlosReason || off || d.band === 'NONE';
+    document.getElementById('wfFsocCone').setAttribute('fill',
+      fsocActive ? 'rgba(16,185,129,0.26)' : losBlocked ? 'rgba(239,68,68,0.18)' : 'rgba(56,189,248,0.14)'
+    );
+    document.getElementById('wfFsocTurret').setAttribute('stroke',
+      fsocActive ? '#10B981' : losBlocked ? '#EF4444' : '#38BDF8'
+    );
+    document.getElementById('wfFsocLens').setAttribute('fill',
+      fsocActive ? '#34D399' : losBlocked ? '#F87171' : '#38BDF8'
+    );
+    document.getElementById('wfDectWaves').setAttribute('opacity', dectActive ? '0.95' : '0.15');
+    document.getElementById('wfDectRing').setAttribute('stroke',
+      isPopUp ? '#C084FC' : dectActive ? '#F59E0B' : fsocActive ? '#10B981' : '#64748B'
+    );
+    document.getElementById('wfCoreTxt').textContent = isPopUp ? 'INS/VIO' : dectActive ? 'DECT 1.9G' : 'FSOC 1550';
+    document.getElementById('wfCoreTxt').setAttribute('fill',
+      isPopUp ? '#E9D5FF' : dectActive ? '#FBBF24' : '#6EE7B7'
+    );
+    document.getElementById('wfCargoWeight').textContent = d.mission.weight;
+    const hwEl = document.getElementById('wfActiveHw');
+    hwEl.textContent = isPopUp
+      ? 'INS/VIO STEREO FLOW ACTIVE'
+      : d.qosEmergency
+      ? 'DECT FHSS · 12 kbps C2 LOCK'
+      : dectActive
+      ? 'DECT NR+ 1.9G PHASED ARRAY'
+      : fsocActive
+      ? 'FSOC 1550nm TURRET LOCKED'
+      : '2.4 GHz OMNIDIRECTIONAL';
+    hwEl.setAttribute('fill', isPopUp ? '#E9D5FF' : dectActive ? '#FBBF24' : fsocActive ? '#34D399' : '#94A3B8');
+
+    // Update Logistics & Task Telemetry Block
+    document.getElementById('ncMissionKicker').textContent =
+      d.id === 'DR-04' || d.id === 'DR-09' ? 'BVB STADIUM / CROWD OVERWATCH' : d.role === 'RELAY' ? 'HIGH-ALTITUDE OPTICAL BACKBONE' : 'MORPHEUS LOGISTICS MISSION';
+    document.getElementById('ncMissionTask').textContent = d.mission.task;
+    document.getElementById('ncMissionCargo').textContent = d.mission.cargo;
+    document.getElementById('ncMissionWeight').textContent = d.mission.weight;
+    document.getElementById('ncMissionRoute').textContent = d.mission.route;
+
+    document.getElementById('ncAlt').textContent = d.popUpActive ? `↑ ${d.alt.toFixed(0)} m (Pop-Up)` : `${d.alt.toFixed(0)} m AGL`;
+    document.getElementById('ncSpd').textContent = `${(d.speed * 3.6).toFixed(0)} km/h · ${d.battery.toFixed(0)}%`;
+    document.getElementById('ncLink').textContent = linkName;
+    document.getElementById('ncLat').textContent = d.routeState === 'OK' ? `${d.latency.toFixed(0)} ms · ${d.hops}H` : '—';
+    document.getElementById('ncLos').textContent = losInfo;
+    document.getElementById('ncPath').textContent = route;
+
+    this.drawHudCamera(d, t, dt);
   }
 }
 
@@ -2781,11 +3274,16 @@ class UI {
         <div class="drow-main">
           <span class="st-dot"></span>
           <span class="drow-id">${d.id}</span>
-          <span class="drow-ip">(${ip})</span>
+          <span class="drow-ip" title="${d.mission.task}">· ${d.mission.task.split('·')[0].trim().slice(0, 15)}</span>
           <span class="drow-band">FSOC Laser</span>
           <span class="drow-rtt">2ms</span>
         </div>
         <div class="drow-detail">
+          <div class="dd-cell" style="grid-column:1/-1;border-bottom:1px solid rgba(255,255,255,0.06);padding-bottom:4px;margin-bottom:2px">
+            <span>Task · Payload (${d.mission.weight})</span>
+            <b style="color:#34D399">${d.mission.task}</b>
+            <span style="text-transform:none;letter-spacing:0;color:var(--txt2);margin-top:1px">${d.mission.cargo} · ${d.mission.route}</span>
+          </div>
           <div class="dd-cell"><span>Altitude</span><b class="v-alt">0 m</b></div>
           <div class="dd-cell"><span>Speed</span><b class="v-spd">0 km/h</b></div>
           <div class="dd-cell"><span>Battery</span><b class="v-bat">0%</b></div>
