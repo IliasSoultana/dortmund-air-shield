@@ -201,29 +201,31 @@
   .rm-step p { font-size: 20px; color: var(--sub); line-height: 1.42; }
 
   /* ---------- team slide ---------- */
-  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; margin-top: 48px; flex: 1; align-items: stretch; margin-bottom: 36px; }
+  .team-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 38px; margin-top: 44px; flex: 1; align-items: stretch; margin-bottom: 34px; }
   .member-card {
-    border: 1px solid var(--line); border-radius: 28px; padding: 48px 52px;
+    border: 1px solid var(--line); border-radius: 26px; padding: 38px 38px;
     background: linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 100%);
     display: flex; flex-direction: column; justify-content: space-between;
     position: relative; overflow: hidden;
   }
   .member-card.m-fsoc { border-top: 3px solid var(--fsoc); }
   .member-card.m-pop  { border-top: 3px solid var(--pop); }
-  .member-top { display: flex; align-items: center; gap: 28px; }
+  .member-card.m-dect { border-top: 3px solid var(--dect); }
+  .member-top { display: flex; align-items: center; gap: 22px; }
   .avatar {
-    width: 88px; height: 88px; border-radius: 24px; flex-shrink: 0;
+    width: 76px; height: 76px; border-radius: 20px; flex-shrink: 0;
     display: flex; align-items: center; justify-content: center;
-    font-family: var(--mono); font-size: 32px; font-weight: 700; letter-spacing: -0.03em;
+    font-family: var(--mono); font-size: 28px; font-weight: 700; letter-spacing: -0.03em;
   }
   .m-fsoc .avatar { background: rgba(16,185,129,0.14); color: var(--fsoc); border: 1px solid rgba(16,185,129,0.35); }
   .m-pop  .avatar { background: rgba(167,139,250,0.14); color: var(--pop); border: 1px solid rgba(167,139,250,0.35); }
-  .member-role { font-family: var(--mono); font-size: 18px; letter-spacing: .12em; text-transform: uppercase; color: var(--mut); margin-bottom: 8px; }
-  .member-name { font-size: 46px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.05; }
-  .member-desc { font-size: 25px; line-height: 1.5; color: var(--sub); margin-top: 32px; }
-  .member-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .m-dect .avatar { background: rgba(245,158,11,0.14); color: var(--dect); border: 1px solid rgba(245,158,11,0.35); }
+  .member-role { font-family: var(--mono); font-size: 16px; letter-spacing: .11em; text-transform: uppercase; color: var(--mut); margin-bottom: 6px; }
+  .member-name { font-size: 36px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.08; }
+  .member-desc { font-size: 22px; line-height: 1.48; color: var(--sub); margin-top: 26px; }
+  .member-tags { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 26px; }
   .member-tags span {
-    font-family: var(--mono); font-size: 18px; padding: 8px 16px; border-radius: 999px;
+    font-family: var(--mono); font-size: 16px; padding: 7px 14px; border-radius: 999px;
     border: 1px solid var(--line); background: rgba(255,255,255,0.03); color: var(--ink);
   }
 
@@ -299,7 +301,7 @@
     <div class="meta rise" style="--d:.85s">
       <div>Challenge<b>Morpheus Logistik · OFF-Grid Air</b></div>
       <div>Fleet &amp; HQ<b>10 Drones · Reinoldikirche</b></div>
-      <div>Team<b>Nassim Soultana · Ilias Amir Soultana</b></div>
+      <div>Team<b>Nassim · Ilias Amir · Sami Soultana</b></div>
     </div>
   </section>
 
@@ -564,7 +566,7 @@
   </section>
 
   <!-- 10 · TEAM -->
-  <section class="slide" style="--glow: rgba(56,189,248,0.08)" data-notes="Built in 24 hours at the DO-DATA-Hackathon 2026 by Nassim Soultana and Ilias Amir Soultana — combining real-time 3D aerospace & RF/optical simulation with deterministic contrastive threat detection and downstream LLM incident response. (~15 s)">
+  <section class="slide" style="--glow: rgba(56,189,248,0.08)" data-notes="Built in 24 hours at the DO-DATA-Hackathon 2026 by Nassim Soultana, Ilias Amir Soultana, and Sami Soultana — combining real-time 3D aerospace & RF/optical simulation, deterministic contrastive threat detection & LLM incident response, and Morpheus Leitstand QoS & regulatory systems engineering. (~15 s)">
     <div class="eyebrow">The team · DO-DATA-Hackathon 2026</div>
     <div class="title">Built by <span class="c-fsoc">engineers</span> who ship under fire.</div>
     <div class="team-grid">
@@ -573,17 +575,16 @@
           <div class="member-top">
             <div class="avatar">NS</div>
             <div>
-              <div class="member-role c-fsoc">Aerospace &amp; RF/Optical Systems · 3D HUD</div>
+              <div class="member-role c-fsoc">Aerospace &amp; RF/Optical · 3D HUD</div>
               <div class="member-name">Nassim Soultana</div>
             </div>
           </div>
-          <p class="member-desc">Designed the hybrid 1550 nm FSOC Laser + 1.9 GHz DECT NR+ mesh topology, 3D Dortmund building raycast &amp; Mie-scattering fog physics, autonomous INS/VIO Vertical Pop-Up recovery, and the 60 fps Mission Control &amp; Drone Inspector HUD.</p>
+          <p class="member-desc">Designed the hybrid 1550 nm FSOC Laser + 1.9 GHz DECT NR+ mesh topology, 3D Dortmund building raycast &amp; Mie-scattering fog physics, autonomous INS/VIO Vertical Pop-Up, and the 60 fps Mission Control &amp; Drone Inspector HUD.</p>
         </div>
         <div class="member-tags">
           <span>FSOC 1550 nm / DECT NR+</span>
           <span>3D Raycast &amp; Fog Physics</span>
           <span>INS/VIO Pop-Up</span>
-          <span>@SoulNassim</span>
         </div>
       </div>
       <div class="member-card m-pop b">
@@ -591,17 +592,33 @@
           <div class="member-top">
             <div class="avatar">IS</div>
             <div>
-              <div class="member-role c-pop">AI Security &amp; Anomaly Detection · Backend</div>
+              <div class="member-role c-pop">AI Security &amp; Anomaly Detection</div>
               <div class="member-name">Ilias Amir Soultana</div>
             </div>
           </div>
-          <p class="member-desc">Architected the deterministic 2 Hz Python physics &amp; HMAC-SHA256 zero-trust backend, per-drone Contrastive Prototype Detector (0.0 s slow-ramp detection vs 9.5 s rules), one-click online threat learning, and the LLM Security Analyst Co-Pilot.</p>
+          <p class="member-desc">Architected the deterministic 2 Hz Python physics &amp; HMAC-SHA256 zero-trust backend, per-drone Contrastive Prototype Detector (0.0 s slow-ramp detection vs 9.5 s rules), one-click online threat learning, and the LLM Security Co-Pilot.</p>
         </div>
         <div class="member-tags">
           <span>Contrastive Prototypes</span>
           <span>HMAC-SHA256 Mesh Auth</span>
           <span>LLM Security Co-Pilot</span>
-          <span>@IliasSoultana</span>
+        </div>
+      </div>
+      <div class="member-card m-dect b">
+        <div>
+          <div class="member-top">
+            <div class="avatar">SS</div>
+            <div>
+              <div class="member-role c-dect">Mesh QoS, SWaP &amp; Operations</div>
+              <div class="member-name">Sami Soultana</div>
+            </div>
+          </div>
+          <p class="member-desc">Engineered the 4-tier QoS traffic prioritization &amp; emergency video shedding (12 kbps C2 lock), the 225 g / 9.7 W hardware SWaP &amp; BNetzA / ETSI regulatory compliance model, and the Dortmund medical &amp; critical-infrastructure mission profiles.</p>
+        </div>
+        <div class="member-tags">
+          <span>QoS Traffic Shedding</span>
+          <span>225 g Pod SWaP &amp; BNetzA</span>
+          <span>Morpheus Leitstand Ops</span>
         </div>
       </div>
     </div>
