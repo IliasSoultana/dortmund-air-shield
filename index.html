@@ -75,6 +75,14 @@ button,input{font-family:inherit}
 .toast-chev{color:var(--mut);font-size:10px;transition:transform .2s}
 .toast-bar.open .toast-chev{transform:rotate(180deg)}
 
+.weather-badge{
+  pointer-events:auto;display:inline-flex;align-items:center;gap:8px;max-width:100%;
+  padding:6px 13px;border-radius:999px;background:rgba(30,41,59,0.72);
+  backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border:1px solid rgba(148,163,184,0.22);
+  color:#CBD5E1;font-family:var(--mono);font-size:9.5px;font-weight:600;letter-spacing:.04em;white-space:nowrap;
+}
+.weather-badge svg{flex:none;color:#94A3B8}
+.weather-badge span{overflow:hidden;text-overflow:ellipsis}
 .log-drawer{
   pointer-events:auto;width:100%;max-height:220px;padding:12px 14px;border-radius:16px;
   display:flex;flex-direction:column;gap:8px;
@@ -378,6 +386,7 @@ button,input{font-family:inherit}
 .nc-cam-rate.funk{color:#7DD3FC}
 .nc-cam-rate.shed{color:#FCA5A5}
 .nc-cam-rate.popup{color:#E9D5FF}
+.nc-cam-weather{top:36px;left:50%;transform:translateX(-50%);max-width:calc(100% - 18px);overflow:hidden;text-overflow:ellipsis;font-family:var(--mono);font-size:8.5px;font-weight:600;letter-spacing:.03em;color:#CBD5E1;background:rgba(30,41,59,0.62)}
 .nc-cam-foot{
   position:absolute;left:0;right:0;bottom:0;z-index:2;display:flex;justify-content:space-between;gap:10px;
   padding:16px 11px 8px;background:linear-gradient(to top,rgba(0,0,0,0.62),transparent);
@@ -489,6 +498,10 @@ button,input{font-family:inherit}
       <span class="toast-msg" id="toastMsg">Hybrid FSOC Laser + DECT NR+ mesh online</span>
       <span class="toast-threat" id="hdrThreat">NOMINAL</span>
       <span class="toast-chev">▾</span>
+    </div>
+    <div class="weather-badge hidden" id="weatherBadge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 9h13M2 13h18M5 17h12"/></svg>
+      <span>WEATHER: DENSE FOG (VISIBILITY &lt;200m · FSOC RANGE 520m · DECT NR+ IMMUNE)</span>
     </div>
 
     <div class="glass log-drawer hidden" id="logDrawer">
@@ -639,6 +652,10 @@ button,input{font-family:inherit}
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><circle cx="12" cy="10" r="3"/><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11Z"/></svg>
       <span>GPS Spoofing</span>
     </button>
+    <button class="ctrl-btn" id="btnWeather" title="Toggle Dense Fog (1550nm Mie scattering) · Shortcut: W">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M17.5 15H7a4 4 0 1 1 .9-7.9A5.5 5.5 0 0 1 18.4 9 3 3 0 0 1 17.5 15Z"/><path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/></svg>
+      <span>Dense Fog</span>
+    </button>
     <button class="ctrl-btn" id="btnRth" title="Safe Return Home · Shortcut: R">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="m3 11 9-7 9 7"/><path d="M5 10v10h14V10"/></svg>
       <span>Return Home</span>
@@ -668,6 +685,8 @@ const CFG = {
   HQ: { lat: 51.5136, lon: 7.4653, alt: 68, name: 'REINOLDIKIRCHE · CONTROL CENTER' },
   ZONE: { lat: 51.5149, lon: 7.4516, radius: 620, innerCoreRadius: 150, sector: 'SECTOR WEST · U-TOWER' },
   FSOC_RANGE: 2800,          // m, 1550nm optical laser air-to-air / ground-to-air (requires 3D LoS)
+  FOG_FSOC_RANGE: 520,       // m, 1550nm range in dense fog (~60 dB/km Mie scattering)
+  FOG_REASON: 'Dense Fog Mie Scattering (>60 dB/km)',
   DECT_RANGE: 4500,          // m, DECT NR+ 1.9 GHz NLOS RF mesh fallback
   FSOC_CAP_KBPS: 1000000,    // 1 Gbps effective optical link (1550nm)
   DECT_CAP_KBPS: 4800,       // 4.8 Mbps DECT NR+ 1.9 GHz mesh
@@ -842,8 +861,8 @@ class Emitter {
 
 class Logger extends Emitter {
   constructor() { super(); this.lines = []; }
-  log(level, msg) {
-    const e = { ts: new Date(), level, msg };
+  log(level, msg, { holdMs = 0 } = {}) {
+    const e = { ts: new Date(), level, msg, holdMs };
     this.lines.push(e); if (this.lines.length > 400) this.lines.shift();
     this.emit('line', e);
   }
@@ -1018,9 +1037,11 @@ class ThreatEnvironment {
     const z = Geo.toXY(CFG.ZONE.lat, CFG.ZONE.lon);
     this.zone = { x: z.x, y: z.y, radius: CFG.ZONE.radius, innerCoreRadius: CFG.ZONE.innerCoreRadius || 150, sector: CFG.ZONE.sector };
     this.jamming = false; this.spoofing = false;
+    this.weather = 'CLEAR';           // CLEAR | FOG
     this.spoofVec = { x: -5, y: 4 };
-    this.since = { jamming: 0, spoofing: 0 };
+    this.since = { jamming: 0, spoofing: 0, weather: 0 };
   }
+  get fsocRange() { return this.weather === 'FOG' ? CFG.FOG_FSOC_RANGE : CFG.FSOC_RANGE; }
   jamDistanceAt(x, y) {
     return Math.hypot(x - this.zone.x, y - this.zone.y);
   }
@@ -1174,12 +1195,21 @@ class MeshNetwork {
       const fsocDeg = new Map();
       const dectAdded = new Set();
       const innerCore = CFG.ZONE.innerCoreRadius || 150;
+      const fsocRange = env.fsocRange, fog = env.weather === 'FOG';
+      const fogLost = new Set();
 
       for (let i = 0; i < nodes.length; i++) for (let j = i + 1; j < nodes.length; j++) {
         const a = nodes[i], b = nodes[j];
         if (forced(a) === 'DECT' || forced(b) === 'DECT') continue;
         const d = Geo.dist3(a, b);
-        if (d > CFG.FSOC_RANGE) continue;
+        if (d > fsocRange) {
+          // Within clear-air laser range but beyond the fog-limited range: Mie scattering kills the beam.
+          if (fog && d <= CFG.FSOC_RANGE) {
+            if (a.id !== 'HQ') fogLost.add(a.id);
+            if (b.id !== 'HQ') fogLost.add(b.id);
+          }
+          continue;
+        }
         const jam = Math.max(jamOf(a), jamOf(b));
         const minJamDist = Math.min(jamDistOf(a), jamDistOf(b));
 
@@ -1209,8 +1239,11 @@ class MeshNetwork {
         }
 
         // Clear 3D Line-of-Sight: FSOC 1550nm optical laser has 0% packet loss and 100% immunity to RF jamming!
-        let q = 1 - Math.pow(d / CFG.FSOC_RANGE, 2.6);
-        if (q < 0.12) continue;
+        let q = 1 - Math.pow(d / fsocRange, 2.6);
+        if (q < 0.12) {
+          if (fog) { if (a.id !== 'HQ') fogLost.add(a.id); if (b.id !== 'HQ') fogLost.add(b.id); }
+          continue;
+        }
         links.push(this.makeLink(a, b, 'FSOC', q, 0, null, minJamDist));
         fsocDeg.set(a.id, (fsocDeg.get(a.id) || 0) + 1);
         fsocDeg.set(b.id, (fsocDeg.get(b.id) || 0) + 1);
@@ -1219,6 +1252,7 @@ class MeshNetwork {
       for (const d of online) {
         const hqHit = this.checkLoSWithHysteresis(d, sim.hq, now);
         if (hqHit) nlosReasonMap.set(d.id, hqHit.obstacle.name);
+        if (fogLost.has(d.id) && !hqHit) nlosReasonMap.set(d.id, CFG.FOG_REASON);
 
         // Only open extra DECT NR+ links if forced or if ALL 3D FSOC sightlines (including to 120m relays DR-01/DR-02) are blocked by tall buildings
         const needDect = forced(d) === 'DECT' || !fsocDeg.get(d.id);
@@ -1277,7 +1311,9 @@ class MeshNetwork {
         } else {
           nb = 'NONE';
         }
-        d.nlosReason = nb !== 'FSOC' ? (nlosReasonMap.get(d.id) || '3D Building LoS Occlusion') : null;
+        d.nlosReason = nb !== 'FSOC'
+          ? (nlosReasonMap.get(d.id) || (env.weather === 'FOG' ? CFG.FOG_REASON : '3D Building LoS Occlusion'))
+          : null;
         // Outer/Mid Jamming Zone (>150m from jammer center) on DECT NR+ triggers QoS EMERGENCY MODE
         const wasQosEmg = d.qosEmergency;
         d.qosEmergency = nb === 'DECT' && env.jamming && d.jam > 0.12 && d.jamDist >= innerCore;
@@ -1798,6 +1834,10 @@ class Simulation extends Emitter {
   onBandChange(d, from, to) {
     const L = this.logger;
     if (to === 'DECT') {
+      if (d.nlosReason === CFG.FOG_REASON) {
+        L.net(`${d.id} FSOC beam lost to fog (Mie scattering >60 dB/km) → 1.9 GHz DECT NR+ · video throttled to 35% · C2 & telemetry 100%`);
+        return;
+      }
       const why = d.nlosReason ? `3D LoS blocked by ${d.nlosReason}` : 'FSOC optical beam attenuated';
       L.warn(`${d.id} FSOC Laser link interrupted (${why} · 3s hysteresis confirmed)`);
       if (this.env.jamming && d.jamDist >= (CFG.ZONE.innerCoreRadius || 150) && d.jam > 0) {
@@ -1837,6 +1877,19 @@ class Simulation extends Emitter {
       this.logger.crit(`GNSS SPOOFING injected – ${this.env.zone.sector} · counterfeit L1 C/A signals`);
     } else this.logger.ok('GNSS spoofing source neutralised');
     this.command('SET_SPOOFING', on, origin); this.emit('env');
+  }
+  setWeather(weather, origin = 'ui') {
+    const w = String(weather).toUpperCase() === 'FOG' ? 'FOG' : 'CLEAR';
+    if (this.env.weather === w) return;
+    this.env.weather = w; this.env.since.weather = this.now;
+    this.net.compute(); this.traffic.compute(); this.metrics.compute();
+    // Logged after the recompute so the alert, not the per-drone band changes, is what stays in the toast.
+    if (w === 'FOG') {
+      this.logger.log('WARN', 'WEATHER ALERT: Dense fog over Dortmund (>60 dB/km optical attenuation) → Long-range FSOC links switching to weather-immune 1.9 GHz DECT NR+ mesh', { holdMs: 6000 });
+    } else {
+      this.logger.ok(`Fog cleared – FSOC 1550nm laser range restored to ${CFG.FSOC_RANGE} m`);
+    }
+    this.command('SET_WEATHER', w, origin); this.emit('env'); this.emit('net');
   }
   failDrone(d, { reboot = true, reason = 'heartbeat timeout (3×500 ms) · power bus fault' } = {}) {
     if (d.status === 'OFFLINE') return;
@@ -1891,7 +1944,7 @@ class Simulation extends Emitter {
     this.command('SAFE_RETURN_HOME', on, origin); this.emit('env');
   }
   reset(origin = 'ui') {
-    this.env.jamming = false; this.env.spoofing = false;
+    this.env.jamming = false; this.env.spoofing = false; this.env.weather = 'CLEAR';
     this.rampJam = false;
     this.confirmedMockThreats.clear();
     this.lastMockAnalysisKey = '';
@@ -1940,6 +1993,7 @@ class Simulation extends Emitter {
     switch (t) {
       case 'JAMMING': this.setJamming(on, 'backend'); break;
       case 'SPOOFING': case 'GPS_SPOOFING': this.setSpoofing(on, 'backend'); break;
+      case 'WEATHER': case 'FOG': this.setWeather(e.weather || (on ? 'FOG' : 'CLEAR'), 'backend'); break;
       case 'NODE_FAILURE': this.failNodes(e.ids || e.count || 2, 'backend'); break;
       case 'NODE_RESTORE': (e.ids ? e.ids.map(id => this.droneMap.get(id)) : this.drones).filter(Boolean).forEach(d => this.rebootDrone(d)); break;
       case 'RTH': case 'SAFE_RETURN_HOME': this.setRTH(on, 'backend'); break;
@@ -1954,7 +2008,7 @@ class Simulation extends Emitter {
   getState() {
     return {
       ts: Date.now(), simTime: this.simTime,
-      env: { jamming: this.env.jamming, spoofing: this.env.spoofing, rth: this.rth, protection: this.protection, zone: { ...Geo.toLatLon(this.env.zone.x, this.env.zone.y), radius_m: this.env.zone.radius } },
+      env: { jamming: this.env.jamming, spoofing: this.env.spoofing, weather: this.env.weather, rth: this.rth, protection: this.protection, zone: { ...Geo.toLatLon(this.env.zone.x, this.env.zone.y), radius_m: this.env.zone.radius } },
       metrics: { reachability: this.metrics.v.reach, latency_ms: this.metrics.v.latency, packet_loss: this.metrics.v.loss, recovery_s: this.metrics.v.recovery },
       traffic: this.traffic.stats,
       drones: this.drones.map(d => ({ id: d.id, lat: d.lat, lon: d.lon, alt: d.alt, speed: d.speed, battery: d.battery, status: d.status, mode: d.mode, band: d.band, gnss: d.gnss, route: d.route, routeState: d.routeState, latency_ms: d.latency })),
@@ -2257,6 +2311,7 @@ class MapRenderer extends Emitter {
     ctx.clearRect(0, 0, this.w, this.h);
     if (!this.glReady) this.drawFallbackBackground();
     this.drawObstaclesOverlay(t);
+    this.drawFog();
     this.drawZone(t);
     this.drawLinks(t);
     this.updateParticles(dt);
@@ -2264,6 +2319,39 @@ class MapRenderer extends Emitter {
     this.drawHQ(t);
     this.drawDrones(t);
     this.updateSelectedCard(t, dt);
+  }
+
+  // Misty blue-grey haze, denser toward the far (top) edge of the pitched view, with slowly drifting bands.
+  drawHaze(ctx, W, H, wall, strength = 1) {
+    ctx.fillStyle = `rgba(148,163,184,${0.10 * strength})`;
+    ctx.fillRect(0, 0, W, H);
+    const top = ctx.createLinearGradient(0, 0, 0, H * 0.5);
+    top.addColorStop(0, `rgba(148,163,184,${0.16 * strength})`);
+    top.addColorStop(1, 'rgba(148,163,184,0)');
+    ctx.fillStyle = top;
+    ctx.fillRect(0, 0, W, H * 0.5);
+    for (let i = 0; i < 5; i++) {
+      const span = W * 1.8;
+      const x = ((wall * 0.010 * (1 + i * 0.35) + i * W * 0.41) % span) - W * 0.4;
+      const y = H * (0.14 + i * 0.18) + Math.sin(wall * 0.00025 + i * 1.7) * H * 0.03;
+      const r = Math.max(W, H) * 0.16;
+      ctx.save();
+      ctx.translate(x, y); ctx.scale(3.4, 1);
+      const g = ctx.createRadialGradient(0, 0, 0, 0, 0, r);
+      g.addColorStop(0, `rgba(203,213,225,${0.075 * strength})`);
+      g.addColorStop(1, 'rgba(203,213,225,0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+  }
+
+  drawFog() {
+    if (this.sim.env.weather !== 'FOG') return;
+    const ctx = this.ctx;
+    ctx.save();
+    this.drawHaze(ctx, this.w, this.h, performance.now());
+    ctx.restore();
   }
 
   drawFallbackBackground() {
@@ -2702,6 +2790,7 @@ class MapRenderer extends Emitter {
         <canvas id="ncCamCanvas"></canvas>
         <div class="nc-cam-pill nc-cam-live" id="ncLive"><i></i><span id="ncLiveTxt">LIVE · CAM 01</span></div>
         <div class="nc-cam-pill nc-cam-rate fsoc" id="ncCamRate">3.5 Mbps · FSOC 1550nm</div>
+        <div class="nc-cam-pill nc-cam-weather hidden" id="ncCamWeather">WEATHER ATTENUATION · MIE SCATTERING · DECT NR+ ACTIVE</div>
         <div class="nc-cam-pause">
           <div class="nc-pause-card">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
@@ -2893,15 +2982,20 @@ class MapRenderer extends Emitter {
     if (cam.mode === 'dect') ctx.filter = 'blur(1.2px) saturate(0.85)';
     ctx.drawImage(scene, 0, 0);
     ctx.filter = 'none';
+    if (this.sim.env.weather === 'FOG') {
+      ctx.setTransform(s, 0, 0, s, 0, 0);
+      this.drawHaze(ctx, W, H, wall, 1.8);
+    }
   }
 
   // FLIR white-hot street corridor in 3D perspective (scene units ≈ metres).
   renderCamScene(ctx, W, H, s, wall) {
     ctx.setTransform(s, 0, 0, s, 0, 0);
     const hz = H * 0.40, cx = W / 2, f = W * 0.72, camH = 12, far = 200, camZ = this._camZ;
-    const FOG = [16, 21, 28];
+    const dense = this.sim.env.weather === 'FOG';
+    const FOG = dense ? [58, 66, 78] : [16, 21, 28];
     const P = (x, y, z) => [cx + (x * f) / z, hz + ((camH - y) * f) / z];
-    const fog = z => clamp(1 - (z - 20) / (far - 20), 0, 1);
+    const fog = dense ? z => clamp(1 - (z - 8) / 85, 0, 1) : z => clamp(1 - (z - 20) / (far - 20), 0, 1);
     const mix = (c, t) => `rgb(${c.map((v, i) => Math.round(v + (FOG[i] - v) * t)).join(',')})`;
     const hash = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
     const poly = pts => {
@@ -2920,10 +3014,10 @@ class MapRenderer extends Emitter {
     ctx.translate(cx, hz); ctx.rotate(this._camBank); ctx.translate(-cx, -hz);
 
     const sky = ctx.createLinearGradient(0, -H * 0.3, 0, hz);
-    sky.addColorStop(0, '#05070A'); sky.addColorStop(1, '#10151C');
+    sky.addColorStop(0, dense ? '#1C222B' : '#05070A'); sky.addColorStop(1, dense ? '#3A424E' : '#10151C');
     ctx.fillStyle = sky; ctx.fillRect(-W * 0.3, -H * 0.5, W * 1.6, hz + H * 0.5);
     const gnd = ctx.createLinearGradient(0, hz, 0, H * 1.2);
-    gnd.addColorStop(0, '#10151C'); gnd.addColorStop(1, '#07090C');
+    gnd.addColorStop(0, dense ? '#3A424E' : '#10151C'); gnd.addColorStop(1, dense ? '#151A21' : '#07090C');
     ctx.fillStyle = gnd; ctx.fillRect(-W * 0.3, hz, W * 1.6, H);
 
     // Road surface, curbs, lane markings
@@ -3057,7 +3151,8 @@ class MapRenderer extends Emitter {
 
     // Horizon haze + attitude ticks
     const haze = ctx.createLinearGradient(0, hz - 16, 0, hz + 22);
-    haze.addColorStop(0, 'rgba(16,21,28,0)'); haze.addColorStop(0.45, 'rgba(16,21,28,0.55)'); haze.addColorStop(1, 'rgba(16,21,28,0)');
+    const hc = FOG.join(',');
+    haze.addColorStop(0, `rgba(${hc},0)`); haze.addColorStop(0.45, `rgba(${hc},0.55)`); haze.addColorStop(1, `rgba(${hc},0)`);
     ctx.fillStyle = haze; ctx.fillRect(-W * 0.3, hz - 16, W * 1.6, 38);
     ctx.strokeStyle = 'rgba(255,255,255,0.45)'; ctx.lineWidth = 1;
     seg([12, hz], [30, hz]); seg([W - 30, hz], [W - 12, hz]);
@@ -3123,7 +3218,7 @@ class MapRenderer extends Emitter {
       : d.gnss === 'SPOOFED'
       ? ['warn', 'GNSS Spoofed']
       : d.band === 'DECT'
-      ? ['warn', 'DECT NR+ Fallback']
+      ? ['warn', d.nlosReason === CFG.FOG_REASON ? 'DECT NR+ · Fog' : 'DECT NR+ Fallback']
       : d.band === 'FUNK'
       ? ['funk', '2.4 GHz Baseline']
       : d.role === 'RELAY'
@@ -3144,6 +3239,11 @@ class MapRenderer extends Emitter {
     set('ncCamRate', `nc-cam-pill nc-cam-rate ${cam.cls}`, 'className');
     set('ncCamRate', cam.rate);
     if (shed) { set('ncPauseTitle', cam.title); set('ncPauseSub', cam.sub); }
+    const fogged = this.sim.env.weather === 'FOG';
+    set('ncCamWeather', fogged && !shed ? 'nc-cam-pill nc-cam-weather' : 'nc-cam-pill nc-cam-weather hidden', 'className');
+    set('ncCamWeather', d.band === 'FSOC'
+      ? 'WEATHER ATTENUATION · MIE SCATTERING · FSOC SHORT-RANGE LOCK'
+      : 'WEATHER ATTENUATION · MIE SCATTERING · DECT NR+ ACTIVE');
     set('ncCamPos', `${ll.lat.toFixed(4)}°N ${ll.lon.toFixed(4)}°E`);
     set('ncCamTel', `${d.alt.toFixed(0)}m AGL · ${(d.speed * 3.6).toFixed(0)} km/h`);
 
@@ -3153,7 +3253,9 @@ class MapRenderer extends Emitter {
     set('ncNoseDot', noseCol, '@fill');
     set('ncNoseHalo', noseCol, '@fill');
     set('ncCargoWeight', d.mission.weight);
-    set('ncHwState', fsocLock ? 'Optical turret locked' : losBlocked ? 'Turret LoS blocked' : 'Optical turret idle');
+    set('ncHwState', fsocLock ? 'Optical turret locked'
+      : d.nlosReason === CFG.FOG_REASON ? 'Beam lost in fog'
+      : losBlocked ? 'Turret LoS blocked' : 'Optical turret idle');
     set('ncHwState', fsocLock ? '#6EE7B7' : losBlocked ? '#FCA5A5' : '#A1A1AA', 'color');
 
     if (this._ncRouteFor !== d.id) { this._ncRouteFor = d.id; this._ncRoute = this.parseMissionRoute(d.mission.route); }
@@ -3187,7 +3289,9 @@ class MapRenderer extends Emitter {
     set('ncLinkDot', linkCol, 'background');
     set('ncLat', d.routeState === 'OK' ? `${d.latency.toFixed(0)} ms · ${d.hops} ${d.hops === 1 ? 'hop' : 'hops'}` : '—');
 
-    set('ncLos', d.nlosReason ? `LoS blocked · ${d.nlosReason}` : 'Clear 3D line-of-sight');
+    set('ncLos', d.nlosReason === CFG.FOG_REASON
+      ? `FSOC out of range · ${d.nlosReason}`
+      : d.nlosReason ? `LoS blocked · ${d.nlosReason}` : 'Clear 3D line-of-sight');
     set('ncLosDot', d.nlosReason ? '#EF4444' : '#34D399', 'background');
     set('ncPath', d.route ? d.route.join(' → ') : d.routeState.toLowerCase());
 
@@ -3627,6 +3731,7 @@ class UI {
     const s = this.sim;
     this.$('btnJam').onclick = () => s.setJamming(!s.env.jamming);
     this.$('btnSpoof').onclick = () => s.setSpoofing(!s.env.spoofing);
+    this.$('btnWeather').onclick = () => s.setWeather(s.env.weather === 'FOG' ? 'CLEAR' : 'FOG');
     this.$('btnFail').onclick = () => s.failNodes(2);
     this.$('btnRth').onclick = () => s.setRTH(!s.rth);
     this.$('btnProt').onclick = () => s.setProtection(!s.protection);
@@ -3677,6 +3782,7 @@ class UI {
       if (k === 'j') this.$('btnJam').click(); else if (k === 'g') this.$('btnSpoof').click();
       else if (k === 'f') this.$('btnFail').click(); else if (k === 'r') this.$('btnRth').click();
       else if (k === 'p') this.$('btnProt').click();
+      else if (k === 'w') this.$('btnWeather').click();
       else if (k === 'escape') this.map.select(null);
     });
   }
@@ -3707,6 +3813,8 @@ class UI {
     const s = this.sim, down = s.drones.filter(d => d.status === 'OFFLINE').length;
     this.$('btnJam').classList.toggle('active-red', s.env.jamming);
     this.$('btnSpoof').classList.toggle('active-amber', s.env.spoofing);
+    this.$('btnWeather').classList.toggle('active-amber', s.env.weather === 'FOG');
+    this.$('weatherBadge').classList.toggle('hidden', s.env.weather !== 'FOG');
     this.$('btnFail').classList.toggle('active-red', down > 0);
     this.$('btnRth').classList.toggle('active-amber', s.rth);
     this.$('btnProt').className = `ctrl-btn ${s.protection ? 'prot-on' : 'prot-off'}`;
@@ -3864,7 +3972,9 @@ class UI {
   }
 
   appendLog(e) {
-    if (e.level !== 'DBG') {
+    const held = performance.now() < (this.toastHoldUntil || 0) && e.level !== 'CRIT';
+    if (e.holdMs) this.toastHoldUntil = performance.now() + e.holdMs;
+    if (e.level !== 'DBG' && !held) {
       this.$('toastTime').textContent = hhmmss(e.ts);
       this.$('toastMsg').textContent = e.msg;
       const dot = this.$('toastDot');
