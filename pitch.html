@@ -123,16 +123,23 @@
   .fact .v { font-size: 26px; color: var(--sub); margin-top: 12px; line-height: 1.4; }
 
   /* ---------- link comparison ---------- */
-  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 0; flex: 1; margin-top: 40px; border-top: 1px solid var(--line); }
-  .duo > div { padding: 56px 72px 0 0; }
+  .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 0; flex: 1; margin-top: 32px; border-top: 1px solid var(--line); }
+  .duo > div { padding: 42px 72px 0 0; }
   .duo > div + div { padding-left: 72px; border-left: 1px solid var(--line); }
   .duo .band { font-family: var(--mono); font-size: 22px; letter-spacing: .14em; text-transform: uppercase; }
-  .duo h3 { font-size: 64px; font-weight: 700; letter-spacing: -0.03em; margin: 18px 0 40px; }
-  .spec { display: grid; grid-template-columns: 260px 1fr; row-gap: 26px; font-size: 28px; }
+  .duo h3 { font-size: 60px; font-weight: 700; letter-spacing: -0.03em; margin: 14px 0 30px; }
+  .spec { display: grid; grid-template-columns: 260px 1fr; row-gap: 20px; font-size: 26px; }
   .spec dt { color: var(--mut); }
   .spec dd { color: var(--ink); }
-  .motto { font-size: 40px; font-weight: 600; letter-spacing: -0.02em; text-align: center; color: var(--sub); margin-top: 20px; }
+  .motto { font-size: 36px; font-weight: 600; letter-spacing: -0.02em; text-align: center; color: var(--sub); margin-top: 16px; }
   .motto b { color: var(--ink); font-weight: 700; }
+  .swap-bar {
+    display: flex; justify-content: space-between; align-items: center; gap: 28px;
+    margin-top: 22px; padding: 18px 28px; border-radius: 16px;
+    border: 1px solid var(--line); background: rgba(255,255,255,0.025);
+    font-family: var(--mono); font-size: 20px; color: var(--sub);
+  }
+  .swap-bar b { color: var(--ink); font-weight: 600; }
 
   /* ---------- regime rows ---------- */
   .rows { display: flex; flex-direction: column; gap: 40px; }
@@ -178,13 +185,47 @@
   }
 
   /* ---------- KPI grid ---------- */
-  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: auto; margin-bottom: 40px; border-top: 1px solid var(--line); }
-  .kpi { padding: 60px 40px 0 0; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; margin-top: 36px; margin-bottom: 28px; border-top: 1px solid var(--line); }
+  .kpi { padding: 42px 40px 0 0; }
   .kpi + .kpi { padding-left: 40px; border-left: 1px solid var(--line); }
-  .kpi .k { font-size: 128px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
-  .kpi .k small { font-size: 54px; font-weight: 600; letter-spacing: -0.02em; }
-  .kpi .v { font-size: 27px; color: var(--ink); margin-top: 22px; font-weight: 600; }
-  .kpi .d { font-size: 22px; color: var(--sub); margin-top: 8px; line-height: 1.45; }
+  .kpi .k { font-size: 112px; font-weight: 800; letter-spacing: -0.05em; line-height: 1; }
+  .kpi .k small { font-size: 48px; font-weight: 600; letter-spacing: -0.02em; }
+  .kpi .v { font-size: 26px; color: var(--ink); margin-top: 18px; font-weight: 600; }
+  .kpi .d { font-size: 21px; color: var(--sub); margin-top: 6px; line-height: 1.4; }
+  .roadmap {
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 36px;
+    margin-top: auto; padding-top: 28px; border-top: 1px solid var(--line);
+  }
+  .rm-step .rm-tag { font-family: var(--mono); font-size: 17px; letter-spacing: .1em; text-transform: uppercase; color: var(--fsoc); }
+  .rm-step h4 { font-size: 26px; font-weight: 700; margin: 8px 0 6px; letter-spacing: -0.01em; }
+  .rm-step p { font-size: 20px; color: var(--sub); line-height: 1.42; }
+
+  /* ---------- team slide ---------- */
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 56px; margin-top: 48px; flex: 1; align-items: stretch; margin-bottom: 36px; }
+  .member-card {
+    border: 1px solid var(--line); border-radius: 28px; padding: 48px 52px;
+    background: linear-gradient(180deg, rgba(255,255,255,0.035) 0%, rgba(255,255,255,0.01) 100%);
+    display: flex; flex-direction: column; justify-content: space-between;
+    position: relative; overflow: hidden;
+  }
+  .member-card.m-fsoc { border-top: 3px solid var(--fsoc); }
+  .member-card.m-pop  { border-top: 3px solid var(--pop); }
+  .member-top { display: flex; align-items: center; gap: 28px; }
+  .avatar {
+    width: 88px; height: 88px; border-radius: 24px; flex-shrink: 0;
+    display: flex; align-items: center; justify-content: center;
+    font-family: var(--mono); font-size: 32px; font-weight: 700; letter-spacing: -0.03em;
+  }
+  .m-fsoc .avatar { background: rgba(16,185,129,0.14); color: var(--fsoc); border: 1px solid rgba(16,185,129,0.35); }
+  .m-pop  .avatar { background: rgba(167,139,250,0.14); color: var(--pop); border: 1px solid rgba(167,139,250,0.35); }
+  .member-role { font-family: var(--mono); font-size: 18px; letter-spacing: .12em; text-transform: uppercase; color: var(--mut); margin-bottom: 8px; }
+  .member-name { font-size: 46px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.05; }
+  .member-desc { font-size: 25px; line-height: 1.5; color: var(--sub); margin-top: 32px; }
+  .member-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 32px; }
+  .member-tags span {
+    font-family: var(--mono); font-size: 18px; padding: 8px 16px; border-radius: 999px;
+    border: 1px solid var(--line); background: rgba(255,255,255,0.03); color: var(--ink);
+  }
 
   /* ---------- demo slide ---------- */
   .s-demo { --glow: rgba(16,185,129,0.12); }
@@ -257,8 +298,8 @@
     <div class="tag rise" style="--d:.6s">A drone mesh that keeps talking when the city, the jammer and the GPS all turn against it.</div>
     <div class="meta rise" style="--d:.85s">
       <div>Challenge<b>Morpheus Logistik · OFF-Grid Air</b></div>
-      <div>Fleet<b>10 drones over Dortmund Innenstadt</b></div>
-      <div>Control<b>HQ Reinoldikirche</b></div>
+      <div>Fleet &amp; HQ<b>10 Drones · Reinoldikirche</b></div>
+      <div>Team<b>Nassim Soultana · Ilias Amir Soultana</b></div>
     </div>
   </section>
 
@@ -333,33 +374,38 @@
     </div>
   </section>
 
-  <!-- 4 · TWO LINKS -->
-  <section class="slide" data-notes="So every drone carries two links. A 1550 nm laser: gigabit, a few milliseconds, and completely immune to RF jamming — but it needs line of sight. And DECT NR+ at 1.9 GHz: slower, but it goes through buildings and survives jamming by frequency hopping. Laser when it can see, radio when it can't. (~20 s)">
-    <div class="eyebrow">Hybrid mesh</div>
-    <div class="title">Two links per drone.</div>
+  <!-- 4 · TWO LINKS + SWAP & BNETZA -->
+  <section class="slide" data-notes="Every drone carries a 225 gram, 9.7 watt hybrid pod. First, a 1550 nm eye-safe laser: gigabit, 2 ms latency, completely immune to RF jamming — though attenuated to 520 m in dense fog due to Mie scattering. Second, DECT NR+ at 1.9 GHz: license-exempt European ETSI spectrum, zero aviation VHF or public 4G/5G dependency, immune to fog, and survives jamming via frequency hopping. Every packet is signed with HMAC-SHA256. (~25 s)">
+    <div class="eyebrow">Hybrid mesh · Hardware &amp; regulatory feasibility</div>
+    <div class="title">Two off-grid links per drone.</div>
     <div class="duo">
       <div>
-        <div class="band c-fsoc">Primary · Optical</div>
+        <div class="band c-fsoc">Primary · Optical (Unlicensed Class 1 Eye-Safe)</div>
         <h3>FSOC Laser <span class="c-sub" style="font-weight:400">1550 nm</span></h3>
         <dl class="spec">
-          <dt>Throughput</dt><dd>up to 1 Gbps</dd>
-          <dt>Latency</dt><dd>a few milliseconds</dd>
+          <dt>Throughput / Lat</dt><dd>up to 1 Gbps · 2 ms</dd>
           <dt>RF jamming</dt><dd class="c-fsoc">immune · 0 % loss</dd>
+          <dt>Weather (Fog)</dt><dd class="c-dect">Mie scattering (&gt;60 dB/km → 520 m max)</dd>
           <dt>Needs</dt><dd>clear 3D line of sight</dd>
         </dl>
       </div>
       <div>
-        <div class="band c-dect">Fallback · Radio</div>
+        <div class="band c-dect">Fallback · Radio (ETSI EN 301 406-2 · BNetzA Exempt)</div>
         <h3>DECT NR+ <span class="c-sub" style="font-weight:400">1.9 GHz</span></h3>
         <dl class="spec">
-          <dt>Throughput</dt><dd>4.8 Mbps</dd>
-          <dt>Latency</dt><dd>tens of milliseconds</dd>
-          <dt>RF jamming</dt><dd class="c-dect">survives by frequency hopping</dd>
-          <dt>Needs</dt><dd>nothing — passes through buildings</dd>
+          <dt>Throughput / Lat</dt><dd>4.8 Mbps · 14–18 ms</dd>
+          <dt>RF jamming</dt><dd class="c-dect">survives by TDMA/FDMA hopping</dd>
+          <dt>Weather (Fog)</dt><dd class="c-fsoc">0 dB attenuation · 100 % weather-immune</dd>
+          <dt>Needs</dt><dd>nothing — diffracts around buildings</dd>
         </dl>
       </div>
     </div>
-    <div class="motto">Laser when it can see. <b>Radio when it can't.</b></div>
+    <div class="swap-bar">
+      <span>POD SWaP: <b>225 g · 9.7 W</b> (155 g MEMS Gimbal + 70 g Nordic nRF9151)</span>
+      <span>CRYPTO: <b>HMAC-SHA256 + Replay Counter</b></span>
+      <span>SPECTRUM: <b>0 % Cellular · 0 % Aviation VHF</b></span>
+    </div>
+    <div class="motto">Laser when clear. <b>DECT NR+ through buildings &amp; dense fog.</b></div>
   </section>
 
   <!-- 5 · JAMMING PHYSICS -->
@@ -488,28 +534,89 @@
     <div class="divider b"><span>Offline deterministic by default · university LLM via one env variable</span></div>
   </section>
 
-  <!-- 9 · RESULTS -->
-  <section class="slide" data-notes="So, in numbers: the whole fleet stays reachable under jamming, the worst-case drone recovers itself in 3.2 seconds, slow attacks are caught at onset, and the backend is covered by 19 passing tests. Now let's break it live. (~15 s)">
-    <div class="eyebrow">Results</div>
+  <!-- 9 · RESULTS & R&D ROADMAP -->
+  <section class="slide" data-notes="In numbers: all 10 drones stay reachable under jamming and dense fog, the worst-case isolated drone recovers itself in 3.2 seconds via INS/VIO pop-up, slow attacks are caught at onset, and our hardware-agnostic pod plugs into any Morpheus airframe via MAVLink 2 + Ethernet with a clear 3-phase R&D roadmap. (~20 s)">
+    <div class="eyebrow">Results · Integration &amp; F&amp;E Roadmap</div>
     <div class="title">What it adds up to.</div>
     <div class="kpis">
-      <div class="kpi b"><div class="k c-fsoc">10<small>/10</small></div><div class="v">Drones reachable</div><div class="d">Under active jamming, with protection on.</div></div>
-      <div class="kpi b"><div class="k c-pop">3.2<small>s</small></div><div class="v">Worst-case recovery</div><div class="d">Double-fail healed by the vertical pop-up.</div></div>
-      <div class="kpi b"><div class="k c-sky">0.0<small>s</small></div><div class="v">Slow-attack detection</div><div class="d">vs 9.5 s for threshold rules.</div></div>
-      <div class="kpi b"><div class="k">19<small>/19</small></div><div class="v">Backend tests passing</div><div class="d">Raycast, link budget, HMAC, contrastive, LLM.</div></div>
+      <div class="kpi b"><div class="k c-fsoc">10<small>/10</small></div><div class="v">Drones reachable</div><div class="d">Under jamming, node loss &amp; dense fog.</div></div>
+      <div class="kpi b"><div class="k c-pop">3.2<small>s</small></div><div class="v">Worst-case recovery</div><div class="d">Double-fail healed by INS/VIO pop-up.</div></div>
+      <div class="kpi b"><div class="k c-sky">0.0<small>s</small></div><div class="v">Slow-attack detection</div><div class="d">Contrastive prototype vs 9.5 s rules.</div></div>
+      <div class="kpi b"><div class="k">225<small>g</small></div><div class="v">Hardware-agnostic pod</div><div class="d">MAVLink 2 / Ethernet into Morpheus Leitstand.</div></div>
+    </div>
+    <div class="roadmap b">
+      <div class="rm-step">
+        <div class="rm-tag">Phase 1 · Months 1–3 (TRL 4)</div>
+        <h4>COTS DECT NR+ Bench &amp; Crypto Mesh</h4>
+        <p>Nordic nRF9151 dev-kits + HMAC-SHA256 OLSRv2 routing + MAVLink 2 bridge into Morpheus Leitstand.</p>
+      </div>
+      <div class="rm-step">
+        <div class="rm-tag" style="color:var(--dect)">Phase 2 · Months 4–8 (TRL 5–6)</div>
+        <h4>1550 nm MEMS Gimbal Airframe Pod</h4>
+        <p>Integrate 225 g hybrid FSOC/DECT pod on 2 Morpheus relay drones + 1 canyon drone over Dortmund test range.</p>
+      </div>
+      <div class="rm-step">
+        <div class="rm-tag" style="color:var(--pop)">Phase 3 · Months 9–12 (TRL 7)</div>
+        <h4>SAIL II/III BVLOS Dortmund Trial</h4>
+        <p>10-drone live trial (Klinikum Mitte ↔ Westfalenhallen) with autonomous INS/VIO Pop-Up &amp; RTH certification.</p>
+      </div>
     </div>
   </section>
 
-  <!-- 10 · LIVE DEMO -->
-  <section class="slide s-demo" data-notes="Four steps. One: unprotected baseline under jamming — watch reachability fall. Two: protection on — DR-07 drops video and keeps 12 kbps command-and-control. Three: DR-03 goes isolated, climbs, laser snaps back in 3.2 s. Four: coordinated attack — flagged unexplained, one click to learn it, the LLM explains. (~2 min)">
+  <!-- 10 · TEAM -->
+  <section class="slide" style="--glow: rgba(56,189,248,0.08)" data-notes="Built in 24 hours at the DO-DATA-Hackathon 2026 by Nassim Soultana and Ilias Amir Soultana — combining real-time 3D aerospace & RF/optical simulation with deterministic contrastive threat detection and downstream LLM incident response. (~15 s)">
+    <div class="eyebrow">The team · DO-DATA-Hackathon 2026</div>
+    <div class="title">Built by <span class="c-fsoc">engineers</span> who ship under fire.</div>
+    <div class="team-grid">
+      <div class="member-card m-fsoc b">
+        <div>
+          <div class="member-top">
+            <div class="avatar">NS</div>
+            <div>
+              <div class="member-role c-fsoc">Aerospace &amp; RF/Optical Systems · 3D HUD</div>
+              <div class="member-name">Nassim Soultana</div>
+            </div>
+          </div>
+          <p class="member-desc">Designed the hybrid 1550 nm FSOC Laser + 1.9 GHz DECT NR+ mesh topology, 3D Dortmund building raycast &amp; Mie-scattering fog physics, autonomous INS/VIO Vertical Pop-Up recovery, and the 60 fps Mission Control &amp; Drone Inspector HUD.</p>
+        </div>
+        <div class="member-tags">
+          <span>FSOC 1550 nm / DECT NR+</span>
+          <span>3D Raycast &amp; Fog Physics</span>
+          <span>INS/VIO Pop-Up</span>
+          <span>@SoulNassim</span>
+        </div>
+      </div>
+      <div class="member-card m-pop b">
+        <div>
+          <div class="member-top">
+            <div class="avatar">IS</div>
+            <div>
+              <div class="member-role c-pop">AI Security &amp; Anomaly Detection · Backend</div>
+              <div class="member-name">Ilias Amir Soultana</div>
+            </div>
+          </div>
+          <p class="member-desc">Architected the deterministic 2 Hz Python physics &amp; HMAC-SHA256 zero-trust backend, per-drone Contrastive Prototype Detector (0.0 s slow-ramp detection vs 9.5 s rules), one-click online threat learning, and the LLM Security Analyst Co-Pilot.</p>
+        </div>
+        <div class="member-tags">
+          <span>Contrastive Prototypes</span>
+          <span>HMAC-SHA256 Mesh Auth</span>
+          <span>LLM Security Co-Pilot</span>
+          <span>@IliasSoultana</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 11 · LIVE DEMO -->
+  <section class="slide s-demo" data-notes="Four live stress tests in Mission Control. One: unprotected 2.4 GHz baseline under jamming — watch reachability collapse. Two: hybrid protection on + jamming — DR-07 sheds video to 0% for 12 kbps C2, while DR-03 climbs out of the <150m core in 3.2 s. Three: Dense Fog (W) — Mie scattering cuts long lasers >520 m, seamless fallback to DECT NR+. Four: inspect any drone's live FLIR/FSD camera & CAD pod, or trigger a coordinated RF+GNSS attack. (~2 min)">
     <div class="eyebrow">Live demo</div>
     <div class="title" style="font-size:120px">Let's break it. <span class="c-fsoc">Live.</span></div>
     <a class="launch" href="index.html">Open mission control <span>→ index.html</span></a>
     <div class="steps">
-      <div class="st"><div class="n">01</div><h4>Unprotected baseline</h4><p><span class="key">P</span><span class="key">J</span> 2.4 GHz only, jammer on. Reachability falls.</p></div>
-      <div class="st"><div class="n">02</div><h4>QoS emergency</h4><p><span class="key">↺</span><span class="key">J</span> DR-07 sheds video, holds 12 kbps C2.</p></div>
-      <div class="st"><div class="n">03</div><h4>Vertical pop-up</h4><p>DR-03 isolated → climbs 50 → 125 m → laser back in 3.2 s.</p></div>
-      <div class="st"><div class="n">04</div><h4>Learn a new attack</h4><p>Coordinated RF+GNSS → unexplained → confirm → LLM briefing.</p></div>
+      <div class="st"><div class="n">01</div><h4>2.4 GHz vs Hybrid</h4><p><span class="key">P</span><span class="key">J</span> Baseline collapses under jamming; hybrid holds 10/10.</p></div>
+      <div class="st"><div class="n">02</div><h4>QoS &amp; Pop-Up</h4><p><span class="key">J</span> DR-07 pauses video (12 kbps C2); DR-03 climbs 50→125 m in 3.2 s.</p></div>
+      <div class="st"><div class="n">03</div><h4>Dense fog physics</h4><p><span class="key">W</span> &gt;60 dB/km Mie scattering cuts long lasers; DECT NR+ holds 100 %.</p></div>
+      <div class="st"><div class="n">04</div><h4>Inspector &amp; Co-Pilot</h4><p>Click any drone for live 3D camera + CAD pod; test contrastive + LLM.</p></div>
     </div>
   </section>
 
@@ -520,7 +627,7 @@
 <div class="nav-bar" id="navBar">
   <button class="nav-btn" id="btnPrevSlide" title="Previous Slide">« Slide</button>
   <button class="nav-btn" id="btnPrev" title="Back (←)">← Back</button>
-  <span class="nav-count" id="navCount">01 / 10</span>
+  <span class="nav-count" id="navCount">01 / 11</span>
   <button class="nav-btn" id="btnNext" title="Next (→ / Space)">Next →</button>
   <div class="nav-sep"></div>
   <button class="nav-btn" id="btnNotesToggle" title="Speaker Notes (N)">Notes</button>

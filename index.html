@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<title>DORTMUND AIR SHIELD · Hybrid FSOC Laser + DECT NR+ Terminal</title>
+<title>DORTMUND OFF-GRID AIR · Morpheus Leitstand · Hybrid FSOC Laser + DECT NR+</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -526,8 +526,8 @@ button,input{font-family:inherit}
           </svg>
         </div>
         <div>
-          <div class="brand-title">Dortmund Air Shield</div>
-          <div class="brand-sub" id="fleetCount">10 Nodes · Hybrid FSOC / DECT NR+</div>
+          <div class="brand-title">Dortmund OFF-Grid Air</div>
+          <div class="brand-sub" id="fleetCount">Morpheus Leitstand · Hybrid FSOC / DECT NR+</div>
         </div>
       </div>
       <div class="nav-right">
@@ -3228,7 +3228,7 @@ class MapRenderer extends Emitter {
     set('ncId', d.id);
     set('ncStatus', `nc-status ${stCls}`.trim(), 'className');
     set('ncStatusTxt', stTxt);
-    set('ncSub', `Morpheus Heavy-Lift · 10.41.0.${d.index + 1}`);
+    set('ncSub', `Morpheus Heavy-Lift · 10.41.0.${d.index + 1} · HMAC-SHA256 ✓`);
 
     const cam = this.camState(d);
     const shed = cam.mode === 'shed';
@@ -3477,7 +3477,7 @@ class UI {
       });
       list.appendChild(el);
     }
-    this.$('fleetCount').textContent = `${this.sim.drones.length} Nodes · Hybrid FSOC / DECT NR+`;
+    this.$('fleetCount').textContent = `Morpheus Leitstand · ${this.sim.drones.length} Nodes · FSOC / DECT NR+`;
   }
 
   highlightCard(id) {
@@ -3794,10 +3794,11 @@ class UI {
     const steps = [
       [500, () => L.info('DEMO ▶ Phase 1 – Hybrid FSOC Laser + DECT NR+ mesh over 3D Dortmund')],
       [5000, () => { L.info('DEMO ▶ Phase 2 – Hostile RF/optical jammer activates near Dortmunder U-Tower'); s.setJamming(true); }],
-      [16000, () => { L.info('DEMO ▶ Phase 3 – GNSS spoofer joins the attack'); s.setSpoofing(true); }],
-      [28000, () => { L.info('DEMO ▶ Phase 4 – Hardware failure on two relay nodes'); s.failNodes(2); }],
-      [42000, () => { L.info('DEMO ▶ Phase 5 – Operator triggers SAFE-RETURN-HOME'); s.setRTH(true); }],
-      [62000, () => { L.info('DEMO ▶ Phase 6 – Threat neutralised, FSOC Laser LoS restored'); s.setRTH(false); s.setJamming(false); s.setSpoofing(false); }],
+      [16000, () => { L.info('DEMO ▶ Phase 3 – GNSS spoofer joins the attack (OSNMA + INS/VIO cross-check)'); s.setSpoofing(true); }],
+      [25000, () => { L.info('DEMO ▶ Phase 4 – Dense fog (>60 dB/km Mie scattering) cuts long FSOC beams → DECT NR+ holds'); s.setWeather('FOG'); }],
+      [34000, () => { L.info('DEMO ▶ Phase 5 – Hardware failure on two relay nodes'); s.failNodes(2); }],
+      [46000, () => { L.info('DEMO ▶ Phase 6 – Operator triggers SAFE-RETURN-HOME'); s.setRTH(true); }],
+      [62000, () => { L.info('DEMO ▶ Phase 7 – Threat & weather cleared, FSOC Laser LoS restored'); s.setRTH(false); s.setJamming(false); s.setSpoofing(false); s.setWeather('CLEAR'); }],
       [70000, () => { L.ok('DEMO ■ scenario complete'); this.stopDemo(); }],
     ];
     this.demoTimers = steps.map(([ms, fn]) => setTimeout(fn, ms));
@@ -3820,8 +3821,8 @@ class UI {
     this.$('btnProt').className = `ctrl-btn ${s.protection ? 'prot-on' : 'prot-off'}`;
     this.$('protLabel').textContent = s.protection ? 'Protected · FSOC+DECT' : 'Unprotected · 2.4G Funk';
     this.$('fleetCount').textContent = s.protection
-      ? `${s.drones.length} Nodes · Hybrid FSOC / DECT NR+`
-      : `${s.drones.length} Nodes · Standard 2.4 GHz Funk (Baseline)`;
+      ? `Morpheus Leitstand · ${s.drones.length} Nodes · FSOC / DECT NR+`
+      : `Morpheus Leitstand · ${s.drones.length} Nodes · 2.4 GHz Funk (Baseline)`;
     this.$('fcDot1').style.background = s.protection ? '#10B981' : '#38BDF8';
     this.$('fcLabel1').textContent = s.protection ? 'FSOC LoS' : '2.4G Funk';
     this.$('fcDot2').style.background = s.protection ? '#F59E0B' : '#EF4444';
@@ -4022,9 +4023,9 @@ window.AirShield = {
 window.updateDroneData = window.AirShield.updateDroneData;
 
 const L = sim.logger;
-L.info(`DORTMUND AIR SHIELD v${CFG.VERSION} – 3D LoS Mission Control online`);
+L.info(`DORTMUND OFF-GRID AIR v${CFG.VERSION} – Morpheus Leitstand 3D LoS Mission Control online`);
 L.info(`HQ ${CFG.HQ.name} · ${CFG.HQ.lat.toFixed(4)}°N ${CFG.HQ.lon.toFixed(4)}°E · Pitch 60°`);
-L.net(`Hybrid Mesh: ${sim.drones.length} nodes · Primary FSOC Laser (LoS) · Fallback DECT NR+ (NLOS)`);
+L.net(`Hybrid Mesh: ${sim.drones.length} nodes · Primary FSOC Laser (LoS) · Fallback DECT NR+ (NLOS) · HMAC-SHA256`);
 
 const params = new URLSearchParams(location.search);
 if (params.get('ws')) { document.getElementById('wsUrl').value = params.get('ws'); bridge.connect(params.get('ws')); }
