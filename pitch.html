@@ -250,13 +250,21 @@
   .progress { position: fixed; left: 0; bottom: 0; height: 3px; background: var(--fsoc); transition: width .4s ease; z-index: 30; }
   .notes {
     position: fixed; left: 50%; bottom: 18px; transform: translate(-50%, 140%); z-index: 40;
-    width: min(1100px, 92vw); background: rgba(16,17,22,0.96); border: 1px solid rgba(255,255,255,0.12);
-    border-radius: 16px; padding: 18px 24px; backdrop-filter: blur(12px);
-    font-size: 16px; line-height: 1.55; color: #D4D4D8; transition: transform .35s cubic-bezier(.2,.7,.2,1);
+    width: min(1140px, 92vw); background: rgba(12,13,18,0.96); border: 1px solid rgba(255,255,255,0.16);
+    border-radius: 16px; padding: 16px 24px; backdrop-filter: blur(14px);
+    font-size: 16.5px; line-height: 1.5; color: #E4E4E7; transition: transform .35s cubic-bezier(.2,.7,.2,1);
+    box-shadow: 0 12px 36px rgba(0,0,0,0.65);
   }
   .notes.open { transform: translate(-50%, 0); }
   .notes .hd { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 12px; letter-spacing: .1em; text-transform: uppercase; color: var(--mut); margin-bottom: 8px; }
   .notes .hd b { color: var(--fsoc); font-weight: 600; }
+  .notes ul { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 4px; }
+  .notes li b { color: #FFFFFF; font-weight: 700; }
+  .notes li em { color: #FDE047; font-style: normal; font-weight: 600; }
+  .notes li .g { color: #34D399; font-weight: 700; }
+  .notes li .o { color: #FBBF24; font-weight: 700; }
+  .notes li .p { color: #C4B5FD; font-weight: 700; }
+  .notes li .b-tag { color: #38BDF8; font-weight: 700; }
   .hint {
     position: fixed; right: 18px; top: 14px; z-index: 30; font-family: var(--mono); font-size: 12px; color: #52525B;
     transition: opacity .6s ease;
@@ -291,7 +299,7 @@
 <div class="deck"><div class="canvas" id="canvas">
 
   <!-- 1 · TITLE -->
-  <section class="slide s-title" data-notes="Ten drones, one control center at the Reinoldikirche, and a city that keeps getting in the way. This is Dortmund OFF-Grid Air: a drone mesh that keeps talking when the buildings, the jammer and the GPS all turn against it. (~15 s)">
+  <section class="slide s-title" data-notes="<ul><li><b>Opening Hook:</b> 10 autonomous drones over Dortmund — delivering urgent hospital blood supplies or helping firefighters at a big city fire.</li><li><em>What-If?:</em> Normally drones need public 5G/internet — <em>what happens when cell towers fail or get attacked? (1s pause)</em></li><li><b>Mission:</b> <span class='g'>Dortmund OFF-Grid Air</span> — 0 public internet, 0 cell towers → drones build their own private sky-network back to HQ (Reinoldikirche)!</li></ul>">
     <canvas id="heroCity"></canvas>
     <div class="shade"></div>
     <div class="hud rise" style="--d:1.2s"><i></i><b>LIVE</b> 10 NODES · FSOC 1550 nm · DECT NR+ 1.9 GHz</div>
@@ -306,7 +314,7 @@
   </section>
 
   <!-- 2 · PROBLEM (STATUS QUO TODAY) -->
-  <section class="slide" style="--glow: rgba(239,68,68,0.07)" data-notes="Today, commercial drone fleets fly on 2.4 or 5.8 GHz radio and public 4G/5G cellular, with GPS L1 for navigation. In an off-grid crisis or electronic attack over a city, that status quo collapses in three ways at once: a cheap broadband jammer wipes out 2.4 GHz and public cell towers fail; star-topology links have no drone-to-drone relay and video starves C2; and standard autopilots blindly follow spoofed GPS while rolling-average alarms miss slow attacks for nine seconds. (~25 s)">
+  <section class="slide" style="--glow: rgba(239,68,68,0.07)" data-notes="<ul><li><b>01 · Public Spectrum:</b> Standard drones use 2.4 GHz or public 4G/5G → a cheap jammer or power blackout wipes both out.</li><li><b>02 · Star Topology:</b> Every drone talks straight to ground (no drone-to-drone relay) → tall buildings block links &amp; heavy HD video starves steering (C2).</li><li><b>03 · Blind Navigation:</b> Standard autopilots trust fake GPS &amp; rolling-average alarms stay blind to slow attacks for <em>~9.5s</em>.</li></ul>">
     <div class="eyebrow">The problem · How drone fleets fly today</div>
     <div class="title">Today's fleets rely on <span class="c-crit">2.4 GHz, 4G/5G &amp; GPS.</span> <span class="dim">In a crisis, all three fail.</span></div>
     <div class="cols c3">
@@ -329,7 +337,7 @@
   </section>
 
   <!-- 3 · OUR SHIFT TO OPTICAL + 3D GEOMETRY -->
-  <section class="slide" data-notes="To defeat RF jammers completely, we move the primary link onto 1550 nm Free-Space Optical lasers. Lasers cannot be RF-jammed — zero packet loss. But lasers introduce a new engineering challenge: Dortmund's 3D skyline. Every 200 ms, we raycast every link against real Dortmund building heights. When a drone drops to 50 m behind the 95 m U-Tower, the laser hits the facade — so we pair it with 120 m high-altitude relays and a 1.9 GHz DECT NR+ radio fallback. (~25 s)">
+  <section class="slide" data-notes="<ul><li><b>Why Optical Laser?:</b> Move primary link to <span class='g'>1550 nm FSOC Laser</span> → narrow beam of light (not radio), so ground RF jammers cannot jam it (0% loss)!</li><li><b>New Challenge (3D City):</b> Dortmund blocks = 22–28 m, <b>U-Tower = 95 m</b> → when DR-03 flies at 50 m behind the U-Tower, the building blocks the laser!</li><li><b>Our Solution:</b> Place <b>2 High-Altitude Relay Drones (DR-01 &amp; DR-02) at 120 m</b> (above every roof) + pair laser with <span class='o'>1.9 GHz DECT NR+</span> backup radio.</li></ul>">
     <div class="eyebrow">Our answer · Move off jammed RF</div>
     <div class="title">Optical lasers beat the jammer. <span class="dim">Now the city is the obstacle.</span></div>
     <div class="split">
@@ -377,7 +385,7 @@
   </section>
 
   <!-- 4 · TWO LINKS + SWAP & BNETZA -->
-  <section class="slide" data-notes="Every drone carries a 225 gram, 9.7 watt hybrid pod. First, a 1550 nm eye-safe laser: gigabit, 2 ms latency, completely immune to RF jamming — though attenuated to 520 m in dense fog due to Mie scattering. Second, DECT NR+ at 1.9 GHz: license-exempt European ETSI spectrum, zero aviation VHF or public 4G/5G dependency, immune to fog, and survives jamming via frequency hopping. Every packet is signed with HMAC-SHA256. (~25 s)">
+  <section class="slide" data-notes="<ul><li><span class='g'>1) Green FSOC Laser (1550 nm):</span> <b>1 Gbps · 2 ms</b> when sky is clear → carries HD video + C2 + telemetry. <b>100% immune to RF jamming!</b></li><li><em>What-If Building or Dense Fog blocks Laser?:</em> Switches to <span class='o'>2) Orange DECT NR+ (1.9 GHz)</span> → innovative license-exempt EU mesh radio (<b>0 SIM cards, 0 cell towers</b>), bends around buildings &amp; <b>100% immune to fog!</b></li><li><em>What-If Opposite (Jammer attacks Radio)?:</em> Any drone with clear Line-of-Sight stays 100% immune on the green laser! (225 g pod · HMAC-SHA256).</li></ul>">
     <div class="eyebrow">Hybrid mesh · Hardware &amp; regulatory feasibility</div>
     <div class="title">Two off-grid links per drone.</div>
     <div class="duo">
@@ -411,7 +419,7 @@
   </section>
 
   <!-- 5 · JAMMING PHYSICS -->
-  <section class="slide" style="--glow: rgba(239,68,68,0.08)" data-notes="Jamming follows the inverse-square law, so distance matters. With line of sight, the laser doesn't care about RF at all. Behind a building but more than 150 m from the jammer, DECT survives — but capacity drops, so we go into QoS emergency mode: video off, command-and-control locked at 12 kbps. That's DR-07 behind the Ellipson. Inside the 150 m core and behind a building, nothing gets through. We don't fake it. (~30 s)">
+  <section class="slide" style="--glow: rgba(239,68,68,0.08)" data-notes="<ul><li><b>Why outside drones stay green:</b> Jammer power drops with distance (1/r²) → drones outside the circles keep clean lasers.</li><li><span class='g'>1) Clear Line-of-Sight:</span> <b>Laser holds (0% loss)</b> — photons ignore radio noise.</li><li><span class='o'>2) Outer Red Zone (&gt;150 m, behind building — DR-07):</span> Laser blocked → switches to <b>DECT NR+</b> &amp; triggers <b>QoS Emergency</b>: cuts heavy video (<b>99% BW → 0%</b>) so <b>C2 steering (<1% BW) stays locked at 100% (12 kbps)!</b></li><li><span class='p'>3) Inner Purple Core (&lt;150 m, behind U-Tower — DR-03):</span> Building blocks Laser <b>AND</b> jammer crushes DECT → <b>Double-Fail</b>.</li></ul>">
     <div class="eyebrow">Layer 1 · Jamming physics</div>
     <div class="title">Distance decides. <span class="dim">We don't cheat it.</span></div>
     <div class="split">
@@ -460,7 +468,7 @@
   </section>
 
   <!-- 6 · POP-UP -->
-  <section class="slide" style="--glow: rgba(167,139,250,0.10)" data-notes="So what does a drone do when every radio is gone? It climbs. After 1.5 seconds isolated, DR-03 switches to onboard inertial and visual odometry — no GPS, no RF needed — and climbs straight up. The moment it clears the 95 m roof, it has line of sight to the relay at 120 m, and the laser snaps back. 3.2 seconds, measured live. (~30 s)">
+  <section class="slide" style="--glow: rgba(167,139,250,0.10)" data-notes="<ul><li><em>What-If BOTH Laser &amp; Radio fail in the Purple Circle?:</em> Drone solves it physically — <b>it climbs!</b></li><li><b>0.0s → 1.5s:</b> DR-03 is isolated behind the 95 m U-Tower → switches to onboard <b>INS/VIO</b> (internal movement &amp; camera sensor — needs 0 GPS, 0 radio).</li><li><b>&gt;95 m → 3.2s:</b> Climbs straight up (50 m → 125 m), peeks over the U-Tower roof, catches clear Line-of-Sight to <b>Relay DR-01 (120 m)</b> → <span class='g'>FSOC Laser snaps back in 3.2s!</span></li></ul>">
     <div class="eyebrow" style="color:var(--pop)">Autonomous recovery</div>
     <div class="title">When every radio fails, <span class="c-pop">climb.</span></div>
     <div class="figure" style="margin-top:20px">
@@ -504,7 +512,7 @@
   </section>
 
   <!-- 7 · DETECTION -->
-  <section class="slide" style="--glow: rgba(56,189,248,0.08)" data-notes="Physics keeps the link. Detection tells the operator what is happening. A threshold detector on a slow-ramping jammer stays blind for 9.5 seconds because the rolling baseline absorbs the ramp. Our contrastive detector compares against a learned per-drone nominal prototype and flags at onset. Zero false flags in nominal flight. And when it sees something new, it says 'unexplained' instead of guessing — one operator click teaches it. (~25 s)">
+  <section class="slide" style="--glow: rgba(56,189,248,0.08)" data-notes="<ul><li><em>What-If a smart attacker ramps jamming power slowly (+1.55 dB/s)?:</em> Standard detector compares to a <b>4s rolling average</b> — the average shifts down with the attack (<em>like eyes adjusting to a slowly darkening room</em>) → blind for <b>9.5s</b>!</li><li><span class='b-tag'>Contrastive Prototype Detector (0.0s):</span> Freezes a <b>healthy takeoff baseline</b> of 4 sensors (RSSI, SNR, Loss, GPS-INS offset) → catches slow ramp &amp; GPS drift at <b>0.0s</b> with <b>0 false alarms</b>!</li><li><b>Honest AI (MPI-SP insight):</b> When Jamming + GPS Spoofing hit together in an unseen pattern, it refuses to guess → flags yellow <em>UNEXPLAINED — needs label</em>.</li></ul>">
     <div class="eyebrow" style="color:var(--sky)">Layer 2 · Threat detection</div>
     <div class="title">Catch the slow attack <span class="c-sky">at onset.</span></div>
     <div class="versus">
@@ -521,7 +529,7 @@
   </section>
 
   <!-- 8 · LLM -->
-  <section class="slide" style="--glow: rgba(167,139,250,0.08)" data-notes="And the LLM? It never detects. Detection is deterministic math. The LLM sits strictly downstream: it reads the verdict and the evidence, writes a German situation briefing, files a prioritized issue, and offers one-click countermeasures. The demo runs a deterministic offline analyst; the university LLM is one environment variable away, with automatic fallback. (~20 s)">
+  <section class="slide" style="--glow: rgba(167,139,250,0.08)" data-notes="<ul><li><b>Bridge:</b> Because <em>UNEXPLAINED</em> needs a label → <span class='p'>LLM Security Co-Pilot</span> steps in! (<b>Never flies the drone</b> — runs offline at HQ; live Uni LLM via 1 env var).</li><li><b>What LLM does:</b> Translates the 4D sensor jump into <b>2 plain German sentences</b>, opens a <b>CRIT ticket</b>, and prepares the <b>1-click Confirm Threat</b> button.</li><li><span class='b-tag'>Collaborative Fleet Learning &amp; Business Win:</span> 1 click on Confirm Threat → HQ broadcasts the tiny <b>4-number fingerprint to all 10 drones</b>! Approaching drones recognize it at 0.0s &amp; proactively switch to DECT backup routes (<3s recovery) → <b>cuts fleet downtime, lowers cost &amp; keeps Morpheus Logistik hospital deliveries on time!</b></li></ul>">
     <div class="eyebrow" style="color:var(--pop)">Layer 3 · LLM co-pilot</div>
     <div class="title">The LLM never detects. <span class="c-pop">It explains.</span></div>
     <div class="pipe">
@@ -537,7 +545,7 @@
   </section>
 
   <!-- 9 · RESULTS & R&D ROADMAP -->
-  <section class="slide" data-notes="In numbers: all 10 drones stay reachable under jamming and dense fog, the worst-case isolated drone recovers itself in 3.2 seconds via INS/VIO pop-up, slow attacks are caught at onset, and our hardware-agnostic pod plugs into any Morpheus airframe via MAVLink 2 + Ethernet with a clear 3-phase R&D roadmap. (~20 s)">
+  <section class="slide" data-notes="<ul><li><b>4 Key Scorecards:</b> <span class='g'>10/10 Drones Reachable</span> (jamming + node loss + fog) · <span class='p'>3.2s Recovery</span> (Pop-Up) · <span class='b-tag'>0.0s Detection</span> (vs 9.5s) · <b>225 g Pod</b> (MAVLink 2 / Ethernet).</li><li><b>12-Month Morpheus Roadmap:</b> M1–3 COTS DECT NR+ &amp; HMAC-SHA256 bench → M4–8 225 g hybrid pod on 2 relays + 1 canyon drone → M9–12 10-drone BVLOS trial (Klinikum Mitte ↔ Westfalenhallen).</li></ul>">
     <div class="eyebrow">Results · Integration &amp; F&amp;E Roadmap</div>
     <div class="title">What it adds up to.</div>
     <div class="kpis">
@@ -566,7 +574,7 @@
   </section>
 
   <!-- 10 · TEAM -->
-  <section class="slide" style="--glow: rgba(56,189,248,0.08)" data-notes="Built in 24 hours at the DO-DATA-Hackathon 2026 by Nassim Soultana, Ilias Amir Soultana, and Sami Soultana — combining real-time 3D aerospace & RF/optical simulation, deterministic contrastive threat detection & LLM incident response, and Morpheus Leitstand QoS & regulatory systems engineering. (~15 s)">
+  <section class="slide" style="--glow: rgba(56,189,248,0.08)" data-notes="<ul><li><span class='g'>Nassim Soultana:</span> 3D Aerospace, 1550 nm FSOC / 1.9 GHz DECT NR+ mesh, Mie-scattering fog physics, INS/VIO Pop-Up &amp; 60 fps HUD.</li><li><span class='p'>Ilias Amir Soultana:</span> Contrastive Prototype AI Detector (0.0s vs 9.5s), Collaborative Fleet Learning, HMAC-SHA256 auth &amp; LLM Co-Pilot.</li><li><span class='o'>Sami Soultana:</span> 4-tier QoS Emergency Video Shedding (12 kbps C2 lock), 225 g SWaP, BNetzA compliance &amp; Morpheus Leitstand Ops.</li></ul>">
     <div class="eyebrow">The team · DO-DATA-Hackathon 2026</div>
     <div class="title">Built by <span class="c-fsoc">engineers</span> who ship under fire.</div>
     <div class="team-grid">
@@ -625,7 +633,7 @@
   </section>
 
   <!-- 11 · LIVE DEMO -->
-  <section class="slide s-demo" data-notes="Four live stress tests in Mission Control. One: unprotected 2.4 GHz baseline under jamming — watch reachability collapse. Two: hybrid protection on + jamming — DR-07 sheds video to 0% for 12 kbps C2, while DR-03 climbs out of the <150m core in 3.2 s. Three: Dense Fog (W) — Mie scattering cuts long lasers >520 m, seamless fallback to DECT NR+. Four: inspect any drone's live FLIR/FSD camera & CAD pod, or trigger a coordinated RF+GNSS attack. (~2 min)">
+  <section class="slide s-demo" data-notes="<ul><li><b>Left-to-Right Demo Flow (Click Green Button → index.html):</b></li><li><b>1) Left + Center:</b> Show 10 drones → press <b>[J] Jamming</b> &amp; <b>[W] Dense Fog</b> → outer ring sheds video to 0% (C2 100%); inner purple core (<b>DR-03</b>) climbs 50→125 m (<b>POP-UP</b>) in 3.2s!</li><li><b>2) Right Bottom:</b> Click <b>[🎯 Coordinated RF+GNSS]</b> → DR-03 &amp; DR-07 turn yellow <em>UNEXPLAINED</em> → LLM explains in German → click <b>[✓ Confirm Threat]</b> → <b>Collaborative Fleet Learning</b> turns all 10 drones blue!</li></ul>">
     <div class="eyebrow">Live demo</div>
     <div class="title" style="font-size:120px">Let's break it. <span class="c-fsoc">Live.</span></div>
     <a class="launch" href="index.html">Open mission control <span>→ index.html</span></a>
@@ -678,7 +686,7 @@
     builds(cur).forEach((el, j) => el.classList.toggle('in', j < step));
     document.getElementById('progress').style.width = `${((cur + 1) / total) * 100}%`;
     document.getElementById('notesIdx').textContent = `Slide ${cur + 1} / ${total}`;
-    document.getElementById('notesTxt').textContent = slides[cur].dataset.notes || '';
+    document.getElementById('notesTxt').innerHTML = slides[cur].dataset.notes || '';
     document.getElementById('navCount').textContent = `${String(cur + 1).padStart(2, '0')} / ${String(total).padStart(2, '0')}`;
     document.getElementById('btnPrev').disabled = cur === 0 && step === 0;
     document.getElementById('btnPrevSlide').disabled = cur === 0;

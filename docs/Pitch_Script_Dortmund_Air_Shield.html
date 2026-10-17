@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Dortmund Air Shield — Final Left-to-Right Pitch Script & Technical Q&A</title>
+<style>
+  @page {
+    size: A4;
+    margin: 12mm 14mm 12mm 14mm;
+  }
+  * {
+    box-sizing: border-box;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: #18181b;
+    background: #ffffff;
+    margin: 0;
+    padding: 0;
+    font-size: 9.8pt;
+    line-height: 1.44;
+  }
+  .header {
+    background: #09090b;
+    color: #fafafa;
+    padding: 13px 18px;
+    border-radius: 10px;
+    margin-bottom: 11px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .header h1 {
+    margin: 0 0 3px 0;
+    font-size: 14.8pt;
+    letter-spacing: -0.02em;
+  }
+  .header p {
+    margin: 0;
+    font-size: 8.6pt;
+    color: #a1a1aa;
+  }
+  .badge {
+    background: #10b981;
+    color: #052e16;
+    font-weight: 700;
+    font-size: 8.2pt;
+    padding: 5px 10px;
+    border-radius: 999px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .section {
+    border: 1.5px solid #e4e4e7;
+    border-left: 6px solid #10b981;
+    border-radius: 9px;
+    padding: 11px 15px;
+    margin-bottom: 10px;
+    page-break-inside: avoid;
+  }
+  .sec-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+    border-bottom: 1px solid #f4f4f5;
+    padding-bottom: 4px;
+  }
+  .sec-title {
+    font-weight: 800;
+    font-size: 10.6pt;
+    color: #09090b;
+  }
+  .sec-meta {
+    font-weight: 700;
+    font-size: 8.2pt;
+    padding: 2px 8px;
+    border-radius: 5px;
+    background: #d1fae5;
+    color: #065f46;
+  }
+  .stage-cue {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    color: #92400e;
+    font-size: 8.5pt;
+    padding: 4px 9px;
+    border-radius: 6px;
+    margin: 4px 0 6px 0;
+    font-weight: 600;
+  }
+  .speech {
+    font-size: 9.9pt;
+    color: #18181b;
+    margin: 4px 0;
+  }
+  .speech p {
+    margin: 0 0 6px 0;
+  }
+  .speech p:last-child {
+    margin-bottom: 0;
+  }
+  .hl {
+    background: #fef08a;
+    padding: 0 3px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .hl-green {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 0 4px;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+  .hl-blue {
+    background: #dbeafe;
+    color: #1e40af;
+    padding: 0 4px;
+    border-radius: 3px;
+    font-weight: 700;
+  }
+  .page-break {
+    page-break-before: always;
+  }
+  .qa-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .qa-card {
+    border: 1px solid #e4e4e7;
+    border-left: 4px solid #18181b;
+    border-radius: 8px;
+    padding: 8px 12px;
+    background: #fafafa;
+    page-break-inside: avoid;
+  }
+  .qa-q {
+    font-weight: 800;
+    font-size: 9.4pt;
+    color: #09090b;
+    margin-bottom: 3px;
+  }
+  .qa-a {
+    font-size: 9pt;
+    color: #27272a;
+    margin: 0;
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>DORTMUND AIR SHIELD — Complete Left-to-Right Pitch Script</h1>
+    <p>Morpheus DO-DATA Hackathon 2026 · Challenge 02: Off-Grid Air · Full Walkthrough</p>
+  </div>
+  <div class="badge">5 Min Pitch + Technical Q&amp;A</div>
+</div>
+
+<!-- ================= 1. OPENING HOOK ================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="sec-title">1. Opening Hook — The Off-Grid Air Mission</span>
+    <span class="sec-meta">0:00 – 0:50 (50 sec)</span>
+  </div>
+  <div class="stage-cue">
+    🎬 ON SCREEN: Live 3D Dortmund Dashboard in Nominal mode. Pause 2 seconds, smile, look at the jury.
+  </div>
+  <div class="speech">
+    <p>"Imagine ten autonomous drones flying over Dortmund right now — delivering urgent blood supplies between hospitals, or helping firefighters see a big city fire from above.</p>
+    <p>Normally, those drones rely on public 5G or the internet to stay connected. <b><i>But what happens during a real crisis when cell towers go down, or an attacker targets the network?</i></b> <i>(1s pause)</i></p>
+    <p><b>That is exactly where our mission, Off-Grid Air, comes in:</b> we have to keep all ten drones flying and connected with <b>zero public internet and zero cell towers</b> — which means they have to build their own private network right in the sky!</p>
+    <p><b>To solve this, we built <span class="hl-green">Dortmund Air Shield</span>:</b> a self-healing drone mesh and real-time threat-intelligence system. Let me walk you through how it works on our live dashboard, going from left to right."</p>
+  </div>
+</div>
+
+<!-- ================= 2. LEFT SIDEBAR ================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="sec-title">2. Left Sidebar — The 10 Drones &amp; Our 2 Communication Channels (FSOC + DECT NR+)</span>
+    <span class="sec-meta">0:50 – 1:45 (55 sec)</span>
+  </div>
+  <div class="speech">
+    <p>"On the left side, you see our ten drones — <code>DR-01</code> through <code>DR-10</code> — each with its own private sky-network IP address (<code>10.41.0.1</code> to <code>10.41.0.10</code>). Every drone's goal is simply to keep a working connection back to <b>HQ</b>, our ground control base station on the roof.</p>
+    <p>To do that without public internet, our drones use <b>two communication channels that protect each other</b>:</p>
+    <p>• <b>First, when the sky is clear</b>, they connect over <span class="hl-green">green FSOC Lasers</span> at <b>1 Gigabit per second</b> with just 5 milliseconds of latency — fast enough to stream live HD camera video, steering commands, and telemetry straight to HQ.</p>
+    <p>• <b><i>But what happens when a drone flies behind a tall building like the Dortmunder U-Tower — or through thick fire smoke — and the laser loses Line-of-Sight?</i></b> <i>(1s pause)</i> Automatically, the drone switches to our second channel: <span class="hl">orange DECT NR+</span> — an innovative, decentralized 5G-grade mesh radio at 1.9 GHz that needs <b>zero SIM cards and zero cell towers</b>, bends around buildings, and bounces signals up to our two <b>High-Altitude Relay Drones (<code>DR-01</code> and <code>DR-02</code>)</b> flying at 120 meters!</p>
+    <p>• <b><i>And what if the opposite happens — what if an attacker blasts a radio jammer to block DECT NR+ radio?</i></b> <i>(1s pause)</i> Because <b>FSOC is a narrow beam of light (not a radio wave)</b>, a radio jammer on the ground cannot jam the laser! Any drone with clear Line-of-Sight to HQ or our 120-meter relays stays 100% immune on the green laser."</p>
+  </div>
+</div>
+
+<!-- ================= 3. CENTER 3D MAP ================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="sec-title">3. Center 3D Map — The 3 Attack Circles Around the U-Tower</span>
+    <span class="sec-meta">1:45 – 2:35 (50 sec)</span>
+  </div>
+  <div class="stage-cue">
+    🎬 ACTION: Click [⚡ Jamming] and [📍 GPS Spoofing] at the bottom bar so the 3 circles appear around the U-Tower.
+  </div>
+  <div class="speech">
+    <p>"Now look at the center 3D map of Dortmund when we turn on an attack around the <b>Dortmunder U-Tower</b>.</p>
+    <p>First, you might wonder: <b><i>why are some drones like <code>DR-04</code> and <code>DR-08</code> still green?</i></b> Because an attacker on the ground has a limited physical range — drones flying on the other side of the city are outside the circles, so their lasers stay untouched.</p>
+    <p>Inside the attack zone, you see <b>three concentric rings</b>, and our drones take automatic survival actions in each one:</p>
+    <p>1. <b>In the outer Yellow Circle (GPS Spoofing):</b> The attacker sends fake satellite GPS coordinates. Our drone spots the sudden jump by cross-checking GPS against its own <b>internal movement sensor (INS)</b>, rejects the fake GPS, and stays on its real flight path.</p>
+    <p>2. <b>In the middle Red Circle (Radio Jamming):</b> The attacker blasts heavy radio noise, so the drone switches to <b>DECT NR+ backup radio</b> and cuts off heavy video.</p>
+    <p>3. <b>And in the inner Purple Circle (<code>DOUBLE-FAIL</code>):</b> Look at <code>DR-03</code> — it is flying low right behind the tall U-Tower, so the building blocks its laser <b>AND</b> the jammer crushes its radio at the same time! Because it is completely isolated, the drone automatically <b>climbs higher (<code>POP-UP ↑65m</code>)</b> until it peeks over the building roof and catches a clean laser beam again! And if two drones suddenly crash (<b>Node Failure</b>), the remaining eight drones automatically reroute around them."</p>
+  </div>
+</div>
+
+<!-- ================= 4. RIGHT TOP & MIDDLE ================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="sec-title">4. Right Sidebar (Top &amp; Middle) — Resilience Metrics &amp; Traffic Priorities (QoS)</span>
+    <span class="sec-meta">2:35 – 3:15 (40 sec)</span>
+  </div>
+  <div class="speech">
+    <p>"Now look at the top of the <b>Right Sidebar</b>: the <b>top four boxes (Resilience Metrics)</b> are our network health scorecards for the commander — showing <b>100% Reachability</b>, <b>Average Latency</b>, <b>Packet Loss</b>, and <b>Recovery Time</b>, proving our mesh heals broken links in under 3 seconds.</p>
+    <p>Right below that, look at the <b>four bars under Traffic Priorities (QoS)</b>. <b><i>How do we keep steering commands alive when a drone drops from a 1 Gbps laser to weaker backup radio under jamming?</i></b> <i>(1s pause)</i></p>
+    <p>Our connection carries four types of traffic: <b>C2 Command</b> (steering), <b>Telemetry</b> (battery and height reports), <b>Inter-Drone</b> (drones sharing 3D positions so they don't collide, aim their lasers, and route packets), and <b>Live Camera Video</b>. Because live video eats <b>99% of our bandwidth</b> while steering commands need less than <b>1%</b>, our system automatically <b>cuts off the heavy video (<code>SHED · 0%</code>)</b> in an emergency — guaranteeing that <b>C2 Steering stays locked at 90 to 100%</b> so no drone ever crashes!"</p>
+  </div>
+</div>
+
+<div class="page-break"></div>
+
+<!-- ================= 5. RIGHT BOTTOM: THREAT INTEL & LLM ================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="sec-title">5. Right Sidebar (Bottom) — Contrastive Detector, Honest AI &amp; Collaborative Fleet Learning</span>
+    <span class="sec-meta">3:15 – 4:40 (85 sec)</span>
+  </div>
+  <div class="stage-cue">
+    🎬 ACTION 1: Click [🎯 Coordinated RF+GNSS] → DR-03 &amp; DR-07 turn YELLOW (UNEXPLAINED).<br/>
+    🎬 ACTION 2: When saying "Watch what happens when I click Confirm Threat once...", click [✓ Confirm Threat] → Turns BLUE!
+  </div>
+  <div class="speech">
+    <p>"That brings us to the bottom half of the right sidebar — our <b>Threat Intelligence</b> and <b>LLM Security Analyst</b>.</p>
+    <p>When I worked on anomaly detection during my internship at Fraunhofer, one question always fascinated me: <b><i>how will tomorrow's smart attackers bypass standard detectors?</i></b> <i>(1s pause)</i></p>
+    <p>Instead of turning a jammer on at full power all at once, a smart attacker <b>increases the jamming power very slowly over time — a Ramping Jammer</b>. <b><i>Why does that fool a standard detector?</i></b> Because a standard detector only compares the current signal to the <b>moving average of the last 4 seconds</b>. When the jamming increases slowly, that 4-second average shifts down right along with the attack — just like your eyes adjusting to a slowly darkening room — so the detector stays completely blind for <span class="hl">9.5 seconds</span> (over 130 meters of blind flight).</p>
+    <p><b>Our <span class="hl-green">Contrastive Detector</span> fixes this:</b> at takeoff, it saves a <b>frozen healthy baseline</b> of 4 values (Signal Strength, Signal Clarity, Packet Loss, and GPS-to-INS offset). Because that takeoff baseline never shifts, we detect even a slow ramping jammer at <span class="hl-green">0.0 seconds</span>!</p>
+    <p>Now, <b><i>what if an attacker combines two weapons at once — Jamming AND GPS Spoofing — in a pattern we have never seen before?</i></b> <i>(1s pause)</i> Most AI models blindly guess — and a wrong guess triggers the wrong defense. From my security research discussions at <b>MPI-SP</b>, <b>real trust comes when AI is honest about what it does NOT know</b>. Therefore, instead of guessing, our detector flags <code>DR-03</code> and <code>DR-07</code> in yellow as <span class="hl">UNEXPLAINED — needs label</span>.</p>
+    <p><b>And because this new attack needs a label, that is exactly where our <span class="hl-blue">LLM Security Analyst</span> right below comes in!</b> We never let an LLM fly the drone — survival happens automatically in milliseconds, and the LLM runs <b>offline at HQ</b> strictly as a <b>CoPilot for the human commander</b>: it translates those raw sensor jumps into <b>two plain sentences</b>, opens a <b>critical ticket</b> for the ground team, and gives me this <b>Confirm Threat</b> button.</p>
+    <p>Watch what happens when I click <b>Confirm Threat</b> once: this triggers <b>Collaborative Fleet Learning</b>! <b>HQ takes that tiny 4-number threat fingerprint from <code>DR-03</code> and <code>DR-07</code> and broadcasts it to all 10 drones in the fleet</b> — so <code>DR-03</code> and <code>DR-07</code> immediately turn <span class="hl-blue">blue</span>, and any other drone approaching that sector later immediately recognizes the attack at 0.0 seconds and proactively switches to its DECT backup route and INS lock before its connection can break — keeping our <b>Recovery Time under 3 seconds</b>!</p>
+    <p><b><i>And why is this a game-changer for clients like Morpheus Logistik?</i></b> Because when one drone learns a new threat, the other nine drones don't have to abort their flights or get grounded for manual inspection — <b>drastically cutting fleet downtime, lowering operational costs, and keeping hospital deliveries on schedule!</b>"</p>
+  </div>
+</div>
+
+<!-- ================= 6. FINALE ================= -->
+<div class="section">
+  <div class="sec-head">
+    <span class="sec-title">6. Benchmark Proof &amp; Closing Line</span>
+    <span class="sec-meta">4:40 – 5:00 (20 sec)</span>
+  </div>
+  <div class="speech">
+    <p>"We validated every claim in a reproducible 7-scenario benchmark: <b>0.0 seconds</b> detection instead of 9.5 seconds, <b>zero false alarms</b> across 1,200 noisy drone-ticks, and <b>100% recognition</b> of unseen compound attacks after one click.</p>
+    <p><b>The future of urban logistics is airborne — let's make sure it never falls out of the sky. Thank you!</b>"</p>
+  </div>
+</div>
+
+<!-- ================= TECHNICAL Q&A BOX ================= -->
+<div class="header" style="background:#18181b; margin-top:10px; margin-bottom:8px; padding:10px 16px;">
+  <div>
+    <h1 style="font-size:12.5pt;">Technical Deep-Dive Notes (For Jury Q&amp;A Only)</h1>
+    <p>How Z-Score, Cosine Similarity, Detector-to-LLM JSON, and Hardware Scope work under the hood</p>
+  </div>
+  <div class="badge" style="background:#38bdf8; color:#082f49;">Q&amp;A Ready</div>
+</div>
+
+<div class="qa-grid">
+  <div class="qa-card">
+    <div class="qa-q">1. How Z-Score (&gt;= 4.5) and Cosine Similarity (&gt;= 0.84) Work Under the Hood</div>
+    <p class="qa-a">
+      • <b>Step 1 — Anomaly Detection (Z-Score):</b> During the 40s (80-tick) takeoff warmup, each drone records the mean (&mu;) and standard deviation (&sigma;) of 4 sensors: <code>[RSSI, SNR, Packet_Loss, GNSS_INS_Offset]</code>. Every 0.5s tick, we compute the 4D Z-score deviation vector <code>[z_rssi, z_snr, z_loss, z_gnss]</code>. If its Euclidean length <code>z_score &gt;= 4.5</code> (e.g., <code>z = 24.6</code>), an attack is detected at <code>0.0s</code>.<br/>
+      • <b>Step 2 — Attribution (Cosine Similarity):</b> We compare the <i>direction</i> of that 4D Z-vector against known attack prototypes using Cosine Similarity (<code>sim</code> from <code>0.00</code> to <code>1.00</code>). Pure <code>jamming</code> points along <code>[High, High, Med, 0]</code>; pure <code>spoofing</code> points along <code>[0, 0, 0, High]</code>. When both hit together (<code>Coordinated RF+GNSS</code>), the vector points diagonally between them: max similarity is only <code>sim = 0.68 &lt; 0.84</code> threshold &rarr; flagged as <code>UNEXPLAINED</code>.
+    </p>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">2. How the Detector Feeds the LLM &amp; How 1-Click Collaborative Learning Works</div>
+    <p class="qa-a">
+      • <b>Detector &rarr; LLM JSON:</b> The detector passes a structured JSON payload <code>{device: "DR-07", label: "UNEXPLAINED", z_score: 24.6, dims: {rssi: 8.1, snr: 18.2, loss: 4.0, gnss_offset_m: 16.4}, similarity: 0.68}</code> to the LLM Analyst (<code>llm_analyst.py</code>), which runs offline at HQ (with optional live API mode to <code>gpt-6-studierende</code> on <code>chat.kiconnect.nrw/v1/responses</code>).<br/>
+      • <b>1-Click Fleet Learning (<code>CONFIRM_THREAT</code>):</b> Clicking Confirm Threat normalizes the 4D Z-vector into a unit vector (4 floats = 16 bytes) and saves it in the shared fleet prototype table as <code>coordinated_rf_gnss</code>. On the very next tick, similarity jumps from <code>0.68</code> to <code>0.99 &gt;= 0.84</code> across all 10 drones.
+    </p>
+  </div>
+
+  <div class="qa-card">
+    <div class="qa-q">3. Why Only 4 Sensors in the Detector? &amp; How Do Moving Drones Aim Lasers?</div>
+    <p class="qa-a">
+      • <b>Why we excluded Latency &amp; Velocity from the 4D detector (Invariance):</b> When a drone flies behind the U-Tower and switches from FSOC Laser to DECT radio, its latency jumps from 5ms to 40ms. If latency or speed were inside the cyberattack detector, every building in Dortmund would trigger a false cyberattack alarm! Keeping only link-budget &amp; navigation residuals gives us <b>0 false alarms</b> across 1,200 noisy drone-ticks.<br/>
+      • <b>How drones aim FSOC lasers (PAT) &amp; Hardware Economics:</b> Drones broadcast their 3D GPS/INS coordinates over omnidirectional <b>DECT NR+</b> (`Inter-Drone` channel) so gimbals know where to aim the laser. And because optical heads weigh ~400g and cost more than €15 DECT NR+ chips, our architecture puts high-power FSOC relays on <code>DR-01</code> and <code>DR-02</code> at 120m altitude while allowing lower drones to use DECT NR+ seamlessly.
+    </p>
+  </div>
+</div>
+
+</body>
+</html>
